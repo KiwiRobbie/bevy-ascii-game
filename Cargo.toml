@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 bevy = "0.12.1"
 swash = "0.1.8"
+
+[lib]
