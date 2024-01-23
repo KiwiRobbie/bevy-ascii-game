@@ -37,8 +37,7 @@ pub struct AtlasBuilder<'a> {
 
 impl<'a> AtlasBuilder<'a> {
     pub fn new(font: swash::FontRef<'a>, render: Render<'a>, scaler: Scaler<'a>) -> Self {
-        let metrics = font.metrics(&[]);
-        dbg!(metrics);
+        // let metrics = font.metrics(&[]);
 
         Self {
             font,
