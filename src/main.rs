@@ -9,6 +9,7 @@ use bevy::{
     },
     math::{Vec2, Vec3},
     render::{
+        camera::CameraRenderGraph,
         color::Color,
         render_resource::{Extent3d, TextureFormat},
         texture::{Image, ImagePlugin},
@@ -54,7 +55,10 @@ const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWX
 struct LoadingCustomFont(Handle<CustomFont>);
 
 fn setup(mut commands: Commands, server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
+        ..Default::default()
+    });
     commands.spawn(LoadingCustomFont(
         server.load::<CustomFont>("FiraCode-Regular.ttf"),
     ));
@@ -103,7 +107,7 @@ fn font_ready_system(
                         color: Color::WHITE,
                         atlas: atlas_handle,
                         texture: glyph_textures.add(GlyphTexture::from_text(
-                            Box::new(["AAA", "BBB", "CCC", "123"]),
+                            Box::new(["Test", "Text", "it's", "@#$-"]),
                             atlas,
                             font_ref,
                         )),

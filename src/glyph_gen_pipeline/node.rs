@@ -1,22 +1,20 @@
 use crate::atlas::AtlasGpuBuffers;
-use bevy::ecs::entity::Entity;
-use bevy::ecs::query::QueryIter;
-use bevy::ecs::query::QueryState;
-use bevy::ecs::world::World;
-use bevy::render::render_graph;
-use bevy::render::render_resource::BindGroupEntry;
-use bevy::render::render_resource::ComputePassDescriptor;
-use bevy::render::render_resource::LoadOp;
-use bevy::render::render_resource::Operations;
-use bevy::render::render_resource::PipelineCache;
-use bevy::render::render_resource::RenderPassColorAttachment;
+use bevy::{
+    ecs::{
+        entity::Entity,
+        query::QueryState,
+        world::{FromWorld, World},
+    },
+    render::{
+        render_graph::{self, SlotValue},
+        render_resource::{BindGroupEntry, ComputePassDescriptor, PipelineCache},
+    },
+};
 
-use super::GlyphGenerationPipelineData;
-use super::GlyphSprite;
-use super::GlyphStorageTexture;
-use super::GlyphTextureInfo;
-use super::GlyphVertexBuffer;
-use super::GylphGenerationUniformBuffer;
+use super::{
+    GlyphGenerationPipelineData, GlyphSprite, GlyphStorageTexture, GlyphTextureInfo,
+    GlyphVertexBuffer, GylphGenerationUniformBuffer,
+};
 
 type Q = (
     &'static GlyphSprite,
@@ -40,17 +38,21 @@ impl GlyphGenerationNode {
     }
 }
 
+impl FromWorld for GlyphGenerationNode {
+    fn from_world(world: &mut World) -> Self {
+        Self::new(world)
+    }
+}
+
 impl render_graph::Node for GlyphGenerationNode {
     fn input(&self) -> Vec<render_graph::SlotInfo> {
         vec![]
     }
     fn output(&self) -> Vec<render_graph::SlotInfo> {
-        vec![
-        //     render_graph::SlotInfo::new(
-        //     "vertex_buffer",
-        //     render_graph::SlotType::Buffer,
-        // )
-        ]
+        vec![render_graph::SlotInfo::new(
+            "vertex_buffer",
+            render_graph::SlotType::Buffer,
+        )]
     }
     fn update(&mut self, world: &mut World) {
         self.query = world.query();
@@ -110,16 +112,7 @@ impl render_graph::Node for GlyphGenerationNode {
                         resource: bevy::render::render_resource::BindingResource::TextureView(
                             &atlas_buffers
                                 .data
-                                .create_view(&wgpu::TextureViewDescriptor {
-                                    label: Some("Atlas storage texture view"),
-                                    format: Some(wgpu::TextureFormat::R16Uint),
-                                    dimension: Some(wgpu::TextureViewDimension::D2),
-                                    aspect: wgpu::TextureAspect::All,
-                                    base_mip_level: 0,
-                                    mip_level_count: None,
-                                    base_array_layer: 0,
-                                    array_layer_count: None,
-                                }),
+                                .create_view(&wgpu::TextureViewDescriptor::default()),
                         ),
                     },
                     BindGroupEntry {
@@ -150,7 +143,9 @@ impl render_graph::Node for GlyphGenerationNode {
                 1,
             );
             vertex_buffer.unmap();
-            // atlas_buffers.uvs.unmap();
+            graph
+                .set_output("vertex_buffer", SlotValue::Buffer(vertex_buffer.0.clone()))
+                .unwrap();
         }
         Ok(())
     }

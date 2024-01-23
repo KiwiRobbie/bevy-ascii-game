@@ -22,14 +22,14 @@ mod builder;
 pub use builder::AtlasBuilder;
 use bytemuck::Zeroable;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct AtlasItem {
     pub start: UVec2,
     pub size: UVec2,
     pub offset: IVec2,
 }
 
-#[derive(Asset, TypePath, Clone)]
+#[derive(Asset, TypePath, Debug, Clone)]
 pub struct Atlas {
     pub data: Box<[u8]>,
     pub size: u32,
@@ -80,9 +80,9 @@ impl RenderAsset for Atlas {
                 mip_level_count: 1,
                 sample_count: 1,
                 dimension: bevy::render::render_resource::TextureDimension::D2,
-                format: TextureFormat::R16Uint,
+                format: TextureFormat::Rgba8Unorm,
                 usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[TextureFormat::R16Uint],
+                view_formats: &[TextureFormat::Rgba8Unorm],
             },
             &extracted_asset.data,
         );

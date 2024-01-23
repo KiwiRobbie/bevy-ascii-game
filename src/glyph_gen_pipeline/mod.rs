@@ -5,7 +5,7 @@ use bevy::{
         extract_component::{ExtractComponent, ExtractComponentPlugin},
         extract_resource::ExtractResourcePlugin,
         render_asset::{ExtractedAssets, RenderAsset, RenderAssetPlugin, RenderAssets},
-        render_graph::RenderGraph,
+        render_graph::{RenderGraph, RenderGraphApp, SlotInfo, SlotType},
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
         view::ExtractedView,
@@ -15,7 +15,10 @@ use bevy::{
 pub use node::GlyphGenerationNode;
 use swash::FontRef;
 
-use crate::atlas::Atlas;
+use crate::{
+    atlas::Atlas,
+    glyph_raster_pipeline::{GlyphRasterNode, GlyphRasterPipelineData},
+};
 
 mod node;
 
@@ -28,24 +31,47 @@ impl Plugin for FontRenderPlugin {
             .add_plugins(RenderAssetPlugin::<GlyphTexture>::default())
             .add_plugins(RenderAssetPlugin::<Atlas>::default());
 
-        let render_world = &mut app
+        const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
+        let render_app = &mut app
             .get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(Render, prepare_buffers.in_set(RenderSet::Prepare))
-            .world;
-        let glyph_generation = GlyphGenerationNode::new(render_world);
-        let mut render_graph = render_world.resource_mut::<RenderGraph>();
+            .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
+            .add_render_graph_node::<GlyphRasterNode>(MAIN_GRAPH_2D, "glyph_raster")
+            .add_render_graph_edges(
+                MAIN_GRAPH_2D,
+                &[
+                    bevy::core_pipeline::core_2d::graph::node::TONEMAPPING,
+                    "glyph_generation",
+                    "glyph_raster",
+                    bevy::core_pipeline::core_2d::graph::node::END_MAIN_PASS_POST_PROCESSING,
+                ],
+            );
 
-        render_graph.add_node("glyph_generation", glyph_generation);
-        render_graph.add_node_edge(
-            bevy::render::main_graph::node::CAMERA_DRIVER,
-            "glyph_generation",
-        );
+        render_app
+            .world
+            .resource_mut::<RenderGraph>()
+            .get_sub_graph_mut(MAIN_GRAPH_2D)
+            .unwrap()
+            .add_slot_edge(
+                "glyph_generation",
+                "vertex_buffer",
+                "glyph_raster",
+                "vertex_buffer",
+            );
+
+        // render_graph.add_slot_edge(
+        //     "glyph_generation",
+        //     "vertex_buffer",
+        //     "glyph_raster",
+        //     "vertex_buffer",
+        // );
     }
     fn finish(&self, app: &mut App) {
         // setup custom render pipeline
         app.sub_app_mut(RenderApp)
-            .init_resource::<GlyphGenerationPipelineData>();
+            .init_resource::<GlyphGenerationPipelineData>()
+            .init_resource::<GlyphRasterPipelineData>();
     }
 }
 
@@ -190,7 +216,7 @@ fn prepare_buffers(
 
         let glyph_storage_texture = gpu_glyph_texture.storage_texture.clone();
 
-        const VERTEX_PER_GLYPH: u64 = 4;
+        const VERTEX_PER_GLYPH: u64 = 6;
         const NUM_F32: u64 = 4;
         const F32_SIZE: u64 = 4;
 
@@ -265,7 +291,7 @@ impl FromWorld for GlyphGenerationPipelineData {
                         visibility: ShaderStages::COMPUTE,
                         ty: BindingType::StorageTexture {
                             access: StorageTextureAccess::ReadOnly,
-                            format: TextureFormat::R16Uint,
+                            format: TextureFormat::Rgba8Unorm,
                             view_dimension: TextureViewDimension::D2,
                         },
                         count: None,

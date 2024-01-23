@@ -150,6 +150,20 @@ impl<'a> AtlasBuilder<'a> {
                 }
             }
         }
+        {
+            let items = items.clone();
+            for item in items {
+                println!(
+                    "{:03} {:03} | {:03} {:03} | {:03} {:03}",
+                    item.start.x,
+                    item.start.y,
+                    item.size.x,
+                    item.size.y,
+                    item.offset.x,
+                    item.offset.y
+                );
+            }
+        }
 
         Atlas {
             size: self.size,
