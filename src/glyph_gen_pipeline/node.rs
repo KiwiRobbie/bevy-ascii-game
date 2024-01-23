@@ -80,7 +80,7 @@ impl render_graph::Node for GlyphGenerationNode {
         };
 
         for (
-            glyph_sprite,
+            _glyph_sprite,
             glyph_uniform_buffer,
             glyph_texture_info,
             glyph_storage_texture,

@@ -1,10 +1,6 @@
 use bevy::{
     prelude::*,
-    render::{
-        render_resource::*,
-        renderer::RenderDevice,
-        view::{ViewTarget, ViewUniform, ViewUniforms},
-    },
+    render::{render_resource::*, renderer::RenderDevice, view::ViewUniform},
 };
 pub use node::GlyphRasterNode;
 

@@ -1,4 +1,7 @@
-use crate::atlas::AtlasGpuBuffers;
+use crate::{
+    atlas::AtlasGpuBuffers,
+    glyph_gen_pipeline::{GlyphTexture, GlyphTextureInfo, GpuGlyphTexture},
+};
 use bevy::{
     ecs::{
         entity::Entity,
@@ -7,8 +10,8 @@ use bevy::{
     },
     render::{
         render_graph,
-        render_resource::{BindGroupEntry, ComputePassDescriptor, PipelineCache},
-        view::{ViewTarget, ViewUniform, ViewUniforms},
+        render_resource::{BindGroupEntry, PipelineCache},
+        view::{ViewTarget, ViewUniforms},
     },
 };
 use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
@@ -17,7 +20,7 @@ use super::GlyphRasterPipelineData;
 
 pub struct GlyphRasterNode {
     q_view: QueryState<&'static ViewTarget>,
-    q_atlas: QueryState<&'static AtlasGpuBuffers>,
+    q_sprite: QueryState<(&'static AtlasGpuBuffers, &'static GlyphTextureInfo)>,
     atlas_entity: Option<Entity>,
 }
 
@@ -25,7 +28,7 @@ impl GlyphRasterNode {
     pub fn new(world: &mut World) -> Self {
         Self {
             q_view: world.query(),
-            q_atlas: world.query(),
+            q_sprite: world.query(),
             atlas_entity: world
                 .query_filtered::<Entity, &AtlasGpuBuffers>()
                 .get_single(world)
@@ -52,7 +55,7 @@ impl render_graph::Node for GlyphRasterNode {
     }
     fn update(&mut self, world: &mut World) {
         self.q_view = world.query();
-        self.q_atlas = world.query();
+        self.q_sprite = world.query();
         self.atlas_entity = world
             .query_filtered::<Entity, &AtlasGpuBuffers>()
             .get_single(world)
@@ -74,7 +77,8 @@ impl render_graph::Node for GlyphRasterNode {
             return Ok(());
         };
 
-        let Some(atlas) = self.q_atlas.get_manual(world, atlas_entity).ok() else {
+        let Some((atlas, glyph_texture_info)) = self.q_sprite.get_manual(world, atlas_entity).ok()
+        else {
             return Ok(());
         };
 
@@ -141,7 +145,10 @@ impl render_graph::Node for GlyphRasterNode {
         render_pass.set_pipeline(raster_pipeline);
 
         render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
-        render_pass.draw(0..6 * 4 * 4, 0..1);
+        render_pass.draw(
+            0..6 * glyph_texture_info.width * glyph_texture_info.height,
+            0..1,
+        );
         // }
         Ok(())
     }

@@ -59,7 +59,7 @@ fn compute(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num
         let corner = verticies[i];
 
         var vertex: Vertex ;
-        vertex.pos = vec2<f32>(location.xy * grid_size - atlas_item.offset * vec2<i32>(0, 0) + corner * vec2<i32>(atlas_item.size));
+        vertex.pos = vec2<f32>(location.xy * grid_size - atlas_item.offset * vec2<i32>(-1, 1) + corner * vec2<i32>(atlas_item.size));
         vertex.uv = vec2<f32>(atlas_item.start + atlas_item.size * vec2<u32>(corner)) / vec2<f32>(textureDimensions(atlas_texture).xy);
         vertex_buffer.verticies[6u * index + u32(i)] = vertex;
     }

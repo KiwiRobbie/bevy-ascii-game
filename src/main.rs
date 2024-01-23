@@ -1,3 +1,5 @@
+use std::slice::SliceIndex;
+
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetApp, AssetServer, Assets, Handle},
@@ -5,8 +7,10 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        system::{Commands, Query, Res, ResMut},
+        event::EventReader,
+        system::{Commands, Local, Query, Res, ResMut},
     },
+    input::{keyboard::KeyboardInput, ButtonState},
     math::{Vec2, Vec3},
     render::{
         camera::CameraRenderGraph,
@@ -16,7 +20,7 @@ use bevy::{
     },
     sprite::{Sprite, SpriteBundle},
     transform::components::Transform,
-    window::{Window, WindowPlugin, WindowResolution},
+    window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
@@ -43,6 +47,7 @@ fn main() {
         .add_plugins(FontRenderPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, font_ready_system)
+        .add_systems(Update, keyboard_input)
         .init_asset::<CustomFont>()
         .init_asset::<Atlas>()
         .init_asset_loader::<CustomFontLoader>()
@@ -62,6 +67,47 @@ fn setup(mut commands: Commands, server: Res<AssetServer>) {
     commands.spawn(LoadingCustomFont(
         server.load::<CustomFont>("FiraCode-Regular.ttf"),
     ));
+}
+
+fn keyboard_input(
+    mut ev_character: EventReader<ReceivedCharacter>,
+    q_glyph_sprite: Query<&GlyphSprite>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+    atlases: Res<Assets<Atlas>>,
+    fonts: Res<Assets<CustomFont>>,
+    mut position: Local<usize>,
+) {
+    let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
+        return;
+    };
+
+    let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
+    let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
+    let font = fonts.get(glyph_sprite.font.id()).unwrap();
+
+    let cusror_glyph_id = font.as_ref().charmap().map('_');
+    let cursor_glyph_index = atlas.local_index.get(&cusror_glyph_id).unwrap_or(&u16::MAX);
+
+    for character in ev_character.read() {
+        dbg!(character.char);
+        if character.char == '\u{8}' {
+            glyph_texture.data.split_at_mut(*position).1[..2]
+                .copy_from_slice(&u16::MAX.to_le_bytes());
+            *position = position
+                .wrapping_sub(2)
+                .rem_euclid(glyph_texture.data.len());
+            glyph_texture.data.split_at_mut(*position).1[..2]
+                .copy_from_slice(&cursor_glyph_index.to_le_bytes());
+        } else {
+            let glyph_id = font.as_ref().charmap().map(character.char);
+            let glyph_index = atlas.local_index.get(&glyph_id).unwrap_or(&u16::MAX);
+            glyph_texture.data.split_at_mut(*position).1[..2]
+                .copy_from_slice(&glyph_index.to_le_bytes());
+            *position = (*position + 2).rem_euclid(glyph_texture.data.len());
+            glyph_texture.data.split_at_mut(*position).1[..2]
+                .copy_from_slice(&cursor_glyph_index.to_le_bytes());
+        }
+    }
 }
 
 fn font_ready_system(
@@ -106,8 +152,9 @@ fn font_ready_system(
                     GlyphSprite {
                         color: Color::WHITE,
                         atlas: atlas_handle,
+                        font: font_handle.clone(),
                         texture: glyph_textures.add(GlyphTexture::from_text(
-                            Box::new(["Test", "Text", "it's", "@#$-"]),
+                            (0..32).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
                             atlas,
                             font_ref,
                         )),

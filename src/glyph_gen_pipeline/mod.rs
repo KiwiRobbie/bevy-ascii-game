@@ -3,12 +3,10 @@ use bevy::{
     prelude::*,
     render::{
         extract_component::{ExtractComponent, ExtractComponentPlugin},
-        extract_resource::ExtractResourcePlugin,
-        render_asset::{ExtractedAssets, RenderAsset, RenderAssetPlugin, RenderAssets},
-        render_graph::{RenderGraph, RenderGraphApp, SlotInfo, SlotType},
+        render_asset::{RenderAsset, RenderAssetPlugin, RenderAssets},
+        render_graph::{RenderGraph, RenderGraphApp},
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
-        view::ExtractedView,
         Render, RenderApp, RenderSet,
     },
 };
@@ -17,12 +15,14 @@ use swash::FontRef;
 
 use crate::{
     atlas::Atlas,
+    font::CustomFont,
     glyph_raster_pipeline::{GlyphRasterNode, GlyphRasterPipelineData},
 };
 
 mod node;
 
 pub struct FontRenderPlugin;
+const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
 impl Plugin for FontRenderPlugin {
     fn build(&self, app: &mut App) {
@@ -31,10 +31,9 @@ impl Plugin for FontRenderPlugin {
             .add_plugins(RenderAssetPlugin::<GlyphTexture>::default())
             .add_plugins(RenderAssetPlugin::<Atlas>::default());
 
-        const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
-        let render_app = &mut app
-            .get_sub_app_mut(RenderApp)
-            .unwrap()
+        let render_app = &mut app.get_sub_app_mut(RenderApp).unwrap();
+
+        render_app
             .add_systems(Render, prepare_buffers.in_set(RenderSet::Prepare))
             .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
             .add_render_graph_node::<GlyphRasterNode>(MAIN_GRAPH_2D, "glyph_raster")
@@ -59,13 +58,6 @@ impl Plugin for FontRenderPlugin {
                 "glyph_raster",
                 "vertex_buffer",
             );
-
-        // render_graph.add_slot_edge(
-        //     "glyph_generation",
-        //     "vertex_buffer",
-        //     "glyph_raster",
-        //     "vertex_buffer",
-        // );
     }
     fn finish(&self, app: &mut App) {
         // setup custom render pipeline
@@ -94,7 +86,7 @@ pub struct GlyphTexture {
 }
 
 impl GlyphTexture {
-    pub fn from_text(text: Box<[&str]>, atlas: &Atlas, font: FontRef) -> Self {
+    pub fn from_text(text: Box<[String]>, atlas: &Atlas, font: FontRef) -> Self {
         let height = text.len();
         let width = text[0].len();
 
@@ -106,7 +98,7 @@ impl GlyphTexture {
             let chars = text[y].chars();
             for (x, c) in chars.enumerate() {
                 let index = 2 * (x + y * width);
-                let glyph_id = atlas.local_index[&charmap.map(c)];
+                let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
                 data[index..index + 2].copy_from_slice(&glyph_id.to_le_bytes());
             }
         }
@@ -125,6 +117,7 @@ impl GlyphTexture {
 pub struct GlyphSprite {
     pub color: Color,
     pub atlas: Handle<Atlas>,
+    pub font: Handle<CustomFont>,
     pub texture: Handle<GlyphTexture>,
 }
 
@@ -184,9 +177,9 @@ struct GlyphStorageTexture(Texture);
 struct GlyphVertexBuffer(Buffer);
 
 #[derive(Component)]
-struct GlyphTextureInfo {
-    width: u32,
-    height: u32,
+pub struct GlyphTextureInfo {
+    pub width: u32,
+    pub height: u32,
 }
 
 fn prepare_buffers(

@@ -1,18 +1,9 @@
 use bevy::{
-    asset::Assets,
-    core_pipeline::core_2d::Camera2dBundle,
-    ecs::system::{Commands, ResMut},
-    math::{IVec2, UVec2, Vec2, Vec3},
-    render::{
-        render_resource::{Extent3d, TextureFormat},
-        texture::Image,
-    },
-    sprite::{Sprite, SpriteBundle},
-    transform::components::Transform,
+    math::{IVec2, UVec2},
     utils::HashMap,
 };
 use swash::{
-    scale::{Render, ScaleContext, Scaler, Source, StrikeWith},
+    scale::{Render, Scaler},
     zeno::Format,
     GlyphId,
 };
@@ -67,8 +58,8 @@ impl<'a> AtlasBuilder<'a> {
         self.rendered.push(RenderedGlyph {
             glyph_id,
             ofset: IVec2 {
-                x: image.placement.top,
-                y: image.placement.left,
+                x: image.placement.left,
+                y: image.placement.top,
             },
             size: UVec2 {
                 x: image.placement.width,
@@ -179,5 +170,3 @@ impl<'a> AtlasBuilder<'a> {
         }
     }
 }
-
-const CHARSET: &str = "!\\\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
