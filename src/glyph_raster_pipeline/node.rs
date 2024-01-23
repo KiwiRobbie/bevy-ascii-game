@@ -1,7 +1,4 @@
-use crate::{
-    atlas::AtlasGpuBuffers,
-    glyph_gen_pipeline::{GlyphTexture, GlyphTextureInfo, GpuGlyphTexture},
-};
+use crate::{atlas::AtlasGpuBuffers, glyph_gen_pipeline::GlyphTextureInfo};
 use bevy::{
     ecs::{
         entity::Entity,
@@ -127,19 +124,12 @@ impl render_graph::Node for GlyphRasterNode {
                             .create_view(&wgpu::TextureViewDescriptor::default()),
                     ),
                 },
-                // BindGroupEntry {
-                //     binding: 1,
-                //     resource: bevy::render::render_resource::BindingResource::TextureView(
-                //         &glyph_storage_texture.create_view(&wgpu::TextureViewDescriptor::default()),
-                //     ),
-                // },
             ],
         );
         let mut render_pass = render_context
             .command_encoder()
             .begin_render_pass(&render_pass_descriptor);
 
-        // render_pass.set_bind_group(0, &voxel_data.bind_group, &[]);
         render_pass.set_bind_group(0, &bind_group, &[]);
 
         render_pass.set_pipeline(raster_pipeline);

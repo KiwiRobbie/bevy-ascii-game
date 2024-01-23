@@ -1,5 +1,3 @@
-use std::slice::SliceIndex;
-
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetApp, AssetServer, Assets, Handle},
@@ -10,7 +8,6 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::{keyboard::KeyboardInput, ButtonState},
     math::{Vec2, Vec3},
     render::{
         camera::CameraRenderGraph,
