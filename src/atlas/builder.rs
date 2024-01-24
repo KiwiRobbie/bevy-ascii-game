@@ -46,10 +46,7 @@ impl<'a> AtlasBuilder<'a> {
     }
 
     pub fn insert_glyph(&mut self, glyph_id: GlyphId) -> Option<()> {
-        let mut image = self
-            .render
-            .format(Format::Subpixel)
-            .render(&mut self.scaler, glyph_id)?;
+        let mut image = self.render.render(&mut self.scaler, glyph_id)?;
 
         for alpha in image.data.iter_mut().skip(3).step_by(4) {
             *alpha = 0xff;

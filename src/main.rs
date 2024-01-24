@@ -19,7 +19,10 @@ use bevy::{
 use bevy_prng::ChaCha8Rng;
 use bevy_rand::{plugin::EntropyPlugin, resource::GlobalEntropy};
 use rand_core::RngCore;
-use swash::scale::{Render, ScaleContext, Source, StrikeWith};
+use swash::{
+    scale::{Render, ScaleContext, Source, StrikeWith},
+    zeno::Format,
+};
 
 use bevy_ascii_game::{
     atlas::{Atlas, AtlasBuilder},
@@ -176,12 +179,18 @@ fn font_ready_system(
                 let font_lead = 32.0f32;
 
                 let mut context = ScaleContext::new();
-                let scaler = context.builder(font_ref).hint(true).size(font_size).build();
-                let render = Render::new(&[
+                let scaler = context
+                    .builder(font_ref)
+                    .hint(false)
+                    .size(font_size)
+                    .build();
+                let mut render = Render::new(&[
                     Source::ColorOutline(0),
                     Source::ColorBitmap(StrikeWith::BestFit),
                     Source::Outline,
                 ]);
+                // render.format(Format::Subpixel);
+                render.format(Format::CustomSubpixel([0.0, 0.0, 0.0]));
 
                 let mut atlas_builder = AtlasBuilder::new(font_ref, render, scaler);
 
