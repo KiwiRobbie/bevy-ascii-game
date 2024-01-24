@@ -122,7 +122,6 @@ impl ExtractedGlyphTexture {
         frame: usize,
     ) -> Self {
         let text = &source.frames[frame].data;
-        dbg!(text);
         let height = text.len();
         let width = text[0].len();
 
@@ -258,7 +257,10 @@ fn extract_glyph_animations(
         >,
     >,
 ) {
-    for (entity, global_transform, sprite, font, font_size) in q_glyph_animations.iter() {
+    for (entity, global_transform, animation, font, font_size) in q_glyph_animations.iter() {
+        let Some(animation_source) = glyph_animations.get(animation.source.id()) else {
+            continue;
+        };
         let transform: Transform = global_transform.clone().into();
         let snapped_transform: GlobalTransform = transform
             .with_translation(Vec3 {
@@ -276,17 +278,17 @@ fn extract_glyph_animations(
             .unwrap();
 
         let extracted_glyph_texture = ExtractedGlyphTexture::extract_animation(
-            glyph_animations.get(sprite.source.id()).unwrap(),
+            animation_source,
             atlas,
             font.as_ref(),
-            sprite.frame as usize,
+            animation.frame as usize,
         );
 
         commands.insert_or_spawn_batch([(
             entity,
             (
                 snapped_transform,
-                sprite.clone(),
+                animation.clone(),
                 ExtractedAtlas(atlas.clone()),
                 font_size.clone(),
                 extracted_glyph_texture,
@@ -401,7 +403,6 @@ fn prepare_buffers(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
-    println!("Prepare");
     for (entity, sprite, global_transform, gpu_glyph_texture) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: sprite

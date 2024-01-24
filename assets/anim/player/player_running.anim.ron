@@ -4,8 +4,9 @@
     frames: [
         (
             asset: "art/player/player_running.art",
-            start: (0,0),
-            size: (14,8),
-        )
+            start: Frame(0,1),
+            frame_count: Y(4),
+        ),
+
     ]
 )

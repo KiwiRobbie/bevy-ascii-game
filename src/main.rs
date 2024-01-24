@@ -1,5 +1,7 @@
 #![feature(future_join)]
 
+use std::time::Duration;
+
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetApp, AssetServer, Assets},
@@ -8,6 +10,7 @@ use bevy::{
         component::Component,
         entity::Entity,
         event::EventReader,
+        query::With,
         system::{Commands, Local, Query, Res, ResMut},
     },
     math::Vec3,
@@ -58,7 +61,12 @@ fn main() {
     .add_systems(Startup, setup_system)
     .add_systems(
         Update,
-        (keyboard_input_system, glitch_system, font_load_system),
+        (
+            keyboard_input_system,
+            glitch_system,
+            font_load_system,
+            looping_animation_player_system,
+        ),
     )
     .init_asset::<CustomFontSource>()
     .init_asset_loader::<CustomFontLoader>();
@@ -91,6 +99,7 @@ fn setup_system(
         CustomFont(server.load("FiraCode-Regular.ttf")),
         CharacterSet(CHARSET.chars().into_iter().collect()),
         FontSize(32),
+        LoopingAnimationPlayer::new(15),
     ));
 
     commands.spawn((
@@ -100,11 +109,11 @@ fn setup_system(
         GlyphSprite {
             color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
-                data: (0..16).map(|_| "#".repeat(32)).collect::<Vec<String>>(),
+                data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
             }),
         },
         Transform::from_translation(Vec3 {
-            x: FONT_ADVANCE * 32.0 * 0.0,
+            x: FONT_ADVANCE * 32.0 * -0.5,
             y: FONT_LEAD * 16.0 * -0.5,
             z: 0.0,
         }),
@@ -206,4 +215,44 @@ fn glitch_system(
     //         *start_item = start_item.saturating_add(1);
     //     }
     // }
+}
+
+#[derive(Component)]
+pub struct LoopingAnimationPlayer {
+    pub frame_rate: u32,
+    pub start_time: Option<f64>,
+}
+impl LoopingAnimationPlayer {
+    fn new(frame_rate: u32) -> Self {
+        Self {
+            frame_rate: frame_rate,
+            start_time: None,
+        }
+    }
+}
+
+fn looping_animation_player_system(
+    mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer)>,
+    glyph_animation_sources: Res<Assets<GlyphAnimationSource>>,
+    time: Res<Time>,
+) {
+    // TODO: Fix visual glitch caused by wrapping every hour!
+    let ellapsed = time.elapsed_seconds_wrapped_f64();
+
+    for (mut animation, mut player) in q_glyph_animation.iter_mut() {
+        let Some(source) = glyph_animation_sources.get(animation.source.id()) else {
+            continue;
+        };
+
+        let start_time = match player.start_time {
+            Some(t) => t,
+            None => {
+                player.start_time = Some(ellapsed);
+                ellapsed
+            }
+        };
+
+        let frame = ((ellapsed - start_time) * player.frame_rate as f64).round() as u32;
+        animation.frame = frame.rem_euclid(source.frames.len() as u32);
+    }
 }
