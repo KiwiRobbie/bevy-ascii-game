@@ -117,43 +117,44 @@ impl render_graph::Node for GlyphRasterNode {
         };
 
         // for () in [()] {
-        let render_device = render_context.render_device();
-        let bind_group = render_device.create_bind_group(
-            Some("glyph generation bind group"),
-            &generation_pipeline_data.bind_group_layout,
-            &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: world.resource::<ViewUniforms>().uniforms.binding().unwrap(),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: glyph_model_uniforms.binding().unwrap(),
-                },
-                BindGroupEntry {
-                    binding: 2,
-                    resource: bevy::render::render_resource::BindingResource::TextureView(
-                        &atlas
-                            .data
-                            .create_view(&wgpu::TextureViewDescriptor::default()),
-                    ),
-                },
-            ],
-        );
-        let mut render_pass = render_context
-            .command_encoder()
-            .begin_render_pass(&render_pass_descriptor);
+        for _ in 0..=5 {
+            let render_device = render_context.render_device();
+            let bind_group = render_device.create_bind_group(
+                Some("glyph generation bind group"),
+                &generation_pipeline_data.bind_group_layout,
+                &[
+                    BindGroupEntry {
+                        binding: 0,
+                        resource: world.resource::<ViewUniforms>().uniforms.binding().unwrap(),
+                    },
+                    BindGroupEntry {
+                        binding: 1,
+                        resource: glyph_model_uniforms.binding().unwrap(),
+                    },
+                    BindGroupEntry {
+                        binding: 2,
+                        resource: bevy::render::render_resource::BindingResource::TextureView(
+                            &atlas
+                                .data
+                                .create_view(&wgpu::TextureViewDescriptor::default()),
+                        ),
+                    },
+                ],
+            );
+            let mut render_pass = render_context
+                .command_encoder()
+                .begin_render_pass(&render_pass_descriptor);
 
-        render_pass.set_bind_group(0, &bind_group, &[]);
+            render_pass.set_bind_group(0, &bind_group, &[]);
 
-        render_pass.set_pipeline(raster_pipeline);
+            render_pass.set_pipeline(raster_pipeline);
 
-        render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
-        render_pass.draw(
-            0..6 * glyph_texture_info.width * glyph_texture_info.height,
-            0..1,
-        );
-        // }
+            render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
+            render_pass.draw(
+                0..6 * glyph_texture_info.width * glyph_texture_info.height,
+                0..1,
+            );
+        }
         Ok(())
     }
 }

@@ -8,8 +8,7 @@ digraph "RenderGraph" {
 		"label"="core_2d";
 		"fontcolor"="red";
 		graph ["style"="rounded,filled", "color"="#343a42", "fontcolor"="white"];
-		"_core_2d__core_2dglyph_generation" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">glyph_generation<BR/><FONT COLOR="red" POINT-SIZE="10">GlyphGenerationNode</FONT></TD></TR><TR><TD BORDER="0">&nbsp;</TD><TD PORT="out-0">vertex_buffer: Buffer</TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
-		"_core_2d__core_2dglyph_raster" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">glyph_raster<BR/><FONT COLOR="red" POINT-SIZE="10">GlyphRasterNode</FONT></TD></TR><TR><TD PORT="in-0">vertex_buffer: Buffer</TD><TD BORDER="0">&nbsp;</TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
+		"_core_2d__core_2dglyph_generation" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">glyph_generation<BR/><FONT COLOR="red" POINT-SIZE="10">GlyphGenerationNode</FONT></TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
 		"_core_2d__core_2dcontrast_adaptive_sharpening" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">contrast_adaptive_sharpening<BR/><FONT COLOR="red" POINT-SIZE="10">CASNode</FONT></TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
 		"_core_2d__core_2dmain_pass" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">main_pass<BR/><FONT COLOR="red" POINT-SIZE="10">MainPass2dNode</FONT></TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
 		"_core_2d__core_2dmsaa_writeback" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">msaa_writeback<BR/><FONT COLOR="red" POINT-SIZE="10">MsaaWritebackNode</FONT></TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
@@ -19,15 +18,13 @@ digraph "RenderGraph" {
 		"_core_2d__core_2dtonemapping" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">tonemapping<BR/><FONT COLOR="red" POINT-SIZE="10">ViewNodeRunner&lt;TonemappingNode&gt;</FONT></TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
 		"_core_2d__core_2dupscaling" ["label"=<<TABLE STYLE="rounded"><TR><TD PORT="title" BORDER="0" COLSPAN="2">upscaling<BR/><FONT COLOR="red" POINT-SIZE="10">ViewNodeRunner&lt;UpscalingNode&gt;</FONT></TD></TR></TABLE>>, "color"="white", "fillcolor"="white"]
 		"_core_2d__core_2dtonemapping":"title:e" -> "_core_2d__core_2dglyph_generation":"title:w" ["color"="white"]
-		"_core_2d__core_2dglyph_generation":"title:e" -> "_core_2d__core_2dglyph_raster":"title:w" ["color"="white"]
-		"_core_2d__core_2dglyph_generation":"out-0:e" -> "_core_2d__core_2dglyph_raster":"in-0:w" ["color"="#a79be6"]
 		"_core_2d__core_2dtonemapping":"title:e" -> "_core_2d__core_2dcontrast_adaptive_sharpening":"title:w" ["color"="white"]
 		"_core_2d__core_2dfxaa":"title:e" -> "_core_2d__core_2dcontrast_adaptive_sharpening":"title:w" ["color"="white"]
 		"_core_2d__core_2dmsaa_writeback":"title:e" -> "_core_2d__core_2dmain_pass":"title:w" ["color"="white"]
 		"_core_2d__core_2dtonemapping":"title:e" -> "_core_2d__core_2dend_main_pass_post_processing":"title:w" ["color"="white"]
 		"_core_2d__core_2dfxaa":"title:e" -> "_core_2d__core_2dend_main_pass_post_processing":"title:w" ["color"="white"]
 		"_core_2d__core_2dcontrast_adaptive_sharpening":"title:e" -> "_core_2d__core_2dend_main_pass_post_processing":"title:w" ["color"="white"]
-		"_core_2d__core_2dglyph_raster":"title:e" -> "_core_2d__core_2dend_main_pass_post_processing":"title:w" ["color"="white"]
+		"_core_2d__core_2dglyph_generation":"title:e" -> "_core_2d__core_2dend_main_pass_post_processing":"title:w" ["color"="white"]
 		"_core_2d__core_2dmain_pass":"title:e" -> "_core_2d__core_2dbloom":"title:w" ["color"="white"]
 		"_core_2d__core_2dtonemapping":"title:e" -> "_core_2d__core_2dfxaa":"title:w" ["color"="white"]
 		"_core_2d__core_2dmain_pass":"title:e" -> "_core_2d__core_2dtonemapping":"title:w" ["color"="white"]

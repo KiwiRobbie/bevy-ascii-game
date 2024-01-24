@@ -37,28 +37,28 @@ impl Plugin for FontRenderPlugin {
             .add_systems(Render, prepare_buffers)
             .add_systems(ExtractSchedule, extract_glyph_sprite_transform)
             .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
-            .add_render_graph_node::<GlyphRasterNode>(MAIN_GRAPH_2D, "glyph_raster")
+            // .add_render_graph_node::<GlyphRasterNode>(MAIN_GRAPH_2D, "glyph_raster")
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
                 &[
                     bevy::core_pipeline::core_2d::graph::node::TONEMAPPING,
                     "glyph_generation",
-                    "glyph_raster",
+                    // "glyph_raster",
                     bevy::core_pipeline::core_2d::graph::node::END_MAIN_PASS_POST_PROCESSING,
                 ],
             );
 
-        render_app
-            .world
-            .resource_mut::<RenderGraph>()
-            .get_sub_graph_mut(MAIN_GRAPH_2D)
-            .unwrap()
-            .add_slot_edge(
-                "glyph_generation",
-                "vertex_buffer",
-                "glyph_raster",
-                "vertex_buffer",
-            );
+        // render_app
+        //     .world
+        //     .resource_mut::<RenderGraph>()
+        //     .get_sub_graph_mut(MAIN_GRAPH_2D)
+        //     .unwrap()
+        //     .add_slot_edge(
+        //         "glyph_generation",
+        //         "vertex_buffer",
+        //         "glyph_raster",
+        //         "vertex_buffer",
+        //     );
     }
     fn finish(&self, app: &mut App) {
         // setup custom render pipeline

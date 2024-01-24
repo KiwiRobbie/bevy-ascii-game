@@ -49,10 +49,11 @@ impl render_graph::Node for GlyphGenerationNode {
         vec![]
     }
     fn output(&self) -> Vec<render_graph::SlotInfo> {
-        vec![render_graph::SlotInfo::new(
-            "vertex_buffer",
-            render_graph::SlotType::Buffer,
-        )]
+        vec![]
+        // vec![render_graph::SlotInfo::new(
+        //     "vertex_buffer",
+        //     render_graph::SlotType::Buffer,
+        // )]
     }
     fn update(&mut self, world: &mut World) {
         self.query = world.query();
@@ -143,9 +144,9 @@ impl render_graph::Node for GlyphGenerationNode {
                 1,
             );
             vertex_buffer.unmap();
-            graph
-                .set_output("vertex_buffer", SlotValue::Buffer(vertex_buffer.0.clone()))
-                .unwrap();
+            // graph
+            //     .set_output("vertex_buffer", SlotValue::Buffer(vertex_buffer.0.clone()))
+            //     .unwrap();
         }
         Ok(())
     }
