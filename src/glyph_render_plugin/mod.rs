@@ -16,6 +16,7 @@ use swash::FontRef;
 use crate::{
     atlas::{FontAtlasCache, FontAtlasSource},
     font::{CustomFont, CustomFontSource, FontLoadedMarker, FontSize},
+    glyph_animation::{GlyphAnimation, GlyphAnimationSource},
     glyph_render_plugin::render_resources::{
         GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
     },
@@ -40,7 +41,10 @@ impl Plugin for GlyphRenderPlugin {
 
         app.get_sub_app_mut(RenderApp)
             .unwrap()
-            .add_systems(ExtractSchedule, extract_glyph_sprites)
+            .add_systems(
+                ExtractSchedule,
+                (extract_glyph_sprites, extract_glyph_animations),
+            )
             .add_systems(
                 Render,
                 (prepare_atlas_buffers, prepare_glyph_textures).in_set(RenderSet::PrepareAssets),
@@ -87,6 +91,38 @@ pub struct ExtractedGlyphTexture {
 impl ExtractedGlyphTexture {
     pub fn extract(source: &GlyphTexture, atlas: &FontAtlasSource, font: FontRef) -> Self {
         let text = &source.data;
+        let height = text.len();
+        let width = text[0].len();
+
+        let mut data: Box<[u8]> = vec![0; 2 * width * height].into();
+        let charmap = font.charmap();
+
+        for (y, chars) in text.iter().enumerate() {
+            assert_eq!(text[y].len(), width);
+            for (x, c) in chars.chars().enumerate() {
+                let index = 2 * (x + y * width);
+                let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
+                data[index..index + 2].copy_from_slice(&glyph_id.to_le_bytes());
+            }
+        }
+
+        Self {
+            data,
+            width: width as u32,
+            height: height as u32,
+            advance: 19u32,
+            leading: 32u32,
+        }
+    }
+
+    pub fn extract_animation(
+        source: &GlyphAnimationSource,
+        atlas: &FontAtlasSource,
+        font: FontRef,
+        frame: usize,
+    ) -> Self {
+        let text = &source.frames[frame].data;
+        dbg!(text);
         let height = text.len();
         let width = text[0].len();
 
@@ -164,7 +200,7 @@ fn extract_glyph_sprites(
                 &CustomFont,
                 &FontSize,
             ),
-            &FontLoadedMarker,
+            (With<FontLoadedMarker>, Without<GlyphAnimation>),
         >,
     >,
 ) {
@@ -189,6 +225,61 @@ fn extract_glyph_sprites(
             glyph_textures.get(sprite.texture.id()).unwrap(),
             atlas,
             font.as_ref(),
+        );
+
+        commands.insert_or_spawn_batch([(
+            entity,
+            (
+                snapped_transform,
+                sprite.clone(),
+                ExtractedAtlas(atlas.clone()),
+                font_size.clone(),
+                extracted_glyph_texture,
+            ),
+        )]);
+    }
+}
+
+fn extract_glyph_animations(
+    mut commands: Commands,
+    atlas_cache: Extract<Res<FontAtlasCache>>,
+    fonts: Extract<Res<Assets<CustomFontSource>>>,
+    glyph_animations: Extract<Res<Assets<GlyphAnimationSource>>>,
+    q_glyph_animations: Extract<
+        Query<
+            (
+                Entity,
+                &GlobalTransform,
+                &GlyphAnimation,
+                &CustomFont,
+                &FontSize,
+            ),
+            (With<FontLoadedMarker>, Without<GlyphSprite>),
+        >,
+    >,
+) {
+    for (entity, global_transform, sprite, font, font_size) in q_glyph_animations.iter() {
+        let transform: Transform = global_transform.clone().into();
+        let snapped_transform: GlobalTransform = transform
+            .with_translation(Vec3 {
+                x: (transform.translation.x / 19.0).round() * 19.0,
+                y: (transform.translation.y / 32.0).round() * 32.0,
+                z: transform.translation.z,
+            })
+            .into();
+
+        let font = fonts.get(font.id()).unwrap();
+
+        let atlas = atlas_cache
+            .cached
+            .get(&(font_size.clone(), font.key()))
+            .unwrap();
+
+        let extracted_glyph_texture = ExtractedGlyphTexture::extract_animation(
+            glyph_animations.get(sprite.source.id()).unwrap(),
+            atlas,
+            font.as_ref(),
+            sprite.frame as usize,
         );
 
         commands.insert_or_spawn_batch([(
@@ -301,14 +392,21 @@ pub struct AtlasGpuBuffers {
 
 fn prepare_buffers(
     mut commands: Commands,
-    query: Query<(Entity, &GlyphSprite, &GlobalTransform, &GpuGlyphTexture)>,
+    query: Query<(
+        Entity,
+        Option<&GlyphSprite>,
+        &GlobalTransform,
+        &GpuGlyphTexture,
+    )>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
     println!("Prepare");
     for (entity, sprite, global_transform, gpu_glyph_texture) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
-            color: sprite.color.into(),
+            color: sprite
+                .map(|sprite| sprite.color.into())
+                .unwrap_or(Color::WHITE.into()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
         });

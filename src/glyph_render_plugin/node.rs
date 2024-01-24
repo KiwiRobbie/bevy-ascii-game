@@ -1,7 +1,7 @@
 use bevy::{
     ecs::{
         entity::Entity,
-        query::QueryState,
+        query::{Or, QueryState, With},
         world::{FromWorld, World},
     },
     render::{
@@ -12,6 +12,8 @@ use bevy::{
 };
 use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
 
+use crate::glyph_animation::GlyphAnimation;
+
 use super::{
     generation_descriptors::{self},
     raster_descriptors,
@@ -20,7 +22,6 @@ use super::{
 };
 
 type RenderResourceQuery = (
-    &'static GlyphSprite,
     &'static GlyphModelUniformBuffer,
     &'static GlyphUniformBuffer,
     &'static GlyphTextureInfo,
@@ -28,8 +29,11 @@ type RenderResourceQuery = (
     &'static AtlasGpuBuffers,
     &'static GlyphVertexBuffer,
 );
+
+type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
+
 pub struct GlyphGenerationNode {
-    query: QueryState<RenderResourceQuery>,
+    query: QueryState<RenderResourceQuery, RenderResourceFilter>,
     q_view: QueryState<&'static ViewTarget>,
     entities: Vec<Entity>,
 }
@@ -38,7 +42,7 @@ impl GlyphGenerationNode {
     pub fn new(world: &mut World) -> Self {
         Self {
             q_view: world.query(),
-            query: world.query(),
+            query: world.query_filtered(),
             entities: world
                 .query_filtered::<Entity, RenderResourceQuery>()
                 .iter(world)
@@ -62,7 +66,7 @@ impl render_graph::Node for GlyphGenerationNode {
     }
     fn update(&mut self, world: &mut World) {
         self.q_view = world.query();
-        self.query = world.query();
+        self.query = world.query_filtered();
         self.entities = world
             .query_filtered::<Entity, RenderResourceQuery>()
             .iter(world)
@@ -110,7 +114,6 @@ impl render_graph::Node for GlyphGenerationNode {
         };
 
         for (
-            _glyph_sprite,
             glyph_model_uniforms,
             glyph_uniform_buffer,
             glyph_texture_info,

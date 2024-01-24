@@ -121,7 +121,7 @@ impl GylphAnimationFrame {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct GlyphAnimation {
     pub source: Handle<GlyphAnimationSource>,
     pub frame: u32,
