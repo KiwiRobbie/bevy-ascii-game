@@ -25,9 +25,8 @@ struct Model {
 fn vertex(input: VertexInput) -> VertexOutput {
     var out: VertexOutput;
 
-    out.position = view.view_proj * model.model * vec4<f32>(input.pos.x, input.pos.y, 0.0, 1.0);
+    out.position = view.view_proj * model.model * vec4<f32>(input.pos.x, -input.pos.y, 0.0, 1.0);
     out.uv = input.uv;
-    out.position.y = -out.position.y ;
     return out;
 }
 
