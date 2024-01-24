@@ -1,0 +1,11 @@
+(
+    name: "player_running",
+    size: (0,0),
+    frames: [
+        (
+            asset: "art/player/player_running.art",
+            start: (0,0),
+            size: (0,0),
+        )
+    ]
+)

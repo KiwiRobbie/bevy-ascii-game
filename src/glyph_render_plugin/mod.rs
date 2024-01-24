@@ -1,21 +1,21 @@
+use std::sync::Arc;
+
 use bevy::{
-    ecs::system::{lifetimeless::SRes, SystemParamItem},
     prelude::*,
     render::{
-        extract_component::{ExtractComponent, ExtractComponentPlugin},
-        render_asset::{RenderAsset, RenderAssetPlugin, RenderAssets},
         render_graph::RenderGraphApp,
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
         Extract, Render, RenderApp, RenderSet,
     },
 };
+use bytemuck::{cast_slice, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use swash::FontRef;
 
 use crate::{
-    atlas::Atlas,
-    font::CustomFont,
+    atlas::{FontAtlasCache, FontAtlasSource},
+    font::{CustomFont, CustomFontSource, FontLoadedMarker, FontSize},
     glyph_render_plugin::render_resources::{
         GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
     },
@@ -36,15 +36,16 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ExtractComponentPlugin::<GlyphSprite>::default())
-            .init_asset::<GlyphTexture>()
-            .add_plugins(RenderAssetPlugin::<GlyphTexture>::default())
-            .add_plugins(RenderAssetPlugin::<Atlas>::default());
+        app.init_asset::<GlyphTexture>();
 
         app.get_sub_app_mut(RenderApp)
             .unwrap()
-            .add_systems(ExtractSchedule, extract_glyph_sprite_transform)
-            .add_systems(Render, prepare_buffers.in_set(RenderSet::Prepare))
+            .add_systems(ExtractSchedule, extract_glyph_sprites)
+            .add_systems(
+                Render,
+                (prepare_atlas_buffers, prepare_glyph_textures).in_set(RenderSet::PrepareAssets),
+            )
+            .add_systems(Render, (prepare_buffers,).in_set(RenderSet::Prepare))
             .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
@@ -70,8 +71,12 @@ pub struct GlyphUniforms {
 
 #[derive(Asset, TypePath, Clone)]
 pub struct GlyphTexture {
-    pub data: Box<[u8]>,
+    pub data: Vec<String>,
+}
 
+#[derive(Component, Clone)]
+pub struct ExtractedGlyphTexture {
+    pub data: Box<[u8]>,
     pub width: u32,
     pub height: u32,
 
@@ -79,8 +84,9 @@ pub struct GlyphTexture {
     pub leading: u32,
 }
 
-impl GlyphTexture {
-    pub fn from_text(text: &[String], atlas: &Atlas, font: FontRef) -> Self {
+impl ExtractedGlyphTexture {
+    pub fn extract(source: &GlyphTexture, atlas: &FontAtlasSource, font: FontRef) -> Self {
+        let text = &source.data;
         let height = text.len();
         let width = text[0].len();
 
@@ -106,58 +112,17 @@ impl GlyphTexture {
     }
 }
 
-#[derive(Component, Clone, ExtractComponent)]
+#[derive(Component, Clone)]
 pub struct GlyphSprite {
     pub color: Color,
-    pub atlas: Handle<Atlas>,
-    pub font: Handle<CustomFont>,
     pub texture: Handle<GlyphTexture>,
 }
 
+#[derive(Component)]
 pub struct GpuGlyphTexture {
     pub storage_texture: Texture,
     pub width: u32,
     pub height: u32,
-}
-
-impl RenderAsset for GlyphTexture {
-    type ExtractedAsset = Self;
-    type Param = (SRes<RenderDevice>, SRes<RenderQueue>);
-    type PreparedAsset = GpuGlyphTexture;
-    fn extract_asset(&self) -> Self::ExtractedAsset {
-        self.clone()
-    }
-    fn prepare_asset(
-        extracted_asset: Self::ExtractedAsset,
-        (render_device, render_queue): &mut SystemParamItem<Self::Param>,
-    ) -> Result<
-        Self::PreparedAsset,
-        bevy::render::render_asset::PrepareAssetError<Self::ExtractedAsset>,
-    > {
-        let storage_texture = render_device.create_texture_with_data(
-            render_queue,
-            &TextureDescriptor {
-                label: Some("glyph texture"),
-                size: Extent3d {
-                    width: extracted_asset.width,
-                    height: extracted_asset.height,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: TextureDimension::D2,
-                format: TextureFormat::R16Uint,
-                usage: TextureUsages::COPY_SRC | TextureUsages::STORAGE_BINDING,
-                view_formats: &[TextureFormat::R16Uint],
-            },
-            &extracted_asset.data,
-        );
-        Ok(GpuGlyphTexture {
-            storage_texture,
-            width: extracted_asset.width,
-            height: extracted_asset.height,
-        })
-    }
 }
 
 #[derive(Component)]
@@ -178,14 +143,32 @@ impl GlyphModelUniform {
         }
     }
 }
+
+#[derive(Component, Deref)]
+pub struct ExtractedAtlas(pub Arc<FontAtlasSource>);
+
 #[derive(Component, Deref)]
 pub struct GlyphModelUniformBuffer(pub UniformBuffer<GlyphModelUniform>);
 
-fn extract_glyph_sprite_transform(
+fn extract_glyph_sprites(
     mut commands: Commands,
-    q_glyph_sprite: Extract<Query<(Entity, &GlobalTransform), &GlyphSprite>>,
+    atlas_cache: Extract<Res<FontAtlasCache>>,
+    fonts: Extract<Res<Assets<CustomFontSource>>>,
+    glyph_textures: Extract<Res<Assets<GlyphTexture>>>,
+    q_glyph_sprite: Extract<
+        Query<
+            (
+                Entity,
+                &GlobalTransform,
+                &GlyphSprite,
+                &CustomFont,
+                &FontSize,
+            ),
+            &FontLoadedMarker,
+        >,
+    >,
 ) {
-    for (entity, global_transform) in q_glyph_sprite.iter() {
+    for (entity, global_transform, sprite, font, font_size) in q_glyph_sprite.iter() {
         let transform: Transform = global_transform.clone().into();
         let snapped_transform: GlobalTransform = transform
             .with_translation(Vec3 {
@@ -194,28 +177,136 @@ fn extract_glyph_sprite_transform(
                 z: transform.translation.z,
             })
             .into();
-        commands.insert_or_spawn_batch([(entity, snapped_transform)]);
+
+        let font = fonts.get(font.id()).unwrap();
+
+        let atlas = atlas_cache
+            .cached
+            .get(&(font_size.clone(), font.key()))
+            .unwrap();
+
+        let extracted_glyph_texture = ExtractedGlyphTexture::extract(
+            glyph_textures.get(sprite.texture.id()).unwrap(),
+            atlas,
+            font.as_ref(),
+        );
+
+        commands.insert_or_spawn_batch([(
+            entity,
+            (
+                snapped_transform,
+                sprite.clone(),
+                ExtractedAtlas(atlas.clone()),
+                font_size.clone(),
+                extracted_glyph_texture,
+            ),
+        )]);
     }
+}
+
+fn prepare_atlas_buffers(
+    mut commands: Commands,
+    render_device: Res<RenderDevice>,
+    render_queue: Res<RenderQueue>,
+    q_glyph_sprite: Query<(Entity, &ExtractedAtlas)>,
+) {
+    for (entity, atlas) in q_glyph_sprite.iter() {
+        let data = render_device.create_texture_with_data(
+            &render_queue,
+            &TextureDescriptor {
+                label: Some("gpu font atlas storage texture"),
+                size: Extent3d {
+                    width: atlas.size,
+                    height: atlas.size,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: bevy::render::render_resource::TextureDimension::D2,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
+                view_formats: &[TextureFormat::Rgba8Unorm],
+            },
+            &atlas.data,
+        );
+
+        let uvs = render_device.create_buffer_with_data(&BufferInitDescriptor {
+            label: Some("gpu font atlas uv buffer"),
+            usage: BufferUsages::COPY_SRC | BufferUsages::STORAGE,
+            contents: cast_slice(
+                &atlas
+                    .items
+                    .iter()
+                    .map(|x| GpuAtlasItem {
+                        offset: x.offset,
+                        size: x.size,
+                        start: x.start,
+                    })
+                    .collect::<Box<[_]>>(),
+            ),
+        });
+
+        commands
+            .entity(entity)
+            .insert(AtlasGpuBuffers { data, uvs });
+    }
+}
+
+fn prepare_glyph_textures(
+    mut commands: Commands,
+    render_device: Res<RenderDevice>,
+    render_queue: Res<RenderQueue>,
+    q_extracted_glyph_texture: Query<(Entity, &ExtractedGlyphTexture)>,
+) {
+    for (entity, extracted_texture) in q_extracted_glyph_texture.iter() {
+        let storage_texture = render_device.create_texture_with_data(
+            &render_queue,
+            &TextureDescriptor {
+                label: Some("glyph texture"),
+                size: Extent3d {
+                    width: extracted_texture.width,
+                    height: extracted_texture.height,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::R16Uint,
+                usage: TextureUsages::COPY_SRC | TextureUsages::STORAGE_BINDING,
+                view_formats: &[TextureFormat::R16Uint],
+            },
+            &extracted_texture.data,
+        );
+        commands.entity(entity).insert(GpuGlyphTexture {
+            storage_texture,
+            width: extracted_texture.width,
+            height: extracted_texture.height,
+        });
+    }
+}
+
+#[derive(ShaderType, Pod, Clone, Copy, Zeroable)]
+#[repr(C)]
+struct GpuAtlasItem {
+    start: UVec2,
+    size: UVec2,
+    offset: IVec2,
+}
+
+#[derive(Component, Clone)]
+pub struct AtlasGpuBuffers {
+    pub data: Texture,
+    pub uvs: Buffer,
 }
 
 fn prepare_buffers(
     mut commands: Commands,
-    query: Query<(Entity, &GlyphSprite, &GlobalTransform)>,
+    query: Query<(Entity, &GlyphSprite, &GlobalTransform, &GpuGlyphTexture)>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
-    gpu_glyph_textures: Res<RenderAssets<GlyphTexture>>,
-    gpu_atlas_data: Res<RenderAssets<Atlas>>,
 ) {
-    for (entity, sprite, global_transform) in query.iter() {
-        let gpu_glyph_texture = gpu_glyph_textures
-            .get(sprite.texture.clone())
-            .expect("No gpu glyph texture attached to sprite");
-
-        let atlas_buffers = gpu_atlas_data
-            .get(sprite.atlas.clone())
-            .expect("No atlas attached to sprite")
-            .clone();
-
+    println!("Prepare");
+    for (entity, sprite, global_transform, gpu_glyph_texture) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: sprite.color.into(),
             width: gpu_glyph_texture.width,
@@ -254,7 +345,6 @@ fn prepare_buffers(
                 height: gpu_glyph_texture.height,
             },
             GlyphStorageTexture(glyph_storage_texture),
-            atlas_buffers,
             GlyphVertexBuffer(vertex_buffer),
         ));
     }

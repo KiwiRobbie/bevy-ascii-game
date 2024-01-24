@@ -1,8 +1,8 @@
-#![feature(iter_map_windows)]
+#![feature(future_join)]
 
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
-    asset::{AssetApp, AssetServer, Assets, Handle},
+    asset::{AssetApp, AssetServer, Assets},
     core_pipeline::core_2d::Camera2dBundle,
     ecs::{
         component::Component,
@@ -11,7 +11,12 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     math::Vec3,
-    render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
+    render::{
+        camera::CameraRenderGraph,
+        color::Color,
+        texture::{self, Image, ImagePlugin},
+    },
+    sprite::Sprite,
     time::Time,
     transform::components::{GlobalTransform, Transform},
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
@@ -26,8 +31,9 @@ use swash::{
 };
 
 use bevy_ascii_game::{
-    atlas::{Atlas, AtlasBuilder},
-    font::{CustomFont, CustomFontLoader},
+    atlas::{AtlasBuilder, CharacterSet, FontAtlasPlugin, FontAtlasSource, FontAtlasUser},
+    font::{font_load_system, CustomFont, CustomFontLoader, CustomFontSource, FontSize},
+    glyph_animation::{GlyphAnimation, GlyphAnimationAssetLoader, GlyphAnimationSource},
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSprite, GlyphTexture},
 };
 
@@ -44,13 +50,17 @@ fn main() {
                 ..Default::default()
             }),
     )
+    .add_plugins(FontAtlasPlugin)
+    .init_asset::<GlyphAnimationSource>()
+    .init_asset_loader::<GlyphAnimationAssetLoader>()
     .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
     .add_plugins(GlyphRenderPlugin)
     .add_systems(Startup, setup_system)
-    .add_systems(Update, font_ready_system)
-    .add_systems(Update, (keyboard_input_system, glitch_system))
-    .init_asset::<CustomFont>()
-    .init_asset::<Atlas>()
+    .add_systems(
+        Update,
+        (keyboard_input_system, glitch_system, font_load_system),
+    )
+    .init_asset::<CustomFontSource>()
     .init_asset_loader::<CustomFontLoader>();
 
     #[cfg(debug_assertions)]
@@ -65,17 +75,47 @@ fn main() {
 
 const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
 
-#[derive(Component)]
-struct LoadingCustomFont(Handle<CustomFont>);
+fn setup_system(
+    mut commands: Commands,
+    server: Res<AssetServer>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+) {
+    commands.spawn((
+        Transform::default(),
+        GlobalTransform::default(),
+        GlyphAnimation {
+            source: server.load("anim/player/player_running.anim.ron"),
+            frame: 0,
+        },
+        FontAtlasUser,
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet(CHARSET.chars().into_iter().collect()),
+        FontSize(32),
+    ));
 
-fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
+    commands.spawn((
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        FontAtlasUser,
+        FontSize(32),
+        GlyphSprite {
+            color: Color::WHITE,
+            texture: glyph_textures.add(GlyphTexture {
+                data: (0..16).map(|_| "#".repeat(32)).collect::<Vec<String>>(),
+            }),
+        },
+        Transform::from_translation(Vec3 {
+            x: FONT_ADVANCE * 32.0 * 0.0,
+            y: FONT_LEAD * 16.0 * -0.5,
+            z: 0.0,
+        }),
+        GlobalTransform::default(),
+        KeyboardInputMarker,
+    ));
+
     commands.spawn(Camera2dBundle {
         camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
         ..Default::default()
     });
-    commands.spawn(LoadingCustomFont(
-        server.load::<CustomFont>("FiraCode-Regular.ttf"),
-    ));
 }
 
 #[derive(Component)]
@@ -92,8 +132,8 @@ fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
     q_glyph_sprite: Query<&GlyphSprite, &KeyboardInputMarker>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    atlases: Res<Assets<Atlas>>,
-    fonts: Res<Assets<CustomFont>>,
+    // atlases: Res<Assets<FontAtlasSource>>,
+    fonts: Res<Assets<CustomFontSource>>,
     mut position: Local<usize>,
 ) {
     let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
@@ -101,30 +141,31 @@ fn keyboard_input_system(
     };
 
     let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
-    let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
-    let font = fonts.get(glyph_sprite.font.id()).unwrap();
+    let width = glyph_texture.data.first().unwrap().len();
+    let height = glyph_texture.data.len();
 
-    let cusror_glyph_id = font.as_ref().charmap().map('_');
-    let cursor_glyph_index = atlas.local_index.get(&cusror_glyph_id).unwrap_or(&u16::MAX);
+    fn get_pos(index: usize, width: usize, height: usize) -> (usize, usize) {
+        return (
+            index.rem_euclid(width),
+            index.div_euclid(width).rem_euclid(height),
+        );
+    }
 
     for character in ev_character.read() {
         dbg!(character.char);
         if character.char == '\u{8}' {
-            glyph_texture.data.split_at_mut(*position).1[..2]
-                .copy_from_slice(&u16::MAX.to_le_bytes());
-            *position = position
-                .wrapping_sub(2)
-                .rem_euclid(glyph_texture.data.len());
-            glyph_texture.data.split_at_mut(*position).1[..2]
-                .copy_from_slice(&cursor_glyph_index.to_le_bytes());
+            *position = (*position + width * height - 1).rem_euclid(width * height);
+            let (x, y) = get_pos(*position, width, height);
+            glyph_texture.data[y].replace_range(x..=x, "_");
+            let (x, y) = get_pos(*position + 1, width, height);
+            glyph_texture.data[y].replace_range(x..=x, " ");
         } else {
-            let glyph_id = font.as_ref().charmap().map(character.char);
-            let glyph_index = atlas.local_index.get(&glyph_id).unwrap_or(&u16::MAX);
-            glyph_texture.data.split_at_mut(*position).1[..2]
-                .copy_from_slice(&glyph_index.to_le_bytes());
-            *position = (*position + 2).rem_euclid(glyph_texture.data.len());
-            glyph_texture.data.split_at_mut(*position).1[..2]
-                .copy_from_slice(&cursor_glyph_index.to_le_bytes());
+            let (x, y) = get_pos(*position, width, height);
+            glyph_texture.data[y].replace_range(x..=x, character.char.to_string().as_str());
+            let (x, y) = get_pos(*position + 1, width, height);
+            glyph_texture.data[y].replace_range(x..=x, "_");
+
+            *position = (*position + 1).rem_euclid(width * height);
         }
     }
 }
@@ -132,125 +173,37 @@ fn keyboard_input_system(
 fn glitch_system(
     mut q_glyph_sprite: Query<(&GlyphSprite, &mut Transform), &GlitchMarker>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    atlases: Res<Assets<Atlas>>,
+    // atlases: Res<Assets<FontAtlasSource>>,
     mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
     time: Res<Time>,
 ) {
-    for (glyph_sprite, mut transform) in q_glyph_sprite.iter_mut() {
-        *transform = transform.with_translation(Vec3 {
-            x: FONT_ADVANCE * 32.0 * 0.0 + 5.0 * FONT_SIZE * f32::cos(time.elapsed_seconds()),
-            y: FONT_LEAD * 16.0 * -0.5 + 5.0 * FONT_SIZE * f32::sin(time.elapsed_seconds()),
-            z: 0.0,
-        });
+    // for (glyph_sprite, mut transform) in q_glyph_sprite.iter_mut() {
+    //     *transform = transform.with_translation(Vec3 {
+    //         x: FONT_ADVANCE * 32.0 * 0.0 + 5.0 * FONT_SIZE * f32::cos(time.elapsed_seconds()),
+    //         y: FONT_LEAD * 16.0 * -0.5 + 5.0 * FONT_SIZE * f32::sin(time.elapsed_seconds()),
+    //         z: 0.0,
+    //     });
 
-        let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
-        let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
+    //     let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
+    //     let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
 
-        let glitch_position = rng.next_u32().rem_euclid(glyph_texture.width) as usize;
-        let glitch_value = rng.next_u32().rem_euclid(atlas.glyph_ids.len() as u32) as u16;
+    //     let glitch_position = rng.next_u32().rem_euclid(glyph_texture.width) as usize;
+    //     let glitch_value = rng.next_u32().rem_euclid(atlas.glyph_ids.len() as u32) as u16;
 
-        glyph_texture.data.split_at_mut(glitch_position * 2).1[..2]
-            .copy_from_slice(&glitch_value.to_le_bytes());
+    //     glyph_texture.data.split_at_mut(glitch_position * 2).1[..2]
+    //         .copy_from_slice(&glitch_value.to_le_bytes());
 
-        let src_end = ((glyph_texture.height - 1) * glyph_texture.width * 2) as usize;
-        let dst_start = (glyph_texture.width * 2) as usize;
-        glyph_texture.data.copy_within(..src_end, dst_start);
+    //     let src_end = ((glyph_texture.height - 1) * glyph_texture.width * 2) as usize;
+    //     let dst_start = (glyph_texture.width * 2) as usize;
+    //     glyph_texture.data.copy_within(..src_end, dst_start);
 
-        for start_item in glyph_texture
-            .data
-            .iter_mut()
-            .step_by(2)
-            .take(glyph_texture.width as usize)
-        {
-            *start_item = start_item.saturating_add(1);
-        }
-    }
-}
-
-fn font_ready_system(
-    mut commands: Commands,
-    fonts: ResMut<Assets<CustomFont>>,
-    mut atlases: ResMut<Assets<Atlas>>,
-    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    server: Res<AssetServer>,
-    q_fonts_loading: Query<(Entity, &LoadingCustomFont)>,
-) {
-    use bevy::asset::LoadState;
-    for (entity, LoadingCustomFont(font_handle)) in q_fonts_loading.iter() {
-        match server.get_load_state(font_handle).unwrap() {
-            LoadState::Failed => {
-                // one of our assets had an error
-            }
-            LoadState::Loaded => {
-                commands.entity(entity).despawn();
-
-                let font_ref = fonts.get(font_handle).unwrap().as_ref();
-
-                let mut context = ScaleContext::new();
-                let scaler = context
-                    .builder(font_ref)
-                    .hint(false)
-                    .size(FONT_SIZE)
-                    .build();
-                let mut render = Render::new(&[
-                    Source::ColorOutline(0),
-                    Source::ColorBitmap(StrikeWith::BestFit),
-                    Source::Outline,
-                ]);
-                // render.format(Format::Subpixel);
-                render.format(Format::CustomSubpixel([0.0, 0.0, 0.0]));
-
-                let mut atlas_builder = AtlasBuilder::new(font_ref, render, scaler);
-
-                for glyph in CHARSET.chars() {
-                    atlas_builder.insert_char(glyph);
-                }
-                let atlas_handle = atlases.add(atlas_builder.build());
-                let atlas = atlases.get(atlas_handle.clone()).unwrap();
-
-                commands.spawn((
-                    GlyphSprite {
-                        color: Color::WHITE,
-                        atlas: atlas_handle.clone(),
-                        font: font_handle.clone(),
-                        texture: glyph_textures.add(GlyphTexture::from_text(
-                            &(0..16).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
-                            atlas,
-                            font_ref,
-                        )),
-                    },
-                    Transform::from_translation(Vec3 {
-                        x: FONT_ADVANCE * 32.0 * 0.0,
-                        y: FONT_LEAD * 16.0 * -0.5,
-                        z: 0.0,
-                    }),
-                    GlobalTransform::default(),
-                    GlitchMarker,
-                ));
-
-                commands.spawn((
-                    GlyphSprite {
-                        color: Color::WHITE,
-                        atlas: atlas_handle,
-                        font: font_handle.clone(),
-                        texture: glyph_textures.add(GlyphTexture::from_text(
-                            &(0..16).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
-                            atlas,
-                            font_ref,
-                        )),
-                    },
-                    Transform::from_translation(Vec3 {
-                        x: FONT_ADVANCE * 32.0 * -1.0,
-                        y: FONT_LEAD * 16.0 * -0.5,
-                        z: 0.0,
-                    }),
-                    GlobalTransform::default(),
-                    KeyboardInputMarker,
-                ));
-            }
-            _ => {
-                // NotLoaded/Loading: not fully ready yet
-            }
-        }
-    }
+    //     for start_item in glyph_texture
+    //         .data
+    //         .iter_mut()
+    //         .step_by(2)
+    //         .take(glyph_texture.width as usize)
+    //     {
+    //         *start_item = start_item.saturating_add(1);
+    //     }
+    // }
 }

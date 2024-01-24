@@ -10,9 +10,7 @@ use wgpu::{
     StorageTextureAccess, TextureFormat, TextureViewDimension,
 };
 
-use crate::atlas::AtlasGpuBuffers;
-
-use super::{GlyphModelUniform, GlyphModelUniformBuffer, GlyphPipelineData};
+use super::{AtlasGpuBuffers, GlyphModelUniform, GlyphModelUniformBuffer, GlyphPipelineData};
 
 pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 3] = [
     // UNIFORMS

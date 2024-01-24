@@ -1,14 +1,13 @@
 use bevy::{
     math::{IVec2, UVec2},
-    utils::HashMap,
+    utils::{HashMap, HashSet},
 };
 use swash::{
     scale::{Render, Scaler},
-    zeno::Format,
     GlyphId,
 };
 
-use super::{Atlas, AtlasItem};
+use super::{AtlasItem, FontAtlasSource};
 
 struct RenderedGlyph {
     glyph_id: u16,
@@ -23,6 +22,7 @@ pub struct AtlasBuilder<'a> {
     scaler: Scaler<'a>,
     rendered: Vec<RenderedGlyph>,
     packed_positions: Vec<UVec2>,
+    characters: HashSet<char>,
     size: u32,
 }
 
@@ -36,16 +36,18 @@ impl<'a> AtlasBuilder<'a> {
             scaler,
             rendered: vec![],
             packed_positions: vec![],
+            characters: HashSet::new(),
             size: 0,
         }
     }
 
-    pub fn insert_char(&mut self, glyph: char) -> Option<()> {
-        let glyph_id = self.font.charmap().map(glyph);
+    pub fn insert_char(&mut self, character: char) -> Option<()> {
+        self.characters.insert(character);
+        let glyph_id = self.font.charmap().map(character);
         self.insert_glyph(glyph_id)
     }
 
-    pub fn insert_glyph(&mut self, glyph_id: GlyphId) -> Option<()> {
+    fn insert_glyph(&mut self, glyph_id: GlyphId) -> Option<()> {
         let mut image = self.render.render(&mut self.scaler, glyph_id)?;
 
         for alpha in image.data.iter_mut().skip(3).step_by(4) {
@@ -105,7 +107,7 @@ impl<'a> AtlasBuilder<'a> {
         }
     }
 
-    pub fn build(&mut self) -> Atlas {
+    pub fn build(&mut self) -> FontAtlasSource {
         const CHANNELS: usize = 4;
         self.create_packing();
 
@@ -135,7 +137,7 @@ impl<'a> AtlasBuilder<'a> {
             }
         }
 
-        Atlas {
+        FontAtlasSource {
             size: self.size,
             data: data.into(),
             items: items.into(),
@@ -146,6 +148,7 @@ impl<'a> AtlasBuilder<'a> {
                     .enumerate()
                     .map(|(a, b)| (b.glyph_id, a as u16)),
             ),
+            charset: self.characters.clone(),
         }
     }
 }

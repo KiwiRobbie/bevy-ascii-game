@@ -1,4 +1,3 @@
-use crate::atlas::AtlasGpuBuffers;
 use bevy::{
     ecs::{
         entity::Entity,
@@ -17,7 +16,7 @@ use super::{
     generation_descriptors::{self},
     raster_descriptors,
     render_resources::{GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer},
-    GlyphModelUniformBuffer, GlyphPipelineData, GlyphSprite, GlyphTextureInfo,
+    AtlasGpuBuffers, GlyphModelUniformBuffer, GlyphPipelineData, GlyphSprite, GlyphTextureInfo,
 };
 
 type RenderResourceQuery = (

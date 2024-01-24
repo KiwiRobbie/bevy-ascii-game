@@ -5,11 +5,9 @@ use wgpu::{
     TextureViewDimension,
 };
 
-use crate::atlas::AtlasGpuBuffers;
-
 use super::{
     render_resources::{GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer},
-    GlyphPipelineData, GlyphUniforms,
+    AtlasGpuBuffers, GlyphPipelineData, GlyphUniforms,
 };
 
 pub const fn get_bind_group_layout_descriptor() -> BindGroupLayoutDescriptor<'static> {

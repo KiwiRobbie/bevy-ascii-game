@@ -1,12 +1,28 @@
 use anyhow::anyhow;
 use bevy::{
-    asset::{Asset, AssetLoader},
+    asset::{Asset, AssetEvent, AssetLoader, Handle},
+    ecs::{
+        component::Component,
+        entity::Entity,
+        event::EventReader,
+        system::{Commands, Query},
+    },
+    prelude::{Deref, DerefMut},
     reflect::TypePath,
 };
 use swash::{CacheKey, FontRef};
 
+#[derive(Component, PartialEq, Eq, Hash, Clone)]
+pub struct FontSize(pub u32);
+
+#[derive(Component, DerefMut, Deref, Clone)]
+pub struct CustomFont(pub Handle<CustomFontSource>);
+
+#[derive(PartialEq, Eq, Hash, Clone)]
+pub struct CustomFontCacheKey(pub CacheKey);
+
 #[derive(Asset, TypePath)]
-pub struct CustomFont {
+pub struct CustomFontSource {
     // Full content of the font file
     data: Vec<u8>,
     // Offset to the table directory
@@ -15,7 +31,7 @@ pub struct CustomFont {
     key: CacheKey,
 }
 
-impl CustomFont {
+impl CustomFontSource {
     pub fn from_bytes(data: &[u8], index: usize) -> Option<Self> {
         // Create a temporary font reference for the first font in the file.
         // This will do some basic validation, compute the necessary offset
@@ -49,13 +65,17 @@ impl CustomFont {
             key: self.key,
         }
     }
+
+    pub fn key(&self) -> CustomFontCacheKey {
+        CustomFontCacheKey(self.key.clone())
+    }
 }
 
 #[derive(Default)]
 pub struct CustomFontLoader;
 
 impl AssetLoader for CustomFontLoader {
-    type Asset = CustomFont;
+    type Asset = CustomFontSource;
     type Settings = ();
     type Error = anyhow::Error;
 
@@ -71,7 +91,7 @@ impl AssetLoader for CustomFontLoader {
         Box::pin(async move {
             let mut bytes = Vec::new();
             bevy::asset::AsyncReadExt::read_to_end(&mut reader, &mut bytes).await?;
-            match CustomFont::from_bytes(&bytes, 0) {
+            match CustomFontSource::from_bytes(&bytes, 0) {
                 Some(asset) => Ok(asset),
                 None => Err(anyhow!(format!(
                     "Failed to create font from file {:?}",
@@ -79,5 +99,27 @@ impl AssetLoader for CustomFontLoader {
                 ))),
             }
         })
+    }
+}
+
+#[derive(Component)]
+pub struct FontLoadedMarker;
+
+pub fn font_load_system(
+    mut commands: Commands,
+    mut ev_asset: EventReader<AssetEvent<CustomFontSource>>,
+    q_font_references: Query<(Entity, &CustomFont)>,
+) {
+    for ev in ev_asset.read() {
+        match ev {
+            AssetEvent::LoadedWithDependencies { id } => {
+                for (entity, font) in q_font_references.iter() {
+                    if &font.id() == id {
+                        commands.entity(entity).insert(FontLoadedMarker);
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 }
