@@ -8,6 +8,7 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
+    log::LogPlugin,
     math::{Vec2, Vec3},
     render::{
         camera::CameraRenderGraph,
@@ -16,7 +17,7 @@ use bevy::{
         texture::{Image, ImagePlugin},
     },
     sprite::{Sprite, SpriteBundle},
-    transform::components::Transform,
+    transform::components::{GlobalTransform, Transform},
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
@@ -29,26 +30,34 @@ use bevy_ascii_game::{
 };
 
 fn main() {
-    App::new()
-        .add_plugins(
-            DefaultPlugins
-                .set(ImagePlugin::default_nearest())
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: WindowResolution::default().with_scale_factor_override(1.0),
-                        ..Default::default()
-                    }),
+    let mut app = App::new();
+    app.add_plugins(
+        DefaultPlugins
+            .set(ImagePlugin::default_nearest())
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: WindowResolution::default().with_scale_factor_override(1.0),
                     ..Default::default()
                 }),
-        )
-        .add_plugins(FontRenderPlugin)
-        .add_systems(Startup, setup)
-        .add_systems(Update, font_ready_system)
-        .add_systems(Update, keyboard_input)
-        .init_asset::<CustomFont>()
-        .init_asset::<Atlas>()
-        .init_asset_loader::<CustomFontLoader>()
-        .run();
+                ..Default::default()
+            }),
+    )
+    .add_plugins(FontRenderPlugin)
+    .add_systems(Startup, setup)
+    .add_systems(Update, font_ready_system)
+    .add_systems(Update, keyboard_input)
+    .init_asset::<CustomFont>()
+    .init_asset::<Atlas>()
+    .init_asset_loader::<CustomFontLoader>();
+
+    #[cfg(debug_assertions)]
+    std::fs::write(
+        "render-graph.dot",
+        bevy_mod_debugdump::render_graph_dot(&app, &Default::default()),
+    )
+    .unwrap();
+
+    app.run();
 }
 
 const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
@@ -128,6 +137,8 @@ fn font_ready_system(
                 let font_ref = fonts.get(font_handle).unwrap().as_ref();
 
                 let font_size = 32.0f32;
+                let font_advance = 19.0f32;
+                let font_lead = 32.0f32;
 
                 let mut context = ScaleContext::new();
                 let scaler = context.builder(font_ref).hint(true).size(font_size).build();
@@ -151,12 +162,17 @@ fn font_ready_system(
                         atlas: atlas_handle,
                         font: font_handle.clone(),
                         texture: glyph_textures.add(GlyphTexture::from_text(
-                            (0..32).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
+                            &(0..32).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
                             atlas,
                             font_ref,
                         )),
                     },
-                    Transform::default(),
+                    Transform::from_translation(Vec3 {
+                        x: font_advance * font_size * -0.5,
+                        y: font_lead * font_size * -0.5,
+                        z: 0.0,
+                    }),
+                    GlobalTransform::default(),
                 ));
 
                 let image_handle = images.add(Image::new(
@@ -173,8 +189,8 @@ fn font_ready_system(
                 commands.spawn(SpriteBundle {
                     texture: image_handle.clone(),
                     transform: Transform::from_translation(Vec3 {
-                        x: 0.0,
-                        y: 0.0,
+                        x: -((atlas.size / 2) as f32),
+                        y: -((atlas.size / 2) as f32),
                         z: 0.0,
                     }),
                     sprite: Sprite {

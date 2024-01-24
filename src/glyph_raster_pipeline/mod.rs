@@ -4,6 +4,8 @@ use bevy::{
 };
 pub use node::GlyphRasterNode;
 
+use crate::glyph_gen_pipeline::GlyphModelUniform;
+
 pub mod node;
 
 #[derive(ShaderType)]
@@ -39,6 +41,18 @@ impl FromWorld for GlyphRasterPipelineData {
                     },
                     BindGroupLayoutEntry {
                         binding: 1,
+                        visibility: ShaderStages::VERTEX_FRAGMENT,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: BufferSize::new(
+                                GlyphModelUniform::SHADER_SIZE.into(),
+                            ),
+                        },
+                        count: None,
+                    },
+                    BindGroupLayoutEntry {
+                        binding: 2,
                         visibility: ShaderStages::VERTEX_FRAGMENT,
                         ty: BindingType::StorageTexture {
                             access: StorageTextureAccess::ReadOnly,
@@ -83,7 +97,7 @@ impl FromWorld for GlyphRasterPipelineData {
                 entry_point: "fragment".into(),
                 targets: vec![Some(ColorTargetState {
                     format: TextureFormat::Rgba8UnormSrgb,
-                    blend: None,
+                    blend: Some(BlendState::ALPHA_BLENDING),
                     write_mask: ColorWrites::ALL,
                 })],
             }),

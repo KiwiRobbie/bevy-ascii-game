@@ -93,7 +93,7 @@ impl RenderAsset for Atlas {
             contents: cast_slice(
                 &extracted_asset
                     .items
-                    .into_iter()
+                    .iter()
                     .map(|x| GpuAtlasItem {
                         offset: x.offset,
                         size: x.size,

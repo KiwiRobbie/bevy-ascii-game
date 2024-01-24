@@ -1,15 +1,20 @@
-use crate::{atlas::AtlasGpuBuffers, glyph_gen_pipeline::GlyphTextureInfo};
+use crate::{
+    atlas::AtlasGpuBuffers,
+    glyph_gen_pipeline::{GlyphModelUniforms, GlyphTextureInfo},
+};
 use bevy::{
     ecs::{
         entity::Entity,
         query::QueryState,
         world::{FromWorld, World},
     },
+    math::Mat4,
     render::{
         render_graph,
-        render_resource::{BindGroupEntry, PipelineCache},
+        render_resource::{BindGroupEntry, PipelineCache, ShaderType},
         view::{ViewTarget, ViewUniforms},
     },
+    transform::components::GlobalTransform,
 };
 use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
 
@@ -17,7 +22,11 @@ use super::GlyphRasterPipelineData;
 
 pub struct GlyphRasterNode {
     q_view: QueryState<&'static ViewTarget>,
-    q_sprite: QueryState<(&'static AtlasGpuBuffers, &'static GlyphTextureInfo)>,
+    q_sprite: QueryState<(
+        &'static AtlasGpuBuffers,
+        &'static GlyphTextureInfo,
+        &'static GlyphModelUniforms,
+    )>,
     atlas_entity: Option<Entity>,
 }
 
@@ -74,7 +83,8 @@ impl render_graph::Node for GlyphRasterNode {
             return Ok(());
         };
 
-        let Some((atlas, glyph_texture_info)) = self.q_sprite.get_manual(world, atlas_entity).ok()
+        let Some((atlas, glyph_texture_info, glyph_model_uniforms)) =
+            self.q_sprite.get_manual(world, atlas_entity).ok()
         else {
             return Ok(());
         };
@@ -118,6 +128,10 @@ impl render_graph::Node for GlyphRasterNode {
                 },
                 BindGroupEntry {
                     binding: 1,
+                    resource: glyph_model_uniforms.binding().unwrap(),
+                },
+                BindGroupEntry {
+                    binding: 2,
                     resource: bevy::render::render_resource::BindingResource::TextureView(
                         &atlas
                             .data

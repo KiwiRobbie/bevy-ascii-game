@@ -7,7 +7,7 @@ use bevy::{
         render_graph::{RenderGraph, RenderGraphApp},
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
-        Render, RenderApp, RenderSet,
+        Extract, Render, RenderApp,
     },
 };
 pub use node::GlyphGenerationNode;
@@ -34,7 +34,8 @@ impl Plugin for FontRenderPlugin {
         let render_app = &mut app.get_sub_app_mut(RenderApp).unwrap();
 
         render_app
-            .add_systems(Render, prepare_buffers.in_set(RenderSet::Prepare))
+            .add_systems(Render, prepare_buffers)
+            .add_systems(ExtractSchedule, extract_glyph_sprite_transform)
             .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
             .add_render_graph_node::<GlyphRasterNode>(MAIN_GRAPH_2D, "glyph_raster")
             .add_render_graph_edges(
@@ -86,17 +87,16 @@ pub struct GlyphTexture {
 }
 
 impl GlyphTexture {
-    pub fn from_text(text: Box<[String]>, atlas: &Atlas, font: FontRef) -> Self {
+    pub fn from_text(text: &[String], atlas: &Atlas, font: FontRef) -> Self {
         let height = text.len();
         let width = text[0].len();
 
         let mut data: Box<[u8]> = vec![0; 2 * width * height].into();
         let charmap = font.charmap();
 
-        for y in 0..height {
+        for (y, chars) in text.iter().enumerate() {
             assert_eq!(text[y].len(), width);
-            let chars = text[y].chars();
-            for (x, c) in chars.enumerate() {
+            for (x, c) in chars.chars().enumerate() {
                 let index = 2 * (x + y * width);
                 let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
                 data[index..index + 2].copy_from_slice(&glyph_id.to_le_bytes());
@@ -142,7 +142,7 @@ impl RenderAsset for GlyphTexture {
         bevy::render::render_asset::PrepareAssetError<Self::ExtractedAsset>,
     > {
         let storage_texture = render_device.create_texture_with_data(
-            &render_queue,
+            render_queue,
             &TextureDescriptor {
                 label: Some("glyph texture"),
                 size: Extent3d {
@@ -182,15 +182,39 @@ pub struct GlyphTextureInfo {
     pub height: u32,
 }
 
+#[derive(ShaderType)]
+pub struct GlyphModelUniform {
+    model: Mat4,
+}
+
+impl GlyphModelUniform {
+    fn new(transform: GlobalTransform) -> Self {
+        Self {
+            model: transform.compute_matrix(),
+        }
+    }
+}
+#[derive(Component, Deref)]
+pub struct GlyphModelUniforms(pub UniformBuffer<GlyphModelUniform>);
+
+fn extract_glyph_sprite_transform(
+    mut commands: Commands,
+    q_glyph_sprite: Extract<Query<(Entity, &GlobalTransform), &GlyphSprite>>,
+) {
+    for (entity, global_transform) in q_glyph_sprite.iter() {
+        commands.insert_or_spawn_batch([(entity, global_transform.clone())]);
+    }
+}
+
 fn prepare_buffers(
     mut commands: Commands,
-    query: Query<(Entity, &GlyphSprite)>,
+    query: Query<(Entity, &GlyphSprite, &GlobalTransform)>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     gpu_glyph_textures: Res<RenderAssets<GlyphTexture>>,
     gpu_atlas_data: Res<RenderAssets<Atlas>>,
 ) {
-    for (entity, sprite) in query.iter() {
+    for (entity, sprite, global_transform) in query.iter() {
         let gpu_glyph_texture = gpu_glyph_textures
             .get(sprite.texture.clone())
             .expect("No gpu glyph texture attached to sprite");
@@ -206,6 +230,10 @@ fn prepare_buffers(
             height: gpu_glyph_texture.height,
         });
         uniform_buffer.write_buffer(&render_device, &render_queue);
+
+        let mut model_uniform_buffer =
+            UniformBuffer::from(GlyphModelUniform::new(global_transform.clone()));
+        model_uniform_buffer.write_buffer(&render_device, &render_queue);
 
         let glyph_storage_texture = gpu_glyph_texture.storage_texture.clone();
 
@@ -228,6 +256,7 @@ fn prepare_buffers(
 
         commands.entity(entity).insert((
             GylphGenerationUniformBuffer(uniform_buffer),
+            GlyphModelUniforms(model_uniform_buffer),
             GlyphTextureInfo {
                 width: gpu_glyph_texture.width,
                 height: gpu_glyph_texture.height,

@@ -68,7 +68,7 @@ impl<'a> AtlasBuilder<'a> {
             texture: image.data,
         });
 
-        return Some(());
+        Some(())
     }
 
     fn create_packing(&mut self) {
@@ -78,14 +78,10 @@ impl<'a> AtlasBuilder<'a> {
         self.packed_positions = vec![UVec2::ZERO; self.rendered.len()];
         'retry: loop {
             let mut origin = UVec2::ZERO;
-            let mut row_height: u32 = self
-                .rendered
-                .first()
-                .and_then(|x| Some(x.size.y))
-                .unwrap_or(0);
+            let mut row_height: u32 = self.rendered.first().map(|x| x.size.y).unwrap_or(0);
 
             for (index, image) in self.rendered.iter().enumerate() {
-                let mut placement = origin.clone();
+                let mut placement = origin;
                 if origin.x + image.size.x <= self.size {
                     origin.x += image.size.x;
                 } else {
@@ -116,7 +112,7 @@ impl<'a> AtlasBuilder<'a> {
         const CHANNELS: usize = 4;
         self.create_packing();
 
-        let mut data: Vec<u8> = [0xff, 0x00, 0x00, 0xff]
+        let mut data: Vec<u8> = [0xff, 0x00, 0x00, 0x00]
             .into_iter()
             .cycle()
             .take((self.size * self.size * 4) as usize)
@@ -139,20 +135,6 @@ impl<'a> AtlasBuilder<'a> {
                     data[destination..destination + CHANNELS]
                         .copy_from_slice(&rendered.texture[source..source + CHANNELS]);
                 }
-            }
-        }
-        {
-            let items = items.clone();
-            for item in items {
-                println!(
-                    "{:03} {:03} | {:03} {:03} | {:03} {:03}",
-                    item.start.x,
-                    item.start.y,
-                    item.size.x,
-                    item.size.y,
-                    item.offset.x,
-                    item.offset.y
-                );
             }
         }
 

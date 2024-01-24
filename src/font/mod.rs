@@ -33,7 +33,7 @@ impl CustomFont {
     pub fn from_file(path: &str, index: usize) -> Option<Self> {
         // Read the full font file
         let data = std::fs::read(path).ok()?;
-        return Self::from_bytes(&data, index);
+        Self::from_bytes(&data, index)
     }
 
     // Create the transient font reference for accessing this crate's
@@ -72,9 +72,7 @@ impl AssetLoader for CustomFontLoader {
             let mut bytes = Vec::new();
             bevy::asset::AsyncReadExt::read_to_end(&mut reader, &mut bytes).await?;
             match CustomFont::from_bytes(&bytes, 0) {
-                Some(asset) => {
-                    return Ok(asset);
-                }
+                Some(asset) => Ok(asset),
                 None => Err(anyhow!(format!(
                     "Failed to create font from file {:?}",
                     load_context.path()
