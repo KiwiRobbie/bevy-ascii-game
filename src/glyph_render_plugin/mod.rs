@@ -7,21 +7,34 @@ use bevy::{
         render_graph::RenderGraphApp,
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
-        view::ViewUniform,
         Extract, Render, RenderApp, RenderSet,
     },
 };
 pub use node::GlyphGenerationNode;
 use swash::FontRef;
 
-use crate::{atlas::Atlas, font::CustomFont};
+use crate::{
+    atlas::Atlas,
+    font::CustomFont,
+    glyph_render_plugin::render_resources::{
+        GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
+    },
+};
 
+use self::{
+    generation_descriptors::get_bind_group_layout_descriptor,
+    raster_descriptors::RASTER_BINDGROUP_LAYOUT,
+};
+
+mod generation_descriptors;
 mod node;
+mod raster_descriptors;
+mod render_resources;
 
-pub struct FontRenderPlugin;
+pub struct GlyphRenderPlugin;
 const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
-impl Plugin for FontRenderPlugin {
+impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ExtractComponentPlugin::<GlyphSprite>::default())
             .init_asset::<GlyphTexture>()
@@ -44,12 +57,12 @@ impl Plugin for FontRenderPlugin {
     }
     fn finish(&self, app: &mut App) {
         app.sub_app_mut(RenderApp)
-            .init_resource::<GlyphGenerationPipelineData>();
+            .init_resource::<GlyphPipelineData>();
     }
 }
 
 #[derive(Clone, ShaderType)]
-pub struct GlyphGenerationUniforms {
+pub struct GlyphUniforms {
     pub color: Vec4,
     pub width: u32,
     pub height: u32,
@@ -147,15 +160,6 @@ impl RenderAsset for GlyphTexture {
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
-struct GylphGenerationUniformBuffer(UniformBuffer<GlyphGenerationUniforms>);
-
-#[derive(Component, Deref, DerefMut)]
-struct GlyphStorageTexture(Texture);
-
-#[derive(Component, Deref, DerefMut)]
-struct GlyphVertexBuffer(Buffer);
-
 #[derive(Component)]
 pub struct GlyphTextureInfo {
     pub width: u32,
@@ -175,14 +179,13 @@ impl GlyphModelUniform {
     }
 }
 #[derive(Component, Deref)]
-pub struct GlyphModelUniforms(pub UniformBuffer<GlyphModelUniform>);
+pub struct GlyphModelUniformBuffer(pub UniformBuffer<GlyphModelUniform>);
 
 fn extract_glyph_sprite_transform(
     mut commands: Commands,
     q_glyph_sprite: Extract<Query<(Entity, &GlobalTransform), &GlyphSprite>>,
 ) {
     for (entity, global_transform) in q_glyph_sprite.iter() {
-        // dbg!(commands.get_entity(entity).is_some());
         commands.insert_or_spawn_batch([(entity, global_transform.clone())]);
     }
 }
@@ -205,7 +208,7 @@ fn prepare_buffers(
             .expect("No atlas attached to sprite")
             .clone();
 
-        let mut uniform_buffer = UniformBuffer::from(GlyphGenerationUniforms {
+        let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: sprite.color.into(),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
@@ -236,8 +239,8 @@ fn prepare_buffers(
         });
 
         commands.entity(entity).insert((
-            GylphGenerationUniformBuffer(uniform_buffer),
-            GlyphModelUniforms(model_uniform_buffer),
+            GlyphUniformBuffer(uniform_buffer),
+            GlyphModelUniformBuffer(model_uniform_buffer),
             GlyphTextureInfo {
                 width: gpu_glyph_texture.width,
                 height: gpu_glyph_texture.height,
@@ -250,82 +253,21 @@ fn prepare_buffers(
 }
 
 #[derive(Resource)]
-struct GlyphGenerationPipelineData {
+struct GlyphPipelineData {
     glyph_generation_pipeline_id: CachedComputePipelineId,
     glyph_generation_bind_group_layout: BindGroupLayout,
     glyph_raster_pipeline_id: CachedRenderPipelineId,
     glyph_raster_bind_group_layout: BindGroupLayout,
 }
 
-impl FromWorld for GlyphGenerationPipelineData {
+impl FromWorld for GlyphPipelineData {
     fn from_world(render_world: &mut World) -> Self {
         let asset_server = render_world.get_resource::<AssetServer>().unwrap();
 
         let (glyph_generation_pipeline_id, glyph_generation_bind_group_layout) = {
             let glyph_generation_bind_group_layout = render_world
                 .resource::<RenderDevice>()
-                .create_bind_group_layout(&BindGroupLayoutDescriptor {
-                    label: Some("glyph generation bind group layout"),
-                    entries: &[
-                        // UNIFORMS
-                        BindGroupLayoutEntry {
-                            binding: 0,
-                            visibility: ShaderStages::COMPUTE,
-                            ty: BindingType::Buffer {
-                                ty: BufferBindingType::Uniform,
-                                has_dynamic_offset: false,
-                                min_binding_size: BufferSize::new(
-                                    GlyphGenerationUniforms::SHADER_SIZE.into(),
-                                ),
-                            },
-                            count: None,
-                        },
-                        // Glyph Texture
-                        BindGroupLayoutEntry {
-                            binding: 1,
-                            visibility: ShaderStages::COMPUTE,
-                            ty: BindingType::StorageTexture {
-                                access: StorageTextureAccess::ReadOnly,
-                                format: TextureFormat::R16Uint,
-                                view_dimension: TextureViewDimension::D2,
-                            },
-                            count: None,
-                        },
-                        // Atlas Texture
-                        BindGroupLayoutEntry {
-                            binding: 2,
-                            visibility: ShaderStages::COMPUTE,
-                            ty: BindingType::StorageTexture {
-                                access: StorageTextureAccess::ReadOnly,
-                                format: TextureFormat::Rgba8Unorm,
-                                view_dimension: TextureViewDimension::D2,
-                            },
-                            count: None,
-                        },
-                        // Atlas UV's
-                        BindGroupLayoutEntry {
-                            binding: 3,
-                            visibility: ShaderStages::COMPUTE,
-                            ty: BindingType::Buffer {
-                                ty: BufferBindingType::Storage { read_only: true },
-                                has_dynamic_offset: false,
-                                min_binding_size: None,
-                            },
-                            count: None,
-                        },
-                        // Vertex Data Output
-                        BindGroupLayoutEntry {
-                            binding: 4,
-                            visibility: ShaderStages::COMPUTE,
-                            ty: BindingType::Buffer {
-                                ty: BufferBindingType::Storage { read_only: false },
-                                has_dynamic_offset: false,
-                                min_binding_size: None,
-                            },
-                            count: None,
-                        },
-                    ],
-                });
+                .create_bind_group_layout(&get_bind_group_layout_descriptor());
 
             let glyph_generation_shader = asset_server.load("shaders/glyph_generation.wgsl");
 
@@ -353,7 +295,7 @@ impl FromWorld for GlyphGenerationPipelineData {
                 .resource::<RenderDevice>()
                 .create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: Some("glyph generation bind group layout"),
-                    entries: &GLYPH_RASTER_ENTRIES,
+                    entries: &RASTER_BINDGROUP_LAYOUT,
                 });
 
             let glyph_raster_shader = asset_server.load("shaders/glyph_raster.wgsl");
@@ -412,7 +354,7 @@ impl FromWorld for GlyphGenerationPipelineData {
             (pipeline_id, glyph_raster_bind_group_layout)
         };
 
-        GlyphGenerationPipelineData {
+        GlyphPipelineData {
             glyph_generation_pipeline_id,
             glyph_generation_bind_group_layout,
             glyph_raster_pipeline_id,
@@ -420,37 +362,3 @@ impl FromWorld for GlyphGenerationPipelineData {
         }
     }
 }
-
-const GLYPH_RASTER_ENTRIES: [BindGroupLayoutEntry; 3] = [
-    // UNIFORMS
-    BindGroupLayoutEntry {
-        binding: 0,
-        visibility: ShaderStages::VERTEX_FRAGMENT,
-        ty: BindingType::Buffer {
-            ty: BufferBindingType::Uniform,
-            has_dynamic_offset: false,
-            min_binding_size: BufferSize::new(ViewUniform::SHADER_SIZE.get()),
-        },
-        count: None,
-    },
-    BindGroupLayoutEntry {
-        binding: 1,
-        visibility: ShaderStages::VERTEX_FRAGMENT,
-        ty: BindingType::Buffer {
-            ty: BufferBindingType::Uniform,
-            has_dynamic_offset: false,
-            min_binding_size: BufferSize::new(GlyphModelUniform::SHADER_SIZE.get()),
-        },
-        count: None,
-    },
-    BindGroupLayoutEntry {
-        binding: 2,
-        visibility: ShaderStages::VERTEX_FRAGMENT,
-        ty: BindingType::StorageTexture {
-            access: StorageTextureAccess::ReadOnly,
-            format: TextureFormat::Rgba8Unorm,
-            view_dimension: TextureViewDimension::D2,
-        },
-        count: None,
-    },
-];

@@ -10,14 +10,8 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    math::{Vec2, Vec3},
-    render::{
-        camera::CameraRenderGraph,
-        color::Color,
-        render_resource::{Extent3d, TextureFormat},
-        texture::{Image, ImagePlugin},
-    },
-    sprite::{Sprite, SpriteBundle},
+    math::Vec3,
+    render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     transform::components::{GlobalTransform, Transform},
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
@@ -30,7 +24,7 @@ use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use bevy_ascii_game::{
     atlas::{Atlas, AtlasBuilder},
     font::{CustomFont, CustomFontLoader},
-    glyph_pipeline::{FontRenderPlugin, GlyphSprite, GlyphTexture},
+    glyph_render_plugin::{GlyphRenderPlugin, GlyphSprite, GlyphTexture},
 };
 
 fn main() {
@@ -47,10 +41,10 @@ fn main() {
             }),
     )
     .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
-    .add_plugins(FontRenderPlugin)
-    .add_systems(Startup, setup)
+    .add_plugins(GlyphRenderPlugin)
+    .add_systems(Startup, setup_system)
     .add_systems(Update, font_ready_system)
-    .add_systems(Update, keyboard_input)
+    .add_systems(Update, (keyboard_input_system, glitch_system))
     .init_asset::<CustomFont>()
     .init_asset::<Atlas>()
     .init_asset_loader::<CustomFontLoader>();
@@ -70,7 +64,7 @@ const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWX
 #[derive(Component)]
 struct LoadingCustomFont(Handle<CustomFont>);
 
-fn setup(mut commands: Commands, server: Res<AssetServer>) {
+fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle {
         camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
         ..Default::default()
@@ -80,14 +74,19 @@ fn setup(mut commands: Commands, server: Res<AssetServer>) {
     ));
 }
 
-fn keyboard_input(
+#[derive(Component)]
+struct KeyboardInputMarker;
+
+#[derive(Component)]
+struct GlitchMarker;
+
+fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
-    q_glyph_sprite: Query<&GlyphSprite>,
+    q_glyph_sprite: Query<&GlyphSprite, &KeyboardInputMarker>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     atlases: Res<Assets<Atlas>>,
     fonts: Res<Assets<CustomFont>>,
     mut position: Local<usize>,
-    mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
 ) {
     let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
         return;
@@ -99,27 +98,6 @@ fn keyboard_input(
 
     let cusror_glyph_id = font.as_ref().charmap().map('_');
     let cursor_glyph_index = atlas.local_index.get(&cusror_glyph_id).unwrap_or(&u16::MAX);
-
-    // for _ in 0..10 {
-    let glitch_position = rng.next_u32().rem_euclid(glyph_texture.width) as usize;
-    let glitch_value = rng.next_u32().rem_euclid(atlas.glyph_ids.len() as u32) as u16;
-
-    glyph_texture.data.split_at_mut(glitch_position * 2).1[..2]
-        .copy_from_slice(&glitch_value.to_le_bytes());
-    // }
-
-    let src_end = ((glyph_texture.height - 1) * glyph_texture.width * 2) as usize;
-    let dst_start = (glyph_texture.width * 2) as usize;
-    glyph_texture.data.copy_within(..src_end, dst_start);
-
-    for start_item in glyph_texture
-        .data
-        .iter_mut()
-        .step_by(2)
-        .take(glyph_texture.width as usize)
-    {
-        *start_item = start_item.saturating_add(1);
-    }
 
     for character in ev_character.read() {
         dbg!(character.char);
@@ -143,9 +121,39 @@ fn keyboard_input(
     }
 }
 
+fn glitch_system(
+    q_glyph_sprite: Query<&GlyphSprite, &GlitchMarker>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+    atlases: Res<Assets<Atlas>>,
+    mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
+) {
+    for glyph_sprite in q_glyph_sprite.iter() {
+        let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
+        let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
+
+        let glitch_position = rng.next_u32().rem_euclid(glyph_texture.width) as usize;
+        let glitch_value = rng.next_u32().rem_euclid(atlas.glyph_ids.len() as u32) as u16;
+
+        glyph_texture.data.split_at_mut(glitch_position * 2).1[..2]
+            .copy_from_slice(&glitch_value.to_le_bytes());
+
+        let src_end = ((glyph_texture.height - 1) * glyph_texture.width * 2) as usize;
+        let dst_start = (glyph_texture.width * 2) as usize;
+        glyph_texture.data.copy_within(..src_end, dst_start);
+
+        for start_item in glyph_texture
+            .data
+            .iter_mut()
+            .step_by(2)
+            .take(glyph_texture.width as usize)
+        {
+            *start_item = start_item.saturating_add(1);
+        }
+    }
+}
+
 fn font_ready_system(
     mut commands: Commands,
-    mut images: ResMut<Assets<Image>>,
     fonts: ResMut<Assets<CustomFont>>,
     mut atlases: ResMut<Assets<Atlas>>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
@@ -186,50 +194,42 @@ fn font_ready_system(
                 commands.spawn((
                     GlyphSprite {
                         color: Color::WHITE,
-                        atlas: atlas_handle,
+                        atlas: atlas_handle.clone(),
                         font: font_handle.clone(),
                         texture: glyph_textures.add(GlyphTexture::from_text(
-                            &(0..32).map(|_| " ".repeat(64)).collect::<Box<[_]>>(),
+                            &(0..16).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
                             atlas,
                             font_ref,
                         )),
                     },
                     Transform::from_translation(Vec3 {
-                        x: font_advance * 64.0 * -0.5,
-                        y: font_lead * 32.0 * -0.5,
+                        x: font_advance * 32.0 * 0.0,
+                        y: font_lead * 16.0 * -0.5,
                         z: 0.0,
                     }),
                     GlobalTransform::default(),
+                    GlitchMarker,
                 ));
 
-                let image_handle = images.add(Image::new(
-                    Extent3d {
-                        width: atlas.size,
-                        height: atlas.size,
-                        ..Default::default()
+                commands.spawn((
+                    GlyphSprite {
+                        color: Color::WHITE,
+                        atlas: atlas_handle,
+                        font: font_handle.clone(),
+                        texture: glyph_textures.add(GlyphTexture::from_text(
+                            &(0..16).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
+                            atlas,
+                            font_ref,
+                        )),
                     },
-                    bevy::render::render_resource::TextureDimension::D2,
-                    atlas.data.to_vec(),
-                    TextureFormat::Rgba8Unorm,
-                ));
-
-                commands.spawn(SpriteBundle {
-                    texture: image_handle.clone(),
-                    transform: Transform::from_translation(Vec3 {
-                        x: -((atlas.size / 2) as f32),
-                        y: -((atlas.size / 2) as f32),
+                    Transform::from_translation(Vec3 {
+                        x: font_advance * 32.0 * -1.0,
+                        y: font_lead * 16.0 * -0.5,
                         z: 0.0,
                     }),
-                    sprite: Sprite {
-                        anchor: bevy::sprite::Anchor::BottomLeft,
-                        custom_size: Some(Vec2 {
-                            x: atlas.size as f32,
-                            y: atlas.size as f32,
-                        }),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                });
+                    GlobalTransform::default(),
+                    KeyboardInputMarker,
+                ));
             }
             _ => {
                 // NotLoaded/Loading: not fully ready yet
