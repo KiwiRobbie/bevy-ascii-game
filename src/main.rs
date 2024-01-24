@@ -1,3 +1,5 @@
+#![feature(iter_map_windows)]
+
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetApp, AssetServer, Assets, Handle},
@@ -20,6 +22,9 @@ use bevy::{
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
+use bevy_prng::ChaCha8Rng;
+use bevy_rand::{plugin::EntropyPlugin, resource::GlobalEntropy};
+use rand_core::RngCore;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 
 use bevy_ascii_game::{
@@ -41,6 +46,7 @@ fn main() {
                 ..Default::default()
             }),
     )
+    .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
     .add_plugins(FontRenderPlugin)
     .add_systems(Startup, setup)
     .add_systems(Update, font_ready_system)
@@ -81,6 +87,7 @@ fn keyboard_input(
     atlases: Res<Assets<Atlas>>,
     fonts: Res<Assets<CustomFont>>,
     mut position: Local<usize>,
+    mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
 ) {
     let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
         return;
@@ -92,6 +99,27 @@ fn keyboard_input(
 
     let cusror_glyph_id = font.as_ref().charmap().map('_');
     let cursor_glyph_index = atlas.local_index.get(&cusror_glyph_id).unwrap_or(&u16::MAX);
+
+    // for _ in 0..10 {
+    let glitch_position = rng.next_u32().rem_euclid(glyph_texture.width) as usize;
+    let glitch_value = rng.next_u32().rem_euclid(atlas.glyph_ids.len() as u32) as u16;
+
+    glyph_texture.data.split_at_mut(glitch_position * 2).1[..2]
+        .copy_from_slice(&glitch_value.to_le_bytes());
+    // }
+
+    let src_end = ((glyph_texture.height - 1) * glyph_texture.width * 2) as usize;
+    let dst_start = (glyph_texture.width * 2) as usize;
+    glyph_texture.data.copy_within(..src_end, dst_start);
+
+    for start_item in glyph_texture
+        .data
+        .iter_mut()
+        .step_by(2)
+        .take(glyph_texture.width as usize)
+    {
+        *start_item = start_item.saturating_add(1);
+    }
 
     for character in ev_character.read() {
         dbg!(character.char);
@@ -161,14 +189,14 @@ fn font_ready_system(
                         atlas: atlas_handle,
                         font: font_handle.clone(),
                         texture: glyph_textures.add(GlyphTexture::from_text(
-                            &(0..32).map(|_| " ".repeat(32)).collect::<Box<[_]>>(),
+                            &(0..32).map(|_| " ".repeat(64)).collect::<Box<[_]>>(),
                             atlas,
                             font_ref,
                         )),
                     },
                     Transform::from_translation(Vec3 {
-                        x: font_advance * font_size * -0.5,
-                        y: font_lead * font_size * -0.5,
+                        x: font_advance * 64.0 * -0.5,
+                        y: font_lead * 32.0 * -0.5,
                         z: 0.0,
                     }),
                     GlobalTransform::default(),
