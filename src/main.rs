@@ -12,6 +12,7 @@ use bevy::{
     },
     math::Vec3,
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
+    time::Time,
     transform::components::{GlobalTransform, Transform},
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
@@ -83,6 +84,10 @@ struct KeyboardInputMarker;
 #[derive(Component)]
 struct GlitchMarker;
 
+const FONT_SIZE: f32 = 32.0f32;
+const FONT_ADVANCE: f32 = 19.0f32;
+const FONT_LEAD: f32 = 32.0f32;
+
 fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
     q_glyph_sprite: Query<&GlyphSprite, &KeyboardInputMarker>,
@@ -125,12 +130,19 @@ fn keyboard_input_system(
 }
 
 fn glitch_system(
-    q_glyph_sprite: Query<&GlyphSprite, &GlitchMarker>,
+    mut q_glyph_sprite: Query<(&GlyphSprite, &mut Transform), &GlitchMarker>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     atlases: Res<Assets<Atlas>>,
     mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
+    time: Res<Time>,
 ) {
-    for glyph_sprite in q_glyph_sprite.iter() {
+    for (glyph_sprite, mut transform) in q_glyph_sprite.iter_mut() {
+        *transform = transform.with_translation(Vec3 {
+            x: FONT_ADVANCE * 32.0 * 0.0 + 5.0 * FONT_SIZE * f32::cos(time.elapsed_seconds()),
+            y: FONT_LEAD * 16.0 * -0.5 + 5.0 * FONT_SIZE * f32::sin(time.elapsed_seconds()),
+            z: 0.0,
+        });
+
         let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
         let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
 
@@ -174,15 +186,11 @@ fn font_ready_system(
 
                 let font_ref = fonts.get(font_handle).unwrap().as_ref();
 
-                let font_size = 32.0f32;
-                let font_advance = 19.0f32;
-                let font_lead = 32.0f32;
-
                 let mut context = ScaleContext::new();
                 let scaler = context
                     .builder(font_ref)
                     .hint(false)
-                    .size(font_size)
+                    .size(FONT_SIZE)
                     .build();
                 let mut render = Render::new(&[
                     Source::ColorOutline(0),
@@ -212,8 +220,8 @@ fn font_ready_system(
                         )),
                     },
                     Transform::from_translation(Vec3 {
-                        x: font_advance * 32.0 * 0.0,
-                        y: font_lead * 16.0 * -0.5,
+                        x: FONT_ADVANCE * 32.0 * 0.0,
+                        y: FONT_LEAD * 16.0 * -0.5,
                         z: 0.0,
                     }),
                     GlobalTransform::default(),
@@ -232,8 +240,8 @@ fn font_ready_system(
                         )),
                     },
                     Transform::from_translation(Vec3 {
-                        x: font_advance * 32.0 * -1.0,
-                        y: font_lead * 16.0 * -0.5,
+                        x: FONT_ADVANCE * 32.0 * -1.0,
+                        y: FONT_LEAD * 16.0 * -0.5,
                         z: 0.0,
                     }),
                     GlobalTransform::default(),

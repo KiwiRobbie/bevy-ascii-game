@@ -186,7 +186,15 @@ fn extract_glyph_sprite_transform(
     q_glyph_sprite: Extract<Query<(Entity, &GlobalTransform), &GlyphSprite>>,
 ) {
     for (entity, global_transform) in q_glyph_sprite.iter() {
-        commands.insert_or_spawn_batch([(entity, global_transform.clone())]);
+        let transform: Transform = global_transform.clone().into();
+        let snapped_transform: GlobalTransform = transform
+            .with_translation(Vec3 {
+                x: (transform.translation.x / 19.0).round() * 19.0,
+                y: (transform.translation.y / 32.0).round() * 32.0,
+                z: transform.translation.z,
+            })
+            .into();
+        commands.insert_or_spawn_batch([(entity, snapped_transform)]);
     }
 }
 
