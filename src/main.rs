@@ -8,7 +8,6 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    log::LogPlugin,
     math::{Vec2, Vec3},
     render::{
         camera::CameraRenderGraph,
@@ -26,7 +25,7 @@ use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use bevy_ascii_game::{
     atlas::{Atlas, AtlasBuilder},
     font::{CustomFont, CustomFontLoader},
-    glyph_gen_pipeline::{FontRenderPlugin, GlyphSprite, GlyphTexture},
+    glyph_pipeline::{FontRenderPlugin, GlyphSprite, GlyphTexture},
 };
 
 fn main() {
