@@ -1,25 +1,16 @@
 #![feature(future_join)]
 
-use std::time::Duration;
-
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetApp, AssetServer, Assets},
     core_pipeline::core_2d::Camera2dBundle,
     ecs::{
         component::Component,
-        entity::Entity,
         event::EventReader,
-        query::With,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    math::Vec3,
-    render::{
-        camera::CameraRenderGraph,
-        color::Color,
-        texture::{self, Image, ImagePlugin},
-    },
-    sprite::Sprite,
+    math::{IVec2, UVec2, Vec2, Vec3},
+    render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
     transform::components::{GlobalTransform, Transform},
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
@@ -27,17 +18,21 @@ use bevy::{
 };
 use bevy_prng::ChaCha8Rng;
 use bevy_rand::{plugin::EntropyPlugin, resource::GlobalEntropy};
-use rand_core::RngCore;
-use swash::{
-    scale::{Render, ScaleContext, Source, StrikeWith},
-    zeno::Format,
-};
 
 use bevy_ascii_game::{
-    atlas::{AtlasBuilder, CharacterSet, FontAtlasPlugin, FontAtlasSource, FontAtlasUser},
+    atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
     font::{font_load_system, CustomFont, CustomFontLoader, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationAssetLoader, GlyphAnimationSource},
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSprite, GlyphTexture},
+    physics::{
+        actor::ActorPhysicsBundle,
+        collision::{Aabb, Collider, CollisionShape},
+        movement::Movement,
+        plugin::PhysicsPlugin,
+        position::Position,
+        solid::{FilterSolids, SolidPhysicsBundle},
+        velocity::Velocity,
+    },
 };
 
 fn main() {
@@ -53,11 +48,10 @@ fn main() {
                 ..Default::default()
             }),
     )
-    .add_plugins(FontAtlasPlugin)
+    .add_plugins((FontAtlasPlugin, PhysicsPlugin, GlyphRenderPlugin))
     .init_asset::<GlyphAnimationSource>()
     .init_asset_loader::<GlyphAnimationAssetLoader>()
     .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
-    .add_plugins(GlyphRenderPlugin)
     .add_systems(Startup, setup_system)
     .add_systems(
         Update,
@@ -66,6 +60,7 @@ fn main() {
             glitch_system,
             font_load_system,
             looping_animation_player_system,
+            moving_platform,
         ),
     )
     .init_asset::<CustomFontSource>()
@@ -82,6 +77,22 @@ fn main() {
 }
 
 const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+fn moving_platform(
+    mut q_solid_movement: Query<(&mut Movement, &mut Velocity, &Position), FilterSolids>,
+    time: Res<Time>,
+) {
+    for (mut movement, mut velocity, position) in q_solid_movement.iter_mut() {
+        if position.position.x > 50 {
+            velocity.velocity.x = -10.0;
+        } else if position.position.x < -50 {
+            velocity.velocity.x = 10.0;
+        }
+        dbg!(&position, &movement);
+        movement.add(velocity.velocity * time.delta_seconds());
+        dbg!(&position, &movement);
+    }
+}
 
 fn setup_system(
     mut commands: Commands,
@@ -100,6 +111,48 @@ fn setup_system(
         CharacterSet(CHARSET.chars().into_iter().collect()),
         FontSize(32),
         LoopingAnimationPlayer::new(15),
+        ActorPhysicsBundle {
+            position: Position {
+                position: IVec2 { x: 5, y: 0 },
+                ..Default::default()
+            },
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::ZERO,
+                    size: UVec2 { x: 15, y: 8 },
+                }),
+            },
+
+            ..Default::default()
+        },
+    ));
+
+    commands.spawn((
+        Transform::default(),
+        GlobalTransform::default(),
+        GlyphSprite {
+            color: Color::WHITE,
+            texture: glyph_textures.add(GlyphTexture {
+                data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
+            }),
+        },
+        FontAtlasUser,
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet(CHARSET.chars().into_iter().collect()),
+        FontSize(32),
+        SolidPhysicsBundle {
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::ZERO,
+                    size: UVec2 { x: 3, y: 2 },
+                }),
+            },
+            ..Default::default()
+        },
+        Movement::default(),
+        Velocity {
+            velocity: Vec2 { x: 50.0, y: 0.0 },
+        },
     ));
 
     commands.spawn((
