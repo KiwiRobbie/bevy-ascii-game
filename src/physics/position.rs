@@ -10,7 +10,9 @@ pub struct Position {
     pub remainder: Vec2,
 }
 
-pub fn update_transforms(mut q_position_transforms: Query<(&mut Transform, &Position)>) {
+pub fn position_update_transforms_system(
+    mut q_position_transforms: Query<(&mut Transform, &Position)>,
+) {
     for (mut transform, position) in q_position_transforms.iter_mut() {
         *transform = transform.with_translation(Vec3 {
             x: (position.position.x * 19) as f32,

@@ -26,6 +26,8 @@ use bevy_ascii_game::{
     physics::{
         actor::ActorPhysicsBundle,
         collision::{Aabb, Collider, CollisionShape},
+        free::FreeMarker,
+        gravity::Gravity,
         movement::Movement,
         plugin::PhysicsPlugin,
         position::{Position, PositionBundle},
@@ -121,7 +123,7 @@ fn setup_system(
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {
                         min: IVec2::ZERO,
-                        size: UVec2 { x: 15, y: 8 },
+                        size: UVec2 { x: 6, y: 4 },
                     }),
                 },
 
@@ -193,6 +195,43 @@ fn setup_system(
             velocity: Vec2 { x: 0.0, y: 0.0 },
         },
     ));
+
+    // Falling box
+    commands.spawn((
+        GlyphSprite {
+            color: Color::WHITE,
+            texture: glyph_textures.add(GlyphTexture {
+                data: (0..2).map(|_| ".".repeat(3)).collect::<Vec<String>>(),
+            }),
+        },
+        FontAtlasUser,
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet(CHARSET.chars().collect()),
+        FontSize(32),
+        ActorPhysicsBundle {
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::ZERO,
+                    size: UVec2 { x: 3, y: 2 },
+                }),
+            },
+            position: PositionBundle {
+                position: Position {
+                    position: IVec2 { x: -30, y: -15 },
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        Velocity {
+            velocity: Vec2 { x: 50.0, y: 70.0 },
+        },
+        Gravity::default(),
+        FreeMarker,
+    ));
+
+    // Keyboard display
     commands.spawn((
         CustomFont(server.load("FiraCode-Regular.ttf")),
         FontAtlasUser,
@@ -306,16 +345,5 @@ fn looping_animation_player_system(
 
         let frame = ((elapsed - start_time) * player.frame_rate as f64).round() as u32;
         animation.frame = frame.rem_euclid(source.frames.len() as u32);
-
-        let origin = transform.translation.xy();
-        let size = source.size.as_vec2()
-            * Vec2 {
-                x: FONT_ADVANCE,
-                y: FONT_LEAD,
-            };
-        let center = origin + size / 2.0;
-
-        gizmos.rect_2d(center, 0.0, size, Color::RED);
-        gizmos.circle_2d(Vec2::ZERO, 5.0, Color::GREEN);
     }
 }

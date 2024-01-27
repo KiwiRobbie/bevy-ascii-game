@@ -5,7 +5,7 @@ use bevy::{
         query::{With, Without},
         system::Query,
     },
-    math::IVec2,
+    math::{IVec2, Vec2},
 };
 
 use super::{
@@ -101,6 +101,12 @@ pub fn actor_move_system(
             actor_collider,
             solids_aabbs.iter(),
         );
-        actor_movement.delta.x = 0.0;
+        Actor::move_y(
+            actor_movement.delta.y,
+            &mut actor_position,
+            actor_collider,
+            solids_aabbs.iter(),
+        );
+        actor_movement.delta = Vec2::ZERO;
     }
 }

@@ -1,6 +1,6 @@
 use bevy::{
-    app::{Plugin, Update},
-    ecs::{bundle::Bundle, component::Component, schedule::IntoSystemSetConfigs},
+    app::Plugin,
+    ecs::{bundle::Bundle, component::Component},
 };
 
 use crate::physics::actor::ActorPhysicsBundle;
@@ -8,12 +8,10 @@ use crate::physics::actor::ActorPhysicsBundle;
 use self::{
     input::{PlayerInputBundle, PlayerInputPlugin},
     movement::{PlayerMovementBundle, PlayerMovementPlugin},
-    system_sets::{PlayerPostUpdate, PlayerPrepare, PlayerUpdate},
 };
 
 pub mod input;
 pub mod movement;
-pub mod system_sets;
 
 #[derive(Component, Default)]
 pub struct PlayerMarker;
@@ -21,11 +19,7 @@ pub struct PlayerMarker;
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.configure_sets(
-            Update,
-            (PlayerPrepare, PlayerUpdate, PlayerPostUpdate).chain(),
-        )
-        .add_plugins((PlayerInputPlugin, PlayerMovementPlugin));
+        app.add_plugins((PlayerInputPlugin, PlayerMovementPlugin));
     }
 }
 

@@ -5,7 +5,7 @@ use bevy::{
     render::color::Color,
 };
 
-use super::{direction::Direction, position::Position};
+use super::{actor::Actor, direction::Direction, position::Position, solid::Solid};
 
 #[derive(Component, Default)]
 pub struct Collider {
@@ -121,15 +121,22 @@ pub struct OffsetCollision<'a> {
     pub offset: IVec2,
 }
 
-pub fn debug_collision_shapes(mut gizmos: Gizmos, q_colliders: Query<(&Collider, &Position)>) {
-    for (collider, position) in q_colliders.iter() {
+pub fn debug_collision_system(
+    mut gizmos: Gizmos,
+    q_colliders: Query<(&Collider, &Position, Option<&Solid>, Option<&Actor>)>,
+) {
+    for (collider, position, solid, actor) in q_colliders.iter() {
         for shape in collider.shape.colliders() {
             let min = (position.position + shape.min).as_vec2() * Vec2 { x: 19.0, y: 40.0 };
             let size = shape.size.as_vec2() * Vec2 { x: 19.0, y: 40.0 };
 
             let center = min + 0.5 * size;
 
-            gizmos.rect_2d(center, 0.0, size, Color::GREEN);
+            if solid.is_some() {
+                gizmos.rect_2d(center, 0.0, size, Color::GREEN);
+            } else if actor.is_some() {
+                gizmos.rect_2d(center, 0.0, size, Color::RED);
+            }
         }
     }
 }

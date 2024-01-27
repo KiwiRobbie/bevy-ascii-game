@@ -1,15 +1,14 @@
 use bevy::{
-    app::{Plugin, Update},
+    app::{Plugin, PreUpdate},
     ecs::{
         component::Component,
         query::With,
-        schedule::IntoSystemConfigs,
         system::{Query, Res},
     },
     input::{keyboard::KeyCode, Input},
 };
 
-use crate::player::{system_sets::PlayerPrepare, PlayerMarker};
+use crate::player::PlayerMarker;
 
 use super::PlayerInputMarker;
 
@@ -56,6 +55,6 @@ pub struct PlayerKeyboardInputPlugin;
 
 impl Plugin for PlayerKeyboardInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, player_keyboard_movement_input.in_set(PlayerPrepare));
+        app.add_systems(PreUpdate, player_keyboard_movement_input);
     }
 }
