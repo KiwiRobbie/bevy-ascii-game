@@ -9,8 +9,7 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    gizmos::gizmos::Gizmos,
-    math::{IVec2, UVec2, Vec2, Vec3, Vec3Swizzles},
+    math::{IVec2, UVec2, Vec2, Vec3},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
     transform::components::{GlobalTransform, Transform},
@@ -322,15 +321,14 @@ impl LoopingAnimationPlayer {
 }
 
 fn looping_animation_player_system(
-    mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer, &Transform)>,
+    mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer)>,
     glyph_animation_sources: Res<Assets<GlyphAnimationSource>>,
     time: Res<Time>,
-    mut gizmos: Gizmos,
 ) {
     // TODO: Fix visual glitch caused by wrapping every hour!
     let elapsed = time.elapsed_seconds_wrapped_f64();
 
-    for (mut animation, mut player, transform) in q_glyph_animation.iter_mut() {
+    for (mut animation, mut player) in q_glyph_animation.iter_mut() {
         let Some(source) = glyph_animation_sources.get(animation.source.id()) else {
             continue;
         };
