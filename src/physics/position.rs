@@ -1,7 +1,7 @@
 use bevy::{
-    ecs::{component::Component, system::Query},
+    ecs::{bundle::Bundle, component::Component, system::Query},
     math::{IVec2, Vec2, Vec3},
-    transform::components::Transform,
+    transform::components::{GlobalTransform, Transform},
 };
 
 #[derive(Component, Default, Debug)]
@@ -18,4 +18,11 @@ pub fn update_transforms(mut q_position_transforms: Query<(&mut Transform, &Posi
             z: transform.translation.z,
         });
     }
+}
+
+#[derive(Bundle, Default)]
+pub struct PositionBundle {
+    pub position: Position,
+    pub transform: Transform,
+    pub global_transform: GlobalTransform,
 }

@@ -2,7 +2,6 @@ use bevy::{
     ecs::{
         bundle::Bundle,
         component::Component,
-        entity::Entity,
         query::{With, Without},
         system::Query,
     },
@@ -12,7 +11,7 @@ use bevy::{
 use super::{
     collision::{Aabb, Collider},
     movement::Movement,
-    position::Position,
+    position::{Position, PositionBundle},
     solid::{FilterSolids, Solid},
 };
 
@@ -47,13 +46,37 @@ impl Actor {
         }
         false
     }
-    pub fn move_y(amount: f32, actor_position: &mut Position, on_collide: &dyn Fn()) {}
+    pub fn move_y<'a, I: Iterator<Item = &'a Aabb> + Clone>(
+        amount: f32,
+        actor_position: &mut Position,
+        actor_collider: &Collider,
+        solid_collisions: I,
+    ) -> bool {
+        actor_position.remainder.y += amount;
+        let mut movement: i32 = actor_position.remainder.y.round() as i32;
+        if movement != 0 {
+            actor_position.remainder.y -= movement as f32;
+            let step = movement.signum();
+            while movement != 0 {
+                if actor_collider.overlaps(
+                    actor_position.position + IVec2::Y * step,
+                    solid_collisions.clone(),
+                ) {
+                    return true;
+                } else {
+                    actor_position.position.y += step;
+                    movement -= step;
+                }
+            }
+        }
+        false
+    }
 }
 
 #[derive(Bundle, Default)]
 pub struct ActorPhysicsBundle {
     pub actor: Actor,
-    pub position: Position,
+    pub position: PositionBundle,
     pub collider: Collider,
     pub movement: Movement,
 }

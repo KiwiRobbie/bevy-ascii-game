@@ -31,15 +31,19 @@ use bevy_ascii_game::{
         collision::{Aabb, Collider, CollisionShape},
         movement::Movement,
         plugin::PhysicsPlugin,
-        position::Position,
+        position::{Position, PositionBundle},
         solid::{FilterSolids, SolidPhysicsBundle},
         velocity::Velocity,
+    },
+    player::{
+        movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
+        PlayerBundle, PlayerPlugin,
     },
 };
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(
+    app.add_plugins((
         DefaultPlugins
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
@@ -49,7 +53,8 @@ fn main() {
                 }),
                 ..Default::default()
             }),
-    )
+        PlayerPlugin,
+    ))
     .add_plugins((FontAtlasPlugin, PhysicsPlugin, GlyphRenderPlugin))
     .init_asset::<GlyphAnimationSource>()
     .init_asset_loader::<GlyphAnimationAssetLoader>()
@@ -63,7 +68,6 @@ fn main() {
             font_load_system,
             looping_animation_player_system,
             moving_platform,
-            player_walk_system,
         ),
     )
     .init_asset::<CustomFontSource>()
@@ -101,8 +105,6 @@ fn setup_system(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
     commands.spawn((
-        Transform::default(),
-        GlobalTransform::default(),
         GlyphAnimation {
             source: server.load("anim/player/player_running.anim.ron"),
             frame: 0,
@@ -112,18 +114,28 @@ fn setup_system(
         CharacterSet(CHARSET.chars().into_iter().collect()),
         FontSize(32),
         LoopingAnimationPlayer::new(15),
-        ActorPhysicsBundle {
-            position: Position {
-                position: IVec2 { x: -20, y: 0 },
+        PlayerBundle {
+            actor: ActorPhysicsBundle {
+                position: PositionBundle {
+                    position: Position {
+                        position: IVec2 { x: -20, y: 0 },
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                collider: Collider {
+                    shape: CollisionShape::Aabb(Aabb {
+                        min: IVec2::ZERO,
+                        size: UVec2 { x: 15, y: 8 },
+                    }),
+                },
+
                 ..Default::default()
             },
-            collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::ZERO,
-                    size: UVec2 { x: 15, y: 8 },
-                }),
+            movement: PlayerMovementBundle {
+                walk_speed: PlayerWalkSpeed { speed: 1.0 },
+                ..Default::default()
             },
-
             ..Default::default()
         },
     ));
@@ -350,20 +362,5 @@ fn looping_animation_player_system(
 
         gizmos.rect_2d(center, 0.0, size, Color::RED);
         gizmos.circle_2d(Vec2::ZERO, 5.0, Color::GREEN);
-    }
-}
-
-fn player_walk_system(
-    keyboard: Res<Input<KeyCode>>,
-    mut q_player_movement: Query<&mut Movement, &LoopingAnimationPlayer>,
-) {
-    for mut movement in q_player_movement.iter_mut() {
-        if keyboard.pressed(KeyCode::D) {
-            movement.add(Vec2 { x: 1.0, y: 0.0 });
-        }
-
-        if keyboard.pressed(KeyCode::A) {
-            movement.add(Vec2 { x: -1.0, y: 0.0 });
-        }
     }
 }
