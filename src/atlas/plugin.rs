@@ -17,21 +17,17 @@ use crate::font::{CustomFont, CustomFontSource, FontLoadedMarker, FontSize};
 
 use super::{AtlasBuilder, CharacterSet, FontAtlasCache, FontAtlasUser};
 
+type FontUpdatedFilter = Or<(
+    Changed<FontSize>,
+    Changed<CustomFont>,
+    Changed<CharacterSet>,
+    Added<FontLoadedMarker>,
+)>;
+
 fn update_atlases_system(
     mut atlas_cache: ResMut<FontAtlasCache>,
     fonts: Res<Assets<CustomFontSource>>,
-    q_users: Query<
-        (&FontSize, &CustomFont, &CharacterSet),
-        (
-            &FontAtlasUser,
-            Or<(
-                Changed<FontSize>,
-                Changed<CustomFont>,
-                Changed<CharacterSet>,
-                Added<FontLoadedMarker>,
-            )>,
-        ),
-    >,
+    q_users: Query<(&FontSize, &CustomFont, &CharacterSet), (&FontAtlasUser, FontUpdatedFilter)>,
 ) {
     for (font_size, font, character_set) in q_users.iter() {
         let Some(font) = fonts.get(font.id()) else {
@@ -43,7 +39,7 @@ fn update_atlases_system(
             if atlas.charset.is_superset(character_set) {
                 continue;
             }
-            atlas.charset.union(character_set).into_iter().collect()
+            atlas.charset.union(character_set).collect()
         } else {
             character_set.iter().collect()
         };

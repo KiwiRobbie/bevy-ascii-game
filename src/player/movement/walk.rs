@@ -15,11 +15,9 @@ pub struct PlayerWalkSpeed {
     pub speed: f32,
 }
 
+type MovementFilter = (With<PlayerMarker>, With<PlayerMovementMarker>);
 pub fn player_walk_system(
-    mut q_player: Query<
-        (&mut Movement, &PlayerInputMovement, &PlayerWalkSpeed),
-        (With<PlayerMarker>, With<PlayerMovementMarker>),
-    >,
+    mut q_player: Query<(&mut Movement, &PlayerInputMovement, &PlayerWalkSpeed), MovementFilter>,
 ) {
     for (mut movement, input, settings) in q_player.iter_mut() {
         movement.add(Vec2::X * input.horizontal * settings.speed);

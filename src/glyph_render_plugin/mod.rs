@@ -206,7 +206,7 @@ fn extract_glyph_sprites(
     >,
 ) {
     for (entity, global_transform, sprite, font, font_size) in q_glyph_sprite.iter() {
-        let transform: Transform = global_transform.clone().into();
+        let transform: Transform = (*global_transform).into();
         let snapped_transform: GlobalTransform = transform
             .with_translation(Vec3 {
                 x: (transform.translation.x / 19.0).round() * 19.0,
@@ -263,7 +263,7 @@ fn extract_glyph_animations(
         let Some(animation_source) = glyph_animations.get(animation.source.id()) else {
             continue;
         };
-        let transform: Transform = global_transform.clone().into();
+        let transform: Transform = (*global_transform).into();
         let snapped_transform: GlobalTransform = transform
             .with_translation(Vec3 {
                 x: (transform.translation.x / 19.0).round() * 19.0,
@@ -421,7 +421,7 @@ fn prepare_buffers(
         uniform_buffer.write_buffer(&render_device, &render_queue);
 
         let mut model_uniform_buffer =
-            UniformBuffer::from(GlyphModelUniform::new(global_transform.clone()));
+            UniformBuffer::from(GlyphModelUniform::new(*global_transform));
         model_uniform_buffer.write_buffer(&render_device, &render_queue);
 
         let glyph_storage_texture = gpu_glyph_texture.storage_texture.clone();

@@ -7,7 +7,6 @@ use bevy::{
         system::{Query, Res},
     },
     input::{keyboard::KeyCode, Input},
-    math::Vec2,
 };
 
 use crate::player::{system_sets::PlayerPrepare, PlayerMarker};

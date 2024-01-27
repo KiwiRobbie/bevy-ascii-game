@@ -10,7 +10,6 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     gizmos::gizmos::Gizmos,
-    input::{keyboard::KeyCode, Input},
     math::{IVec2, UVec2, Vec2, Vec3, Vec3Swizzles},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
@@ -18,8 +17,6 @@ use bevy::{
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
-use bevy_prng::ChaCha8Rng;
-use bevy_rand::{plugin::EntropyPlugin, resource::GlobalEntropy};
 
 use bevy_ascii_game::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
@@ -58,13 +55,11 @@ fn main() {
     .add_plugins((FontAtlasPlugin, PhysicsPlugin, GlyphRenderPlugin))
     .init_asset::<GlyphAnimationSource>()
     .init_asset_loader::<GlyphAnimationAssetLoader>()
-    .add_plugins(EntropyPlugin::<ChaCha8Rng>::default())
     .add_systems(Startup, setup_system)
     .add_systems(
         Update,
         (
             keyboard_input_system,
-            glitch_system,
             font_load_system,
             looping_animation_player_system,
             moving_platform,
@@ -111,7 +106,7 @@ fn setup_system(
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().into_iter().collect()),
+        CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
         LoopingAnimationPlayer::new(15),
         PlayerBundle {
@@ -151,7 +146,7 @@ fn setup_system(
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().into_iter().collect()),
+        CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
         SolidPhysicsBundle {
             collider: Collider {
@@ -178,7 +173,7 @@ fn setup_system(
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().into_iter().collect()),
+        CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
         SolidPhysicsBundle {
             position: Position {
@@ -237,8 +232,6 @@ fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
     q_glyph_sprite: Query<&GlyphSprite, &KeyboardInputMarker>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    // atlases: Res<Assets<FontAtlasSource>>,
-    fonts: Res<Assets<CustomFontSource>>,
     mut position: Local<usize>,
 ) {
     let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
@@ -250,10 +243,10 @@ fn keyboard_input_system(
     let height = glyph_texture.data.len();
 
     fn get_pos(index: usize, width: usize, height: usize) -> (usize, usize) {
-        return (
+        (
             index.rem_euclid(width),
             index.div_euclid(width).rem_euclid(height),
-        );
+        )
     }
 
     for character in ev_character.read() {
@@ -275,44 +268,6 @@ fn keyboard_input_system(
     }
 }
 
-fn glitch_system(
-    mut q_glyph_sprite: Query<(&GlyphSprite, &mut Transform), &GlitchMarker>,
-    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    // atlases: Res<Assets<FontAtlasSource>>,
-    mut rng: ResMut<GlobalEntropy<ChaCha8Rng>>,
-    time: Res<Time>,
-) {
-    // for (glyph_sprite, mut transform) in q_glyph_sprite.iter_mut() {
-    //     *transform = transform.with_translation(Vec3 {
-    //         x: FONT_ADVANCE * 32.0 * 0.0 + 5.0 * FONT_SIZE * f32::cos(time.elapsed_seconds()),
-    //         y: FONT_LEAD * 16.0 * -0.5 + 5.0 * FONT_SIZE * f32::sin(time.elapsed_seconds()),
-    //         z: 0.0,
-    //     });
-
-    //     let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
-    //     let atlas = atlases.get(glyph_sprite.atlas.id()).unwrap();
-
-    //     let glitch_position = rng.next_u32().rem_euclid(glyph_texture.width) as usize;
-    //     let glitch_value = rng.next_u32().rem_euclid(atlas.glyph_ids.len() as u32) as u16;
-
-    //     glyph_texture.data.split_at_mut(glitch_position * 2).1[..2]
-    //         .copy_from_slice(&glitch_value.to_le_bytes());
-
-    //     let src_end = ((glyph_texture.height - 1) * glyph_texture.width * 2) as usize;
-    //     let dst_start = (glyph_texture.width * 2) as usize;
-    //     glyph_texture.data.copy_within(..src_end, dst_start);
-
-    //     for start_item in glyph_texture
-    //         .data
-    //         .iter_mut()
-    //         .step_by(2)
-    //         .take(glyph_texture.width as usize)
-    //     {
-    //         *start_item = start_item.saturating_add(1);
-    //     }
-    // }
-}
-
 #[derive(Component)]
 pub struct LoopingAnimationPlayer {
     pub frame_rate: u32,
@@ -321,7 +276,7 @@ pub struct LoopingAnimationPlayer {
 impl LoopingAnimationPlayer {
     fn new(frame_rate: u32) -> Self {
         Self {
-            frame_rate: frame_rate,
+            frame_rate,
             start_time: None,
         }
     }

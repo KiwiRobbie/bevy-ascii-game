@@ -3,10 +3,7 @@ use bevy::{
     ecs::{bundle::Bundle, component::Component, schedule::IntoSystemSetConfigs},
 };
 
-use crate::physics::{
-    actor::ActorPhysicsBundle,
-    position::{Position, PositionBundle},
-};
+use crate::physics::actor::ActorPhysicsBundle;
 
 use self::{
     input::{PlayerInputBundle, PlayerInputPlugin},

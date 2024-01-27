@@ -3,8 +3,6 @@ use bevy::{
     ecs::{bundle::Bundle, component::Component, schedule::IntoSystemConfigs},
 };
 
-use crate::physics::{movement::Movement, velocity::Velocity};
-
 use self::walk::{player_walk_system, PlayerWalkSpeed};
 
 use super::system_sets::PlayerUpdate;

@@ -99,7 +99,7 @@ pub fn actor_move_system(
             actor_movement.delta.x,
             &mut actor_position,
             actor_collider,
-            solids_aabbs.into_iter(),
+            solids_aabbs.iter(),
         );
         actor_movement.delta.x = 0.0;
     }

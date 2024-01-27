@@ -82,7 +82,7 @@ impl Collider {
         let self_colliders = self.shape.colliders_at(self_pos);
         for a in self_colliders.into_iter() {
             for b in other.clone() {
-                if a.overlaps(&b) {
+                if a.overlaps(b) {
                     return true;
                 }
             }
@@ -101,7 +101,7 @@ impl Collider {
         let self_colliders = self.shape.colliders_at(self_pos);
         for a in self_colliders.into_iter() {
             for b in other.iter() {
-                if let Some(new_distance) = a.overlap_distance(&b, direction) {
+                if let Some(new_distance) = a.overlap_distance(b, direction) {
                     if let Some(distance) = overlap {
                         if distance < new_distance {
                             overlap = Some(new_distance);

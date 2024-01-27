@@ -36,7 +36,7 @@ pub fn solid_move_system(
         let (current, after) = after.split_at_mut(1);
 
         let (_solid, solid_pos, solid_collision, movement, riding) =
-            current.into_iter().next().unwrap();
+            current.iter_mut().next().unwrap();
 
         solid_pos.remainder += movement.delta;
         movement.delta = Vec2::ZERO;
@@ -53,8 +53,8 @@ pub fn solid_move_system(
             .collect();
 
         let other_solid_aabbs: Box<[_]> = before
-            .into_iter()
-            .chain(after.into_iter())
+            .iter_mut()
+            .chain(after.iter_mut())
             .flat_map(|(_solid, solid_pos, solid_collision, _movement, _riding)| {
                 solid_collision.shape.colliders_at(solid_pos.position)
             })
@@ -75,7 +75,7 @@ pub fn solid_move_system(
                     distance as f32,
                     &mut actor_pos,
                     actor_collision,
-                    other_solid_aabbs.into_iter(),
+                    other_solid_aabbs.iter(),
                 ) {
                     commands.entity(actor).insert(SquishedMarker);
                 }
@@ -84,7 +84,7 @@ pub fn solid_move_system(
                     movement.x as f32,
                     &mut actor_pos,
                     actor_collision,
-                    other_solid_aabbs.into_iter(),
+                    other_solid_aabbs.iter(),
                 ) {
                     commands.entity(actor).insert(SquishedMarker);
                 }

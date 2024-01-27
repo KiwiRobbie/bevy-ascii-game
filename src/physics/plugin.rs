@@ -1,14 +1,11 @@
 use bevy::{
-    app::{Plugin, PostUpdate, Update},
+    app::{Plugin, Update},
     ecs::schedule::IntoSystemConfigs,
 };
 
 use super::{
-    actor::{actor_move_system, FilterActors},
-    collision::debug_collision_shapes,
-    position::update_transforms,
+    actor::actor_move_system, collision::debug_collision_shapes, position::update_transforms,
     solid::solid_move_system,
-    solid::FilterSolids,
 };
 
 #[derive(Default)]

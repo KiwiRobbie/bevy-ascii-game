@@ -67,7 +67,7 @@ impl CustomFontSource {
     }
 
     pub fn key(&self) -> CustomFontCacheKey {
-        CustomFontCacheKey(self.key.clone())
+        CustomFontCacheKey(self.key)
     }
 }
 
@@ -111,15 +111,12 @@ pub fn font_load_system(
     q_font_references: Query<(Entity, &CustomFont)>,
 ) {
     for ev in ev_asset.read() {
-        match ev {
-            AssetEvent::LoadedWithDependencies { id } => {
-                for (entity, font) in q_font_references.iter() {
-                    if &font.id() == id {
-                        commands.entity(entity).insert(FontLoadedMarker);
-                    }
+        if let AssetEvent::LoadedWithDependencies { id } = ev {
+            for (entity, font) in q_font_references.iter() {
+                if &font.id() == id {
+                    commands.entity(entity).insert(FontLoadedMarker);
                 }
             }
-            _ => {}
         }
     }
 }
