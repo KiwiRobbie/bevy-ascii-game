@@ -9,7 +9,9 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    math::{IVec2, UVec2, Vec2, Vec3},
+    gizmos::gizmos::Gizmos,
+    input::{keyboard::KeyCode, Input},
+    math::{IVec2, UVec2, Vec2, Vec3, Vec3Swizzles},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
     transform::components::{GlobalTransform, Transform},
@@ -61,6 +63,7 @@ fn main() {
             font_load_system,
             looping_animation_player_system,
             moving_platform,
+            player_walk_system,
         ),
     )
     .init_asset::<CustomFontSource>()
@@ -88,9 +91,7 @@ fn moving_platform(
         } else if position.position.x < -50 {
             velocity.velocity.x = 10.0;
         }
-        dbg!(&position, &movement);
         movement.add(velocity.velocity * time.delta_seconds());
-        dbg!(&position, &movement);
     }
 }
 
@@ -113,7 +114,7 @@ fn setup_system(
         LoopingAnimationPlayer::new(15),
         ActorPhysicsBundle {
             position: Position {
-                position: IVec2 { x: 5, y: 0 },
+                position: IVec2 { x: -20, y: 0 },
                 ..Default::default()
             },
             collider: Collider {
@@ -154,7 +155,37 @@ fn setup_system(
             velocity: Vec2 { x: 50.0, y: 0.0 },
         },
     ));
-
+    commands.spawn((
+        Transform::default(),
+        GlobalTransform::default(),
+        GlyphSprite {
+            color: Color::WHITE,
+            texture: glyph_textures.add(GlyphTexture {
+                data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
+            }),
+        },
+        FontAtlasUser,
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet(CHARSET.chars().into_iter().collect()),
+        FontSize(32),
+        SolidPhysicsBundle {
+            position: Position {
+                position: IVec2 { x: -30, y: 0 },
+                ..Default::default()
+            },
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::ZERO,
+                    size: UVec2 { x: 3, y: 2 },
+                }),
+            },
+            ..Default::default()
+        },
+        Movement::default(),
+        Velocity {
+            velocity: Vec2 { x: 0.0, y: 0.0 },
+        },
+    ));
     commands.spawn((
         CustomFont(server.load("FiraCode-Regular.ttf")),
         FontAtlasUser,
@@ -188,7 +219,7 @@ struct GlitchMarker;
 
 const FONT_SIZE: f32 = 32.0f32;
 const FONT_ADVANCE: f32 = 19.0f32;
-const FONT_LEAD: f32 = 32.0f32;
+const FONT_LEAD: f32 = 40.0f32;
 
 fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
@@ -285,14 +316,15 @@ impl LoopingAnimationPlayer {
 }
 
 fn looping_animation_player_system(
-    mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer)>,
+    mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer, &Transform)>,
     glyph_animation_sources: Res<Assets<GlyphAnimationSource>>,
     time: Res<Time>,
+    mut gizmos: Gizmos,
 ) {
     // TODO: Fix visual glitch caused by wrapping every hour!
-    let ellapsed = time.elapsed_seconds_wrapped_f64();
+    let elapsed = time.elapsed_seconds_wrapped_f64();
 
-    for (mut animation, mut player) in q_glyph_animation.iter_mut() {
+    for (mut animation, mut player, transform) in q_glyph_animation.iter_mut() {
         let Some(source) = glyph_animation_sources.get(animation.source.id()) else {
             continue;
         };
@@ -300,12 +332,38 @@ fn looping_animation_player_system(
         let start_time = match player.start_time {
             Some(t) => t,
             None => {
-                player.start_time = Some(ellapsed);
-                ellapsed
+                player.start_time = Some(elapsed);
+                elapsed
             }
         };
 
-        let frame = ((ellapsed - start_time) * player.frame_rate as f64).round() as u32;
+        let frame = ((elapsed - start_time) * player.frame_rate as f64).round() as u32;
         animation.frame = frame.rem_euclid(source.frames.len() as u32);
+
+        let origin = transform.translation.xy();
+        let size = source.size.as_vec2()
+            * Vec2 {
+                x: FONT_ADVANCE,
+                y: FONT_LEAD,
+            };
+        let center = origin + size / 2.0;
+
+        gizmos.rect_2d(center, 0.0, size, Color::RED);
+        gizmos.circle_2d(Vec2::ZERO, 5.0, Color::GREEN);
+    }
+}
+
+fn player_walk_system(
+    keyboard: Res<Input<KeyCode>>,
+    mut q_player_movement: Query<&mut Movement, &LoopingAnimationPlayer>,
+) {
+    for mut movement in q_player_movement.iter_mut() {
+        if keyboard.pressed(KeyCode::D) {
+            movement.add(Vec2 { x: 1.0, y: 0.0 });
+        }
+
+        if keyboard.pressed(KeyCode::A) {
+            movement.add(Vec2 { x: -1.0, y: 0.0 });
+        }
     }
 }

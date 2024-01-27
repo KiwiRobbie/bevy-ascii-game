@@ -2,6 +2,8 @@ struct UniformBuffer {
     color: vec4<f32>,
     width: u32,
     height: u32,
+    advance: u32,
+    line_spacing: u32,
 }
 
 struct AtlasItem {
@@ -40,13 +42,14 @@ var<private> verticies: array<vec2<i32>,6> = array(
     vec2<i32>(0, 1),
 );
 
-const grid_size = vec2<i32>(19, 32);
+
 
 @compute @workgroup_size(8, 8, 1)
 fn compute(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num_workgroups) num_workgroups: vec3<u32>) {
     if invocation_id.x >= num_workgroups.x || invocation_id.y >= num_workgroups.y || invocation_id.z >= num_workgroups.z {
         return;
     }
+    var grid_size: vec2<i32> = vec2<i32>(i32(uniform_buffer.advance), i32(uniform_buffer.line_spacing));
 
     let location = vec2<i32>(i32(invocation_id.x), i32(invocation_id.y));
     let index: u32 = u32(location.x) + u32(location.y) * uniform_buffer.width;
@@ -59,8 +62,8 @@ fn compute(@builtin(global_invocation_id) invocation_id: vec3<u32>, @builtin(num
         let corner = verticies[i];
 
         var vertex: Vertex ;
-        vertex.pos = vec2<f32>(location.xy * grid_size - atlas_item.offset * vec2<i32>(-1, 1) + corner * vec2<i32>(atlas_item.size));
-        vertex.uv = vec2<f32>(atlas_item.start + atlas_item.size * vec2<u32>(corner)) / vec2<f32>(textureDimensions(atlas_texture).xy);
+        vertex.pos = vec2<f32>(location.xy * grid_size + atlas_item.offset + corner * vec2<i32>(i32(atlas_item.size.x), -i32(atlas_item.size.y)));
+        vertex.uv = vec2<f32>(atlas_item.start + atlas_item.size * vec2<u32>(u32(corner.x), u32(corner.y))) / vec2<f32>(textureDimensions(atlas_texture).xy);
         vertex_buffer.verticies[6u * index + u32(i)] = vertex;
     }
 }

@@ -14,7 +14,7 @@ pub fn update_transforms(mut q_position_transforms: Query<(&mut Transform, &Posi
     for (mut transform, position) in q_position_transforms.iter_mut() {
         *transform = transform.with_translation(Vec3 {
             x: (position.position.x * 19) as f32,
-            y: (position.position.y * 32) as f32,
+            y: (position.position.y * 40) as f32,
             z: transform.translation.z,
         });
     }

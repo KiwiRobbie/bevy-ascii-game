@@ -79,11 +79,11 @@ impl render_graph::Node for GlyphGenerationNode {
         render_context: &mut bevy::render::renderer::RenderContext,
         world: &World,
     ) -> Result<(), render_graph::NodeRunError> {
-        let view_entity = graph.get_view_entity().expect("Mising View Entity");
+        let view_entity = graph.get_view_entity().expect("Missing View Entity");
         let target = self
             .q_view
             .get_manual(world, view_entity)
-            .expect("Mising ViewTarget");
+            .expect("Missing ViewTarget");
 
         let pipeline_cache = world.resource::<PipelineCache>();
         let glyph_pipeline_data = world.get_resource::<GlyphPipelineData>().unwrap();

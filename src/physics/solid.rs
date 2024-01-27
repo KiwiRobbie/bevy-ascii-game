@@ -2,7 +2,7 @@ use bevy::{prelude::*, utils::EntityHashSet};
 
 use super::{
     actor::{Actor, FilterActors},
-    collision::Collider,
+    collision::{Aabb, Collider},
     direction::Direction,
     movement::Movement,
     position::Position,
@@ -35,7 +35,7 @@ pub fn solid_move_system(
         let (before, after) = solids.split_at_mut(i);
         let (current, after) = after.split_at_mut(1);
 
-        let (_solid, solid_pos, _solid_collision, movement, riding) =
+        let (_solid, solid_pos, solid_collision, movement, riding) =
             current.into_iter().next().unwrap();
 
         solid_pos.remainder += movement.delta;
@@ -47,7 +47,12 @@ pub fn solid_move_system(
             solid_pos.position.x += movement.x;
         }
 
-        let other_colliders: Box<[_]> = before
+        let solid_aabbs: Vec<Aabb> = solid_collision
+            .shape
+            .colliders_at(solid_pos.position)
+            .collect();
+
+        let other_solid_aabbs: Box<[_]> = before
             .into_iter()
             .chain(after.into_iter())
             .flat_map(|(_solid, solid_pos, solid_collision, _movement, _riding)| {
@@ -57,19 +62,20 @@ pub fn solid_move_system(
 
         for (actor, mut actor_pos, actor_collision) in q_actors.iter_mut() {
             if let Some(distance) = actor_collision.overlap_distance(
-                other_colliders.into_iter(),
+                actor_pos.position,
+                &solid_aabbs,
                 if movement.x > 0 {
                     Direction::X
                 } else {
                     Direction::NegX
                 },
             ) {
-                let distance = -distance * movement.x.signum();
+                let distance = distance * movement.x.signum();
                 if Actor::move_x(
                     distance as f32,
                     &mut actor_pos,
                     actor_collision,
-                    other_colliders.into_iter(),
+                    other_solid_aabbs.into_iter(),
                 ) {
                     commands.entity(actor).insert(SquishedMarker);
                 }
@@ -78,7 +84,7 @@ pub fn solid_move_system(
                     movement.x as f32,
                     &mut actor_pos,
                     actor_collision,
-                    other_colliders.into_iter(),
+                    other_solid_aabbs.into_iter(),
                 ) {
                     commands.entity(actor).insert(SquishedMarker);
                 }

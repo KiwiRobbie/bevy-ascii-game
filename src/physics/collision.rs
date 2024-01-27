@@ -1,9 +1,11 @@
 use bevy::{
-    ecs::component::Component,
-    math::{IVec2, UVec2},
+    ecs::{component::Component, system::Query},
+    gizmos::gizmos::Gizmos,
+    math::{IVec2, UVec2, Vec2},
+    render::color::Color,
 };
 
-use super::direction::Direction;
+use super::{direction::Direction, position::Position};
 
 #[derive(Component, Default)]
 pub struct Collider {
@@ -39,7 +41,7 @@ impl Default for CollisionShape {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Aabb {
     pub min: IVec2,
     pub size: UVec2,
@@ -60,9 +62,9 @@ impl Aabb {
     pub fn overlap_distance(&self, other: &Self, direction: Direction) -> Option<i32> {
         if self.overlaps(other) {
             Some(match direction {
-                Direction::X => self.min.x + self.size.x as i32 - other.min.x,
+                Direction::X => other.min.x + other.size.x as i32 - self.min.x,
                 Direction::Y => self.min.y + self.size.y as i32 - other.min.y,
-                Direction::NegX => self.min.x - other.min.x - other.size.x as i32,
+                Direction::NegX => self.min.x + self.size.x as i32 - other.min.x,
                 Direction::NegY => self.min.y - other.min.y - other.size.y as i32,
             })
         } else {
@@ -72,13 +74,14 @@ impl Aabb {
 }
 
 impl Collider {
-    pub fn overlaps<'a, I: Iterator<Item = &'a Aabb> + Clone>(&self, other: I) -> bool {
-        let self_colliders = self.shape.colliders();
-        for (i, a) in self_colliders.into_iter().enumerate() {
-            for (j, b) in other.clone().enumerate() {
-                if j > i {
-                    break;
-                }
+    pub fn overlaps<'a, I: Iterator<Item = &'a Aabb> + Clone>(
+        &self,
+        self_pos: IVec2,
+        other: I,
+    ) -> bool {
+        let self_colliders = self.shape.colliders_at(self_pos);
+        for a in self_colliders.into_iter() {
+            for b in other.clone() {
                 if a.overlaps(&b) {
                     return true;
                 }
@@ -86,19 +89,18 @@ impl Collider {
         }
         false
     }
-    pub fn overlap_distance<'a, I: Iterator<Item = &'a Aabb> + Clone>(
+
+    pub fn overlap_distance(
         &self,
-        other: I,
+        self_pos: IVec2,
+        other: &[Aabb],
         direction: Direction,
     ) -> Option<i32> {
         let mut overlap = None;
 
-        let self_colliders = self.shape.colliders();
-        for (i, a) in self_colliders.into_iter().enumerate() {
-            for (j, b) in other.clone().enumerate() {
-                if j > i {
-                    break;
-                }
+        let self_colliders = self.shape.colliders_at(self_pos);
+        for a in self_colliders.into_iter() {
+            for b in other.iter() {
                 if let Some(new_distance) = a.overlap_distance(&b, direction) {
                     if let Some(distance) = overlap {
                         if distance < new_distance {
@@ -119,8 +121,15 @@ pub struct OffsetCollision<'a> {
     pub offset: IVec2,
 }
 
-// impl<'a> Into<Box<dyn Iterator<Item = Aabb>>> for OffsetCollision<'a> {
-//     fn into(self) -> Box<dyn Iterator<Item = Aabb>> {
-//         return self.shape.colliders_at(self.offset);
-//     }
-// }
+pub fn debug_collision_shapes(mut gizmos: Gizmos, q_colliders: Query<(&Collider, &Position)>) {
+    for (collider, position) in q_colliders.iter() {
+        for shape in collider.shape.colliders() {
+            let min = (position.position + shape.min).as_vec2() * Vec2 { x: 19.0, y: 40.0 };
+            let size = shape.size.as_vec2() * Vec2 { x: 19.0, y: 40.0 };
+
+            let center = min + 0.5 * size;
+
+            gizmos.rect_2d(center, 0.0, size, Color::GREEN);
+        }
+    }
+}

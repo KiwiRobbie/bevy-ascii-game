@@ -11,7 +11,7 @@ use super::{AtlasItem, FontAtlasSource};
 
 struct RenderedGlyph {
     glyph_id: u16,
-    ofset: IVec2,
+    offset: IVec2,
     size: UVec2,
     texture: Vec<u8>,
 }
@@ -54,11 +54,13 @@ impl<'a> AtlasBuilder<'a> {
             *alpha = 0xff;
         }
 
+        let metrics = self.font.metrics(&[]).scale(32.0);
+
         self.rendered.push(RenderedGlyph {
             glyph_id,
-            ofset: IVec2 {
+            offset: IVec2 {
                 x: image.placement.left,
-                y: image.placement.top,
+                y: image.placement.top + metrics.descent as i32,
             },
             size: UVec2 {
                 x: image.placement.width,
@@ -122,7 +124,7 @@ impl<'a> AtlasBuilder<'a> {
             items.push(AtlasItem {
                 start: *packed_position,
                 size: rendered.size,
-                offset: rendered.ofset,
+                offset: rendered.offset,
             });
 
             for y in 0..rendered.size.y {

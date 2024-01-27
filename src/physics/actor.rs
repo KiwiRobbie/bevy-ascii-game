@@ -1,13 +1,19 @@
-use bevy::ecs::{
-    bundle::Bundle,
-    component::Component,
-    query::{With, Without},
+use bevy::{
+    ecs::{
+        bundle::Bundle,
+        component::Component,
+        entity::Entity,
+        query::{With, Without},
+        system::Query,
+    },
+    math::IVec2,
 };
 
 use super::{
     collision::{Aabb, Collider},
+    movement::Movement,
     position::Position,
-    solid::Solid,
+    solid::{FilterSolids, Solid},
 };
 
 pub type FilterActors = (With<Actor>, Without<Solid>);
@@ -28,11 +34,14 @@ impl Actor {
             actor_position.remainder.x -= movement as f32;
             let step = movement.signum();
             while movement != 0 {
-                if actor_collider.overlaps(solid_collisions.clone()) {
-                    actor_position.position += step;
-                    movement -= step;
-                } else {
+                if actor_collider.overlaps(
+                    actor_position.position + IVec2::X * step,
+                    solid_collisions.clone(),
+                ) {
                     return true;
+                } else {
+                    actor_position.position.x += step;
+                    movement -= step;
                 }
             }
         }
@@ -46,4 +55,29 @@ pub struct ActorPhysicsBundle {
     pub actor: Actor,
     pub position: Position,
     pub collider: Collider,
+    pub movement: Movement,
+}
+
+pub fn actor_move_system(
+    mut q_actors: Query<(&mut Position, &mut Movement, &Collider), FilterActors>,
+    mut q_solids: Query<(&mut Position, &Collider), FilterSolids>,
+) {
+    let solids_aabbs: Box<[_]> = q_solids
+        .iter_mut()
+        .flat_map(|(solid_pos, solid_collision)| {
+            solid_collision.shape.colliders_at(solid_pos.position)
+        })
+        .collect();
+
+    dbg!(&solids_aabbs);
+
+    for (mut actor_position, mut actor_movement, actor_collider) in q_actors.iter_mut() {
+        Actor::move_x(
+            actor_movement.delta.x,
+            &mut actor_position,
+            actor_collider,
+            solids_aabbs.into_iter(),
+        );
+        actor_movement.delta.x = 0.0;
+    }
 }

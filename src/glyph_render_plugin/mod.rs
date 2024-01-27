@@ -71,6 +71,8 @@ pub struct GlyphUniforms {
     pub color: Vec4,
     pub width: u32,
     pub height: u32,
+    pub advance: u32,
+    pub line_spacing: u32,
 }
 
 #[derive(Asset, TypePath, Clone)]
@@ -85,7 +87,7 @@ pub struct ExtractedGlyphTexture {
     pub height: u32,
 
     pub advance: u32,
-    pub leading: u32,
+    pub line_spacing: u32,
 }
 
 impl ExtractedGlyphTexture {
@@ -100,7 +102,7 @@ impl ExtractedGlyphTexture {
         for (y, chars) in text.iter().enumerate() {
             assert_eq!(text[y].len(), width);
             for (x, c) in chars.chars().enumerate() {
-                let index = 2 * (x + y * width);
+                let index = 2 * (x + (height - y - 1) * width);
                 let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
                 data[index..index + 2].copy_from_slice(&glyph_id.to_le_bytes());
             }
@@ -111,7 +113,7 @@ impl ExtractedGlyphTexture {
             width: width as u32,
             height: height as u32,
             advance: 19u32,
-            leading: 32u32,
+            line_spacing: 32u32,
         }
     }
 
@@ -131,7 +133,7 @@ impl ExtractedGlyphTexture {
         for (y, chars) in text.iter().enumerate() {
             assert_eq!(text[y].len(), width);
             for (x, c) in chars.chars().enumerate() {
-                let index = 2 * (x + y * width);
+                let index = 2 * (x + (height - y - 1) * width);
                 let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
                 data[index..index + 2].copy_from_slice(&glyph_id.to_le_bytes());
             }
@@ -142,7 +144,7 @@ impl ExtractedGlyphTexture {
             width: width as u32,
             height: height as u32,
             advance: 19u32,
-            leading: 32u32,
+            line_spacing: 32u32,
         }
     }
 }
@@ -208,7 +210,7 @@ fn extract_glyph_sprites(
         let snapped_transform: GlobalTransform = transform
             .with_translation(Vec3 {
                 x: (transform.translation.x / 19.0).round() * 19.0,
-                y: (transform.translation.y / 32.0).round() * 32.0,
+                y: (transform.translation.y / 40.0).round() * 40.0,
                 z: transform.translation.z,
             })
             .into();
@@ -265,7 +267,7 @@ fn extract_glyph_animations(
         let snapped_transform: GlobalTransform = transform
             .with_translation(Vec3 {
                 x: (transform.translation.x / 19.0).round() * 19.0,
-                y: (transform.translation.y / 32.0).round() * 32.0,
+                y: (transform.translation.y / 40.0).round() * 40.0,
                 z: transform.translation.z,
             })
             .into();
@@ -399,17 +401,22 @@ fn prepare_buffers(
         Option<&GlyphSprite>,
         &GlobalTransform,
         &GpuGlyphTexture,
+        &ExtractedGlyphTexture,
     )>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
-    for (entity, sprite, global_transform, gpu_glyph_texture) in query.iter() {
+    for (entity, sprite, global_transform, gpu_glyph_texture, extracted_glyph_texture) in
+        query.iter()
+    {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: sprite
                 .map(|sprite| sprite.color.into())
                 .unwrap_or(Color::WHITE.into()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
+            advance: extracted_glyph_texture.advance,
+            line_spacing: extracted_glyph_texture.line_spacing,
         });
         uniform_buffer.write_buffer(&render_device, &render_queue);
 

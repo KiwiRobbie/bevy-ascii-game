@@ -11,13 +11,14 @@
             "cargo": {
                 "args": [
                     "build",
+                    "--features=bevy/file_watcher"
                 ],
                 "filter": {
                     "name": "bevy-ascii-game",
                     "kind": "bin"
                 }
             },
-            "args": ["--features", "bevy/file_watcher"],
+            "args": [],
             "cwd": "${workspaceFolder}",
             "env": {
                 "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug/deps:/home/kiwi/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH",

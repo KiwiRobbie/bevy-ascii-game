@@ -4,7 +4,11 @@ use bevy::{
 };
 
 use super::{
-    actor::FilterActors, position::update_transforms, solid::solid_move_system, solid::FilterSolids,
+    actor::{actor_move_system, FilterActors},
+    collision::debug_collision_shapes,
+    position::update_transforms,
+    solid::solid_move_system,
+    solid::FilterSolids,
 };
 
 #[derive(Default)]
@@ -15,8 +19,12 @@ impl Plugin for PhysicsPlugin {
         app.add_systems(
             Update,
             (
-                solid_move_system.before(update_transforms),
+                actor_move_system.before(solid_move_system),
+                solid_move_system
+                    .before(update_transforms)
+                    .after(actor_move_system),
                 update_transforms.after(solid_move_system),
+                debug_collision_shapes,
             ),
         );
     }
