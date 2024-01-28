@@ -10,3 +10,11 @@ impl Movement {
         self.delta += movement;
     }
 }
+
+#[derive(Debug, Default, Component)]
+pub struct MovementObstructed {
+    pub x: bool,
+    pub y: bool,
+    pub neg_x: bool,
+    pub neg_y: bool,
+}

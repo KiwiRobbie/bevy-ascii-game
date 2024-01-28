@@ -23,3 +23,6 @@ pub struct PlayerInputBundle {
     marker: PlayerInputMarker,
     movement_input: PlayerInputMovement,
 }
+
+#[derive(Component, Default, Debug)]
+pub struct PlayerInputJump;

@@ -208,15 +208,13 @@ fn extract_glyph_sprites(
 ) {
     for (entity, global_transform, sprite, font, font_size) in q_glyph_sprite.iter() {
         let transform: Transform = (*global_transform).into();
-        // let offset_transform: GlobalTransform = (transform
-        //     * Transform::from_translation(Vec3::new(
-        //         (19 * sprite.offset.x) as f32,
-        //         (40 * sprite.offset.y) as f32,
-        //         0.0,
-        //     )))
-        // .into();
-
-        let offset_transform: GlobalTransform = transform.into();
+        let offset_transform: GlobalTransform = (transform
+            * Transform::from_translation(Vec3::new(
+                (19 * sprite.offset.x) as f32,
+                (40 * sprite.offset.y) as f32,
+                0.0,
+            )))
+        .into();
 
         let font = fonts.get(font.id()).unwrap();
 

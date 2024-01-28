@@ -217,13 +217,7 @@ fn setup_system(
                     size: UVec2 { x: 3, y: 2 },
                 }),
             },
-            position: PositionBundle {
-                position: Position {
-                    position: IVec2 { x: -30, y: -15 },
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
+            position: IVec2::new(-30, -10).into(),
             ..Default::default()
         },
         Velocity {
@@ -265,7 +259,7 @@ fn setup_system(
         CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
         SolidPhysicsBundle {
-            position: IVec2::new(-50, -5).into(),
+            position: IVec2::new(-50, -12).into(),
             collider: Collider {
                 shape: CollisionShape::Aabb(Aabb {
                     min: IVec2::ZERO,

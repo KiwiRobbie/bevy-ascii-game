@@ -2,15 +2,16 @@ use bevy::{
     ecs::{
         bundle::Bundle,
         component::Component,
+        entity::Entity,
         query::{With, Without},
-        system::Query,
+        system::{Commands, Query},
     },
     math::{IVec2, Vec2},
 };
 
 use super::{
     collision::{Aabb, Collider},
-    movement::Movement,
+    movement::{Movement, MovementObstructed},
     position::{Position, PositionBundle},
     solid::{FilterSolids, Solid},
 };
@@ -82,8 +83,9 @@ pub struct ActorPhysicsBundle {
 }
 
 pub fn actor_move_system(
-    mut q_actors: Query<(&mut Position, &mut Movement, &Collider), FilterActors>,
+    mut q_actors: Query<(Entity, &mut Position, &mut Movement, &Collider), FilterActors>,
     mut q_solids: Query<(&mut Position, &Collider), FilterSolids>,
+    mut commands: Commands,
 ) {
     let solids_aabbs: Box<[_]> = q_solids
         .iter_mut()
@@ -92,21 +94,34 @@ pub fn actor_move_system(
         })
         .collect();
 
-    dbg!(&solids_aabbs);
+    for (entity, mut actor_position, mut actor_movement, actor_collider) in q_actors.iter_mut() {
+        let mut obstructed = MovementObstructed::default();
 
-    for (mut actor_position, mut actor_movement, actor_collider) in q_actors.iter_mut() {
-        Actor::move_x(
+        if Actor::move_x(
             actor_movement.delta.x,
             &mut actor_position,
             actor_collider,
             solids_aabbs.iter(),
-        );
-        Actor::move_y(
+        ) {
+            if actor_movement.delta.x > 0.0 {
+                obstructed.x = true;
+            } else {
+                obstructed.neg_x = true;
+            }
+        }
+        if Actor::move_y(
             actor_movement.delta.y,
             &mut actor_position,
             actor_collider,
             solids_aabbs.iter(),
-        );
+        ) {
+            if actor_movement.delta.y > 0.0 {
+                obstructed.y = true;
+            } else {
+                obstructed.neg_y = true;
+            }
+        }
+        commands.entity(entity).insert(obstructed);
         actor_movement.delta = Vec2::ZERO;
     }
 }

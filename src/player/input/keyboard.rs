@@ -2,15 +2,16 @@ use bevy::{
     app::{Plugin, PreUpdate},
     ecs::{
         component::Component,
+        entity::Entity,
         query::With,
-        system::{Query, Res},
+        system::{Commands, Query, Res},
     },
     input::{keyboard::KeyCode, Input},
 };
 
 use crate::player::PlayerMarker;
 
-use super::PlayerInputMarker;
+use super::{PlayerInputJump, PlayerInputMarker};
 
 #[derive(Debug, Default, Component, Clone)]
 pub struct PlayerInputMovement {
@@ -18,7 +19,7 @@ pub struct PlayerInputMovement {
     pub vertical: f32,
 }
 
-fn player_keyboard_movement_input(
+fn player_keyboard_input_movement(
     keyboard: Res<Input<KeyCode>>,
     mut q_player_movement: Query<
         &mut PlayerInputMovement,
@@ -51,10 +52,28 @@ fn player_keyboard_movement_input(
     }
 }
 
+fn player_keyboard_input_jump(
+    mut commands: Commands,
+    keyboard: Res<Input<KeyCode>>,
+    q_jump_inputs: Query<Entity, With<PlayerInputJump>>,
+    q_players: Query<Entity, (With<PlayerMarker>, With<PlayerInputMarker>)>,
+) {
+    for entity in q_players.iter() {
+        commands.entity(entity).remove::<PlayerInputJump>();
+    }
+    if keyboard.pressed(KeyCode::Space) {
+        for entity in q_players.iter() {
+            commands.entity(entity).insert(PlayerInputJump);
+        }
+    }
+}
 pub struct PlayerKeyboardInputPlugin;
 
 impl Plugin for PlayerKeyboardInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(PreUpdate, player_keyboard_movement_input);
+        app.add_systems(
+            PreUpdate,
+            (player_keyboard_input_movement, player_keyboard_input_jump),
+        );
     }
 }
