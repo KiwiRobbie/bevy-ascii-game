@@ -113,7 +113,7 @@ impl ExtractedGlyphTexture {
             width: width as u32,
             height: height as u32,
             advance: 19u32,
-            line_spacing: 32u32,
+            line_spacing: 40u32,
         }
     }
 
@@ -144,7 +144,7 @@ impl ExtractedGlyphTexture {
             width: width as u32,
             height: height as u32,
             advance: 19u32,
-            line_spacing: 32u32,
+            line_spacing: 40u32,
         }
     }
 }
@@ -153,6 +153,7 @@ impl ExtractedGlyphTexture {
 pub struct GlyphSprite {
     pub color: Color,
     pub texture: Handle<GlyphTexture>,
+    pub offset: IVec2,
 }
 
 #[derive(Component)]
@@ -207,13 +208,15 @@ fn extract_glyph_sprites(
 ) {
     for (entity, global_transform, sprite, font, font_size) in q_glyph_sprite.iter() {
         let transform: Transform = (*global_transform).into();
-        let snapped_transform: GlobalTransform = transform
-            .with_translation(Vec3 {
-                x: (transform.translation.x / 19.0).round() * 19.0,
-                y: (transform.translation.y / 40.0).round() * 40.0,
-                z: transform.translation.z,
-            })
-            .into();
+        // let offset_transform: GlobalTransform = (transform
+        //     * Transform::from_translation(Vec3::new(
+        //         (19 * sprite.offset.x) as f32,
+        //         (40 * sprite.offset.y) as f32,
+        //         0.0,
+        //     )))
+        // .into();
+
+        let offset_transform: GlobalTransform = transform.into();
 
         let font = fonts.get(font.id()).unwrap();
 
@@ -231,7 +234,7 @@ fn extract_glyph_sprites(
         commands.insert_or_spawn_batch([(
             entity,
             (
-                snapped_transform,
+                offset_transform,
                 sprite.clone(),
                 ExtractedAtlas(atlas.clone()),
                 font_size.clone(),
@@ -264,13 +267,17 @@ fn extract_glyph_animations(
             continue;
         };
         let transform: Transform = (*global_transform).into();
-        let snapped_transform: GlobalTransform = transform
-            .with_translation(Vec3 {
-                x: (transform.translation.x / 19.0).round() * 19.0,
-                y: (transform.translation.y / 40.0).round() * 40.0,
-                z: transform.translation.z,
-            })
-            .into();
+
+        // TODO: Add frame offsets to glyph animations
+        let offset_transform: GlobalTransform = transform.into();
+
+        // let offset_transform: GlobalTransform = (transform
+        //     * Transform::from_translation(Vec3::new(
+        //         sprite.offset.x as f32,
+        //         sprite.offset.y as f32,
+        //         0.0,
+        //     )))
+        // .into();
 
         let font = fonts.get(font.id()).unwrap();
 
@@ -289,7 +296,7 @@ fn extract_glyph_animations(
         commands.insert_or_spawn_batch([(
             entity,
             (
-                snapped_transform,
+                offset_transform,
                 animation.clone(),
                 ExtractedAtlas(atlas.clone()),
                 font_size.clone(),

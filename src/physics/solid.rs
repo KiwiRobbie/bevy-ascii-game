@@ -5,7 +5,7 @@ use super::{
     collision::{Aabb, Collider},
     direction::Direction,
     movement::Movement,
-    position::Position,
+    position::{Position, PositionBundle},
 };
 
 #[derive(Component, Default)]
@@ -99,7 +99,7 @@ pub struct SquishedMarker;
 #[derive(Bundle, Default)]
 pub struct SolidPhysicsBundle {
     pub solid: Solid,
-    pub position: Position,
+    pub position: PositionBundle,
     pub collider: Collider,
     pub riding: RidingEntities,
 }

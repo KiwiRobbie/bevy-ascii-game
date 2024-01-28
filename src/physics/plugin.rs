@@ -1,6 +1,7 @@
 use bevy::{
     app::{Plugin, PostUpdate, Update},
     ecs::schedule::IntoSystemConfigs,
+    transform::TransformSystem,
 };
 
 use super::{
@@ -28,7 +29,8 @@ impl Plugin for PhysicsPlugin {
                     apply_gravity_to_free,
                     position_update_transforms_system,
                 )
-                    .chain(),
+                    .chain()
+                    .before(TransformSystem::TransformPropagate),
             );
     }
 }

@@ -100,6 +100,7 @@ fn setup_system(
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
+    // Player
     commands.spawn((
         GlyphAnimation {
             source: server.load("anim/player/player_running.anim.ron"),
@@ -122,7 +123,7 @@ fn setup_system(
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {
                         min: IVec2::ZERO,
-                        size: UVec2 { x: 6, y: 4 },
+                        size: UVec2 { x: 6, y: 5 },
                     }),
                 },
 
@@ -134,16 +135,19 @@ fn setup_system(
             },
             ..Default::default()
         },
+        FreeMarker,
+        Gravity::default(),
+        Velocity::default(),
     ));
 
+    // Sliding Box
     commands.spawn((
-        Transform::default(),
-        GlobalTransform::default(),
         GlyphSprite {
             color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
             }),
+            offset: IVec2::ZERO,
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
@@ -163,24 +167,22 @@ fn setup_system(
             velocity: Vec2 { x: 50.0, y: 0.0 },
         },
     ));
+
+    // Stationary box
     commands.spawn((
-        Transform::default(),
-        GlobalTransform::default(),
         GlyphSprite {
             color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
             }),
+            offset: IVec2::ZERO,
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
         CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
         SolidPhysicsBundle {
-            position: Position {
-                position: IVec2 { x: -30, y: 0 },
-                ..Default::default()
-            },
+            position: IVec2::new(-30, 0).into(),
             collider: Collider {
                 shape: CollisionShape::Aabb(Aabb {
                     min: IVec2::ZERO,
@@ -202,6 +204,7 @@ fn setup_system(
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| ".".repeat(3)).collect::<Vec<String>>(),
             }),
+            offset: IVec2::ZERO,
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
@@ -240,14 +243,37 @@ fn setup_system(
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
             }),
+            offset: IVec2 { x: -16, y: -8 },
         },
-        Transform::from_translation(Vec3 {
-            x: FONT_ADVANCE * 32.0 * -0.5,
-            y: FONT_LEAD * 16.0 * -0.5,
-            z: 0.0,
-        }),
-        GlobalTransform::default(),
+        PositionBundle {
+            ..Default::default()
+        },
         KeyboardInputMarker,
+    ));
+
+    // Floor
+    commands.spawn((
+        GlyphSprite {
+            color: Color::WHITE,
+            texture: glyph_textures.add(GlyphTexture {
+                data: (0..2).map(|_| "#".repeat(100)).collect::<Vec<String>>(),
+            }),
+            offset: IVec2::ZERO,
+        },
+        FontAtlasUser,
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet(CHARSET.chars().collect()),
+        FontSize(32),
+        SolidPhysicsBundle {
+            position: IVec2::new(-50, -5).into(),
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::ZERO,
+                    size: UVec2 { x: 100, y: 2 },
+                }),
+            },
+            ..Default::default()
+        },
     ));
 
     commands.spawn(Camera2dBundle {
