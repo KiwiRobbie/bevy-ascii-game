@@ -60,21 +60,25 @@ pub fn solid_move_system(
                     },
                 ) {
                     let distance = distance * movement.x.signum();
-                    if let Some(_) = Actor::move_x(
+                    if Actor::move_x(
                         distance as f32,
                         &mut actor_pos,
                         actor_collision,
                         &solid_collision_cache,
-                    ) {
+                    )
+                    .is_some()
+                    {
                         commands.entity(actor).insert(SquishedMarker);
                     }
                 } else if riding.contains(&actor) {
-                    if let Some(_) = Actor::move_x(
+                    if Actor::move_x(
                         movement.x as f32,
                         &mut actor_pos,
                         actor_collision,
                         &solid_collision_cache,
-                    ) {
+                    )
+                    .is_some()
+                    {
                         commands.entity(actor).insert(SquishedMarker);
                     }
                 }

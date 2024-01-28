@@ -6,7 +6,10 @@ use bevy::ecs::{
 };
 
 use crate::{
-    physics::{free::FreeMarker, velocity::Velocity},
+    physics::{
+        free::{FreeGrounded, FreeMarker},
+        velocity::Velocity,
+    },
     player::input::PlayerInputJump,
 };
 
@@ -27,7 +30,12 @@ pub fn player_jump_system(
     mut commands: Commands,
     mut q_player: Query<
         (Entity, &mut Velocity, &PlayerJumpVelocity),
-        (MovementFilter, With<PlayerInputJump>),
+        (
+            MovementFilter,
+            With<PlayerInputJump>,
+            With<FreeGrounded>,
+            With<FreeMarker>,
+        ),
     >,
 ) {
     for (entity, mut velocity, jump_velocity) in q_player.iter_mut() {
