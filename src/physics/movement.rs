@@ -1,4 +1,7 @@
-use bevy::{ecs::component::Component, math::Vec2};
+use bevy::{
+    ecs::{component::Component, entity::Entity},
+    math::Vec2,
+};
 
 #[derive(Component, Default, Debug)]
 pub struct Movement {
@@ -13,8 +16,8 @@ impl Movement {
 
 #[derive(Debug, Default, Component)]
 pub struct MovementObstructed {
-    pub x: bool,
-    pub y: bool,
-    pub neg_x: bool,
-    pub neg_y: bool,
+    pub x: Option<Entity>,
+    pub y: Option<Entity>,
+    pub neg_x: Option<Entity>,
+    pub neg_y: Option<Entity>,
 }

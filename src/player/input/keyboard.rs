@@ -55,7 +55,6 @@ fn player_keyboard_input_movement(
 fn player_keyboard_input_jump(
     mut commands: Commands,
     keyboard: Res<Input<KeyCode>>,
-    q_jump_inputs: Query<Entity, With<PlayerInputJump>>,
     q_players: Query<Entity, (With<PlayerMarker>, With<PlayerInputMarker>)>,
 ) {
     for entity in q_players.iter() {

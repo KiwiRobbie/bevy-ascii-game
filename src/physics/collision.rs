@@ -1,11 +1,16 @@
 use bevy::{
-    ecs::{component::Component, system::Query},
+    ecs::{component::Component, entity::Entity, system::Query},
     gizmos::gizmos::Gizmos,
     math::{IVec2, UVec2, Vec2},
     render::color::Color,
 };
 
-use super::{actor::Actor, direction::Direction, position::Position, solid::Solid};
+use super::{
+    actor::Actor,
+    direction::Direction,
+    position::Position,
+    solid::{Solid, SolidCollisionCache},
+};
 
 #[derive(Component, Default)]
 pub struct Collider {
@@ -74,20 +79,21 @@ impl Aabb {
 }
 
 impl Collider {
-    pub fn overlaps<'a, I: Iterator<Item = &'a Aabb> + Clone>(
-        &self,
-        self_pos: IVec2,
-        other: I,
-    ) -> bool {
+    pub fn overlaps(&self, self_pos: IVec2, other: &SolidCollisionCache) -> Option<Entity> {
         let self_colliders = self.shape.colliders_at(self_pos);
-        for a in self_colliders.into_iter() {
-            for b in other.clone() {
-                if a.overlaps(b) {
-                    return true;
+
+        for actor_aabb in self_colliders.into_iter() {
+            for (solid, solid_aabb) in other
+                .collisions
+                .iter()
+                .flat_map(|(solid, collider)| collider.iter().map(|aabb| (*solid, aabb)))
+            {
+                if actor_aabb.overlaps(solid_aabb) {
+                    return Some(solid);
                 }
             }
         }
-        false
+        None
     }
 
     pub fn overlap_distance(

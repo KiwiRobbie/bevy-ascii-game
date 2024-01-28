@@ -9,10 +9,9 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    math::{IVec2, UVec2, Vec2, Vec3},
+    math::{IVec2, UVec2, Vec2},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
-    transform::components::{GlobalTransform, Transform},
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
@@ -281,10 +280,6 @@ struct KeyboardInputMarker;
 
 #[derive(Component)]
 struct GlitchMarker;
-
-const FONT_SIZE: f32 = 32.0f32;
-const FONT_ADVANCE: f32 = 19.0f32;
-const FONT_LEAD: f32 = 40.0f32;
 
 fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,

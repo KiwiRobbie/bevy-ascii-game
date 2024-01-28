@@ -1,14 +1,11 @@
 use bevy::{
-    ecs::{component::Component, query::With, system::Query},
+    ecs::{component::Component, system::Query},
     math::Vec2,
 };
 
-use crate::{
-    physics::movement::Movement,
-    player::{input::keyboard::PlayerInputMovement, PlayerMarker},
-};
+use crate::{physics::movement::Movement, player::input::keyboard::PlayerInputMovement};
 
-use super::{MovementFilter, PlayerMovementMarker};
+use super::MovementFilter;
 
 #[derive(Component, Debug, Default)]
 pub struct PlayerWalkSpeed {
