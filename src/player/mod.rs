@@ -12,6 +12,7 @@ use self::{
 
 pub mod input;
 pub mod movement;
+pub mod state;
 
 #[derive(Component, Default)]
 pub struct PlayerMarker;

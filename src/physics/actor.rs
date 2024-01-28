@@ -70,6 +70,33 @@ impl Actor {
         }
         None
     }
+
+    pub fn test_move_x(
+        amount: f32,
+        actor_position: &Position,
+        actor_collider: &Collider,
+        collision_cache: &SolidCollisionCache,
+    ) -> Option<Entity> {
+        Self::move_x(
+            amount,
+            &mut actor_position.clone(),
+            actor_collider,
+            collision_cache,
+        )
+    }
+    pub fn test_move_y(
+        amount: f32,
+        actor_position: &Position,
+        actor_collider: &Collider,
+        collision_cache: &SolidCollisionCache,
+    ) -> Option<Entity> {
+        Self::move_y(
+            amount,
+            &mut actor_position.clone(),
+            actor_collider,
+            collision_cache,
+        )
+    }
 }
 
 #[derive(Bundle, Default)]

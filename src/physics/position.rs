@@ -6,7 +6,7 @@ use bevy::{
     transform::components::{GlobalTransform, Transform},
 };
 
-#[derive(Component, Default, Debug)]
+#[derive(Component, Default, Debug, Clone)]
 pub struct Position {
     pub position: IVec2,
     pub remainder: Vec2,
