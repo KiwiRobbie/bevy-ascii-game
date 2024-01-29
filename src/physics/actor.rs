@@ -18,7 +18,7 @@ use super::{
 
 pub type FilterActors = (With<Actor>, Without<Solid>);
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct Actor;
 
 impl Actor {
@@ -99,7 +99,7 @@ impl Actor {
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle, Default, Clone)]
 pub struct ActorPhysicsBundle {
     pub actor: Actor,
     pub position: PositionBundle,
@@ -112,8 +112,6 @@ pub fn actor_move_system(
     mut commands: Commands,
     solid_collision_cache: Res<SolidCollisionCache>,
 ) {
-    dbg!(&solid_collision_cache);
-
     for (entity, mut actor_position, mut actor_movement, actor_collider) in q_actors.iter_mut() {
         let mut obstructed = MovementObstructed::default();
 

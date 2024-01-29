@@ -10,11 +10,12 @@ use self::{
     movement::{PlayerMovementBundle, PlayerMovementPlugin},
 };
 
+pub mod animation;
 pub mod input;
 pub mod movement;
 pub mod state;
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct PlayerMarker;
 
 pub struct PlayerPlugin;
@@ -24,7 +25,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle, Default, Clone)]
 pub struct PlayerBundle {
     pub marker: PlayerMarker,
     pub input: PlayerInputBundle,

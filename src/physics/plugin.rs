@@ -4,6 +4,8 @@ use bevy::{
     transform::TransformSystem,
 };
 
+use crate::player::animation::set_animation_target;
+
 use super::{
     actor::actor_move_system,
     collision::debug_collision_system,
@@ -33,6 +35,7 @@ impl Plugin for PhysicsPlugin {
                     obstruct_velocity,
                     apply_velocity_to_free,
                     apply_gravity_to_free,
+                    set_animation_target,
                     position_update_transforms_system,
                 )
                     .chain()

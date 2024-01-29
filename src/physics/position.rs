@@ -26,7 +26,7 @@ pub fn position_update_transforms_system(
     }
 }
 
-#[derive(Bundle, Default)]
+#[derive(Bundle, Default, Clone)]
 pub struct PositionBundle {
     pub position: Position,
     pub transform: Transform,

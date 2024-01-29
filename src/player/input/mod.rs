@@ -3,22 +3,23 @@ use bevy::{
     ecs::{bundle::Bundle, component::Component},
 };
 
-use self::keyboard::{PlayerInputMovement, PlayerKeyboardInputPlugin};
+use self::{controller::PlayerControllerInputPlugin, keyboard::PlayerKeyboardInputPlugin};
 
+pub mod controller;
 pub mod keyboard;
 
 pub struct PlayerInputPlugin;
 
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins(PlayerKeyboardInputPlugin);
+        app.add_plugins((PlayerControllerInputPlugin, PlayerKeyboardInputPlugin));
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct PlayerInputMarker;
 
-#[derive(Bundle, Default)]
+#[derive(Bundle, Default, Clone)]
 pub struct PlayerInputBundle {
     marker: PlayerInputMarker,
     movement_input: PlayerInputMovement,
@@ -26,3 +27,9 @@ pub struct PlayerInputBundle {
 
 #[derive(Component, Default, Debug)]
 pub struct PlayerInputJump;
+
+#[derive(Debug, Default, Component, Clone)]
+pub struct PlayerInputMovement {
+    pub horizontal: f32,
+    pub vertical: f32,
+}

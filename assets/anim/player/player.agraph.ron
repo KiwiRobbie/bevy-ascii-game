@@ -1,0 +1,33 @@
+(
+    states: [
+        (
+            name: "idle",
+            animation: "anim/player/states/idle.anim.ron"
+        ),
+        (
+            name: "running",
+            animation: "anim/player/states/running.anim.ron"
+        ),
+        (
+            name: "airborne",
+            animation: "anim/player/states/airborne.anim.ron"
+        )
+    ],
+    transitions: [
+        (from: "idle", to: "running"),
+        (from: "running", to: "idle"),
+        (
+            from: "airborne",
+            to: "idle",
+            transitions: ["anim/player/transitional/landing.anim.ron"]
+        ),
+        (
+            from: "airborne",
+            to: "running",
+            transitions: ["anim/player/transitional/landing.anim.ron"]
+        ),
+        (from: "idle", to: "airborne"),
+        (from: "running", to: "airborne"),
+
+    ]
+)

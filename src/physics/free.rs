@@ -18,7 +18,7 @@ use super::{
     velocity::Velocity,
 };
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct FreeMarker;
 
 pub fn obstruct_velocity(

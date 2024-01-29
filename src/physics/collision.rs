@@ -12,11 +12,12 @@ use super::{
     solid::{Solid, SolidCollisionCache},
 };
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct Collider {
     pub shape: CollisionShape,
 }
 
+#[derive(Debug, Clone)]
 pub enum CollisionShape {
     Aabb(Aabb),
     Composite(Box<[CollisionShape]>),
@@ -46,7 +47,7 @@ impl Default for CollisionShape {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Aabb {
     pub min: IVec2,
     pub size: UVec2,

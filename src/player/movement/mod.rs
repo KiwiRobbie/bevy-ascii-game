@@ -20,10 +20,10 @@ impl Plugin for PlayerMovementPlugin {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone)]
 pub struct PlayerMovementMarker;
 
-#[derive(Bundle, Default)]
+#[derive(Bundle, Default, Clone)]
 pub struct PlayerMovementBundle {
     pub marker: PlayerMovementMarker,
     pub walk_speed: PlayerWalkSpeed,

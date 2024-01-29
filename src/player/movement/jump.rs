@@ -15,7 +15,7 @@ use crate::{
 
 use super::MovementFilter;
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Clone)]
 pub struct PlayerJumpVelocity {
     pub velocity: f32,
 }

@@ -1,6 +1,6 @@
 use bevy::ecs::{component::Component, system::Resource};
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Gravity {
     pub multiplier: f32,
 }

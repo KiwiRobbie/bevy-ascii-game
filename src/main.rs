@@ -6,8 +6,15 @@ use bevy::{
     core_pipeline::core_2d::Camera2dBundle,
     ecs::{
         component::Component,
+        entity::Entity,
         event::EventReader,
+        query::With,
         system::{Commands, Local, Query, Res, ResMut},
+    },
+    input::gamepad::{
+        Gamepad,
+        GamepadConnection::{self, Connected},
+        GamepadConnectionEvent, Gamepads,
     },
     math::{IVec2, UVec2, Vec2},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
@@ -20,6 +27,7 @@ use bevy_ascii_game::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
     font::{font_load_system, CustomFont, CustomFontLoader, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationAssetLoader, GlyphAnimationSource},
+    glyph_animation_graph::{bundle::GlyphAnimationGraphBundle, plugin::GlyphAnimationGraphPlugin},
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSprite, GlyphTexture},
     physics::{
         actor::ActorPhysicsBundle,
@@ -33,6 +41,7 @@ use bevy_ascii_game::{
         velocity::Velocity,
     },
     player::{
+        input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
         movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
         PlayerBundle, PlayerPlugin,
     },
@@ -51,6 +60,7 @@ fn main() {
                 ..Default::default()
             }),
         PlayerPlugin,
+        GlyphAnimationGraphPlugin,
     ))
     .add_plugins((FontAtlasPlugin, PhysicsPlugin, GlyphRenderPlugin))
     .init_asset::<GlyphAnimationSource>()
@@ -63,6 +73,7 @@ fn main() {
             font_load_system,
             looping_animation_player_system,
             moving_platform,
+            handle_gamepads,
         ),
     )
     .init_asset::<CustomFontSource>()
@@ -94,50 +105,40 @@ fn moving_platform(
     }
 }
 
+fn handle_gamepads(
+    mut commands: Commands,
+    server: Res<AssetServer>,
+    mut ev_gamepad: EventReader<GamepadConnectionEvent>,
+    q_players: Query<(Entity, &PlayerInputController)>,
+) {
+    for ev in ev_gamepad.read() {
+        match ev.connection {
+            GamepadConnection::Connected(_) => {
+                create_player(&mut commands, &server).insert(PlayerInputController(ev.gamepad));
+            }
+            GamepadConnection::Disconnected => {
+                for (player, PlayerInputController(gamepad)) in q_players.iter() {
+                    if gamepad.id == ev.gamepad.id {
+                        commands.entity(player).despawn();
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn setup_system(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+    gamepads: Res<Gamepads>,
 ) {
     // Player
-    commands.spawn((
-        GlyphAnimation {
-            source: server.load("anim/player/player_running.anim.ron"),
-            frame: 0,
-        },
-        FontAtlasUser,
-        CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().collect()),
-        FontSize(32),
-        LoopingAnimationPlayer::new(15),
-        PlayerBundle {
-            actor: ActorPhysicsBundle {
-                position: PositionBundle {
-                    position: Position {
-                        position: IVec2 { x: -20, y: 0 },
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-                collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::ZERO,
-                        size: UVec2 { x: 6, y: 5 },
-                    }),
-                },
 
-                ..Default::default()
-            },
-            movement: PlayerMovementBundle {
-                walk_speed: PlayerWalkSpeed { speed: 1.0 },
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-    ));
+    for gamepad in gamepads.iter() {
+        create_player(&mut commands, &server).insert(PlayerInputController(gamepad));
+    }
+    create_player(&mut commands, &server).insert(PlayerInputKeyboardMarker);
 
     // Sliding Box
     commands.spawn((
@@ -359,4 +360,44 @@ fn looping_animation_player_system(
         let frame = ((elapsed - start_time) * player.frame_rate as f64).round() as u32;
         animation.frame = frame.rem_euclid(source.frames.len() as u32);
     }
+}
+
+fn create_player<'w, 's, 'a>(
+    commands: &'a mut Commands<'w, 's>,
+    server: &Res<AssetServer>,
+) -> bevy::ecs::system::EntityCommands<'w, 's, 'a> {
+    commands.spawn((
+        GlyphAnimationGraphBundle::from_source(server.load("anim/player/player.agraph.ron")),
+        FontAtlasUser,
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet(CHARSET.chars().collect()),
+        FontSize(32),
+        PlayerBundle {
+            actor: ActorPhysicsBundle {
+                position: PositionBundle {
+                    position: Position {
+                        position: IVec2 { x: -20, y: 0 },
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                collider: Collider {
+                    shape: CollisionShape::Aabb(Aabb {
+                        min: IVec2::ZERO,
+                        size: UVec2 { x: 6, y: 5 },
+                    }),
+                },
+
+                ..Default::default()
+            },
+            movement: PlayerMovementBundle {
+                walk_speed: PlayerWalkSpeed { speed: 1.0 },
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        FreeMarker,
+        Gravity::default(),
+        Velocity::default(),
+    ))
 }

@@ -10,7 +10,7 @@ use bevy::{
 
 mod builder;
 mod plugin;
-#[derive(Component, DerefMut, Deref)]
+#[derive(Component, DerefMut, Deref, Clone)]
 pub struct CharacterSet(pub HashSet<char>);
 
 pub use plugin::FontAtlasPlugin;
@@ -41,5 +41,5 @@ pub struct FontAtlasSource {
     pub charset: HashSet<char>,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct FontAtlasUser;

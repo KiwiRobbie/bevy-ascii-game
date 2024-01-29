@@ -62,7 +62,7 @@ impl AssetLoader for GlyphAnimationAssetLoader {
                 );
             }
 
-            let mut frames: Vec<GylphAnimationFrame> = Vec::with_capacity(meta.frames.len());
+            let mut frames: Vec<GlyphAnimationFrame> = Vec::with_capacity(meta.frames.len());
             let mut cursor = UVec2::ZERO;
             for frame in meta.frames {
                 let mut frame = frame.clone();
@@ -82,7 +82,7 @@ impl AssetLoader for GlyphAnimationAssetLoader {
                 cursor -= frame_step; // Cancel step for first frame when reading sequence of several frames
                 for _ in 0..frame_count {
                     cursor += frame_step;
-                    frames.push(GylphAnimationFrame::new(
+                    frames.push(GlyphAnimationFrame::new(
                         &frame,
                         frames_data.get(&frame.asset).unwrap(),
                         cursor,
@@ -91,7 +91,7 @@ impl AssetLoader for GlyphAnimationAssetLoader {
                     frame.start = match frame.frame_count {
                         CountDirection::X(_) => FrameIndex::NextX,
                         CountDirection::Y(_) => FrameIndex::NextY,
-                        CountDirection::Single => unreachable!(),
+                        CountDirection::Single => break,
                     };
                 }
             }
@@ -109,11 +109,11 @@ impl AssetLoader for GlyphAnimationAssetLoader {
 pub struct GlyphAnimationSource {
     pub name: String,
     pub size: UVec2,
-    pub frames: Vec<GylphAnimationFrame>,
+    pub frames: Vec<GlyphAnimationFrame>,
 }
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone)]
-pub struct GlyphAnimationMeta {
+struct GlyphAnimationMeta {
     pub name: String,
     pub size: (u32, u32),
 
@@ -167,10 +167,10 @@ impl Default for FrameIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct GylphAnimationFrame {
+pub struct GlyphAnimationFrame {
     pub data: Vec<String>,
 }
-impl GylphAnimationFrame {
+impl GlyphAnimationFrame {
     fn new(
         frame: &GlyphAnimationFrameMeta,
         data: &[String],

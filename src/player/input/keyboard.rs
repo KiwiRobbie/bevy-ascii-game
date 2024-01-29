@@ -11,19 +11,20 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 
-use super::{PlayerInputJump, PlayerInputMarker};
+use super::{PlayerInputJump, PlayerInputMarker, PlayerInputMovement};
 
-#[derive(Debug, Default, Component, Clone)]
-pub struct PlayerInputMovement {
-    pub horizontal: f32,
-    pub vertical: f32,
-}
+#[derive(Debug, Component, Clone)]
+pub struct PlayerInputKeyboardMarker;
 
 fn player_keyboard_input_movement(
     keyboard: Res<Input<KeyCode>>,
     mut q_player_movement: Query<
         &mut PlayerInputMovement,
-        (With<PlayerMarker>, With<PlayerInputMarker>),
+        (
+            With<PlayerMarker>,
+            With<PlayerInputMarker>,
+            With<PlayerInputKeyboardMarker>,
+        ),
     >,
 ) {
     let mut horizontal = 0.0;
@@ -55,7 +56,14 @@ fn player_keyboard_input_movement(
 fn player_keyboard_input_jump(
     mut commands: Commands,
     keyboard: Res<Input<KeyCode>>,
-    q_players: Query<Entity, (With<PlayerMarker>, With<PlayerInputMarker>)>,
+    q_players: Query<
+        Entity,
+        (
+            With<PlayerMarker>,
+            With<PlayerInputMarker>,
+            With<PlayerInputKeyboardMarker>,
+        ),
+    >,
 ) {
     for entity in q_players.iter() {
         commands.entity(entity).remove::<PlayerInputJump>();

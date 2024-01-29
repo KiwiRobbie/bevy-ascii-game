@@ -1,0 +1,104 @@
+use bevy::{
+    asset::{Assets, Handle},
+    ecs::{
+        component::Component,
+        entity::Entity,
+        system::{Commands, Query, Res},
+    },
+    prelude::{Deref, DerefMut},
+    time::Time,
+};
+
+use crate::glyph_animation::{GlyphAnimation, GlyphAnimationSource};
+
+use super::{GlyphAnimationGraph, GlyphAnimationGraphSource};
+
+#[derive(Debug, Component, Clone)]
+pub struct GlyphAnimationGraphSettings {
+    pub framerate: f32,
+}
+
+impl Default for GlyphAnimationGraphSettings {
+    fn default() -> Self {
+        Self { framerate: 15.0 }
+    }
+}
+
+#[derive(Debug, Component, Deref, DerefMut)]
+pub struct GlyphAnimationGraphTarget(pub String);
+
+#[derive(Debug, Component, Default, Clone)]
+pub struct GlyphAnimationGraphCurrent {
+    pub transitional_states: Vec<Handle<GlyphAnimationSource>>,
+    pub current_state: usize,
+    pub frame_timer: f32,
+}
+
+pub fn animation_graph_player(
+    mut commands: Commands,
+    mut q_players: Query<(
+        Entity,
+        &mut GlyphAnimationGraph,
+        &mut GlyphAnimationGraphCurrent,
+        Option<&mut GlyphAnimation>,
+        &GlyphAnimationGraphSettings,
+    )>,
+    time: Res<Time>,
+    glyph_animations: Res<Assets<GlyphAnimationSource>>,
+    glyph_animation_graphs: Res<Assets<GlyphAnimationGraphSource>>,
+) {
+    for (entity, graph, mut current, animation, settings) in q_players.iter_mut() {
+        if let Some(mut animation) = animation {
+            current.frame_timer += time.delta_seconds() * settings.framerate;
+            let animation_source = glyph_animations.get(animation.source.clone()).unwrap();
+            if current.frame_timer > 1.0 {
+                animation.frame += current.frame_timer as u32;
+                current.frame_timer -= current.frame_timer.floor();
+            }
+            if animation.frame < animation_source.frames.len() as u32 {
+                continue;
+            }
+        }
+
+        let graph_source = glyph_animation_graphs.get(graph.source.clone()).unwrap();
+        let new_animation_component =
+            if let Some(transition_animation) = current.transitional_states.pop() {
+                GlyphAnimation {
+                    frame: 0,
+                    source: transition_animation,
+                }
+            } else {
+                GlyphAnimation {
+                    frame: 0,
+                    source: graph_source
+                        .states
+                        .get(current.current_state)
+                        .unwrap()
+                        .animation
+                        .clone(),
+                }
+            };
+        commands.entity(entity).insert(new_animation_component);
+    }
+}
+
+pub fn animation_graph_traverse(
+    mut q_players: Query<(
+        &mut GlyphAnimationGraph,
+        &mut GlyphAnimationGraphCurrent,
+        &GlyphAnimationGraphTarget,
+        &GlyphAnimationGraphSettings,
+    )>,
+    glyph_animation_graphs: Res<Assets<GlyphAnimationGraphSource>>,
+) {
+    for (graph, mut current, target, settings) in q_players.iter_mut() {
+        let graph_source = glyph_animation_graphs.get(graph.source.clone()).unwrap();
+        let target = *graph_source.state_names.get(&**target).unwrap();
+
+        if current.current_state != target {
+            let transition = graph_source.traverse(current.current_state, target);
+            current.current_state = target;
+            current.transitional_states = transition.transitions.unwrap_or(vec![]);
+        }
+    }
+}

@@ -3,7 +3,7 @@ use bevy::{
     math::Vec2,
 };
 
-#[derive(Component, Default, Debug)]
+#[derive(Component, Default, Debug, Clone)]
 pub struct Movement {
     pub delta: Vec2,
 }
