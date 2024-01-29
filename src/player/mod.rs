@@ -13,7 +13,6 @@ use self::{
 pub mod animation;
 pub mod input;
 pub mod movement;
-pub mod state;
 
 #[derive(Component, Default, Clone)]
 pub struct PlayerMarker;

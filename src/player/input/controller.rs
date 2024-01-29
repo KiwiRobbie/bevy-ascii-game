@@ -3,16 +3,11 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        event::EventReader,
         query::With,
-        system::{Commands, Query, Res, Resource},
+        system::{Commands, Query, Res},
     },
     input::{
-        gamepad::{
-            Gamepad, GamepadAxis, GamepadAxisChangedEvent, GamepadAxisType, GamepadButton,
-            GamepadButtonChangedEvent, GamepadButtonType, GamepadEvent, Gamepads,
-        },
-        keyboard::KeyCode,
+        gamepad::{Gamepad, GamepadAxis, GamepadAxisType, GamepadButton, GamepadButtonType},
         Axis, Input,
     },
 };

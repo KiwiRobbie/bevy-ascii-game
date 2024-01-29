@@ -1,7 +1,5 @@
 use bevy::{asset::Handle, ecs::bundle::Bundle};
 
-use crate::glyph_animation::GlyphAnimationSource;
-
 use super::{
     player::{GlyphAnimationGraphCurrent, GlyphAnimationGraphSettings},
     GlyphAnimationGraph, GlyphAnimationGraphSource,

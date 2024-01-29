@@ -8,14 +8,9 @@ use bevy::{
         component::Component,
         entity::Entity,
         event::EventReader,
-        query::With,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::gamepad::{
-        Gamepad,
-        GamepadConnection::{self, Connected},
-        GamepadConnectionEvent, Gamepads,
-    },
+    input::gamepad::{GamepadConnection, GamepadConnectionEvent, Gamepads},
     math::{IVec2, UVec2, Vec2},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
@@ -26,7 +21,7 @@ use bevy::{
 use bevy_ascii_game::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
     font::{font_load_system, CustomFont, CustomFontLoader, CustomFontSource, FontSize},
-    glyph_animation::{GlyphAnimation, GlyphAnimationAssetLoader, GlyphAnimationSource},
+    glyph_animation::{GlyphAnimationAssetLoader, GlyphAnimationSource},
     glyph_animation_graph::{bundle::GlyphAnimationGraphBundle, plugin::GlyphAnimationGraphPlugin},
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSprite, GlyphTexture},
     physics::{
@@ -71,7 +66,7 @@ fn main() {
         (
             keyboard_input_system,
             font_load_system,
-            looping_animation_player_system,
+            // looping_animation_player_system,
             moving_platform,
             handle_gamepads,
         ),
@@ -322,45 +317,45 @@ fn keyboard_input_system(
     }
 }
 
-#[derive(Component)]
-pub struct LoopingAnimationPlayer {
-    pub frame_rate: u32,
-    pub start_time: Option<f64>,
-}
-impl LoopingAnimationPlayer {
-    fn new(frame_rate: u32) -> Self {
-        Self {
-            frame_rate,
-            start_time: None,
-        }
-    }
-}
+// #[derive(Component)]
+// pub struct LoopingAnimationPlayer {
+//     pub frame_rate: u32,
+//     pub start_time: Option<f64>,
+// }
+// impl LoopingAnimationPlayer {
+//     fn new(frame_rate: u32) -> Self {
+//         Self {
+//             frame_rate,
+//             start_time: None,
+//         }
+//     }
+// }
 
-fn looping_animation_player_system(
-    mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer)>,
-    glyph_animation_sources: Res<Assets<GlyphAnimationSource>>,
-    time: Res<Time>,
-) {
-    // TODO: Fix visual glitch caused by wrapping every hour!
-    let elapsed = time.elapsed_seconds_wrapped_f64();
+// fn looping_animation_player_system(
+//     mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer)>,
+//     glyph_animation_sources: Res<Assets<GlyphAnimationSource>>,
+//     time: Res<Time>,
+// ) {
+//     // TODO: Fix visual glitch caused by wrapping every hour!
+//     let elapsed = time.elapsed_seconds_wrapped_f64();
 
-    for (mut animation, mut player) in q_glyph_animation.iter_mut() {
-        let Some(source) = glyph_animation_sources.get(animation.source.id()) else {
-            continue;
-        };
+//     for (mut animation, mut player) in q_glyph_animation.iter_mut() {
+//         let Some(source) = glyph_animation_sources.get(animation.source.id()) else {
+//             continue;
+//         };
 
-        let start_time = match player.start_time {
-            Some(t) => t,
-            None => {
-                player.start_time = Some(elapsed);
-                elapsed
-            }
-        };
+//         let start_time = match player.start_time {
+//             Some(t) => t,
+//             None => {
+//                 player.start_time = Some(elapsed);
+//                 elapsed
+//             }
+//         };
 
-        let frame = ((elapsed - start_time) * player.frame_rate as f64).round() as u32;
-        animation.frame = frame.rem_euclid(source.frames.len() as u32);
-    }
-}
+//         let frame = ((elapsed - start_time) * player.frame_rate as f64).round() as u32;
+//         animation.frame = frame.rem_euclid(source.frames.len() as u32);
+//     }
+// }
 
 fn create_player<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
