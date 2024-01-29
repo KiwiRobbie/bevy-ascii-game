@@ -1,5 +1,5 @@
 (
-    name: "player_running",
+    name: "player_idle",
     size: (14,8),
     frames: [
         (

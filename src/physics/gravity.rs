@@ -17,7 +17,7 @@ pub struct GravityResource {
 impl Default for GravityResource {
     fn default() -> Self {
         Self {
-            acceleration: -50.0,
+            acceleration: -100.0,
         }
     }
 }

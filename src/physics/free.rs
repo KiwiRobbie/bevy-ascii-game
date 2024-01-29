@@ -89,6 +89,7 @@ pub fn update_free_actor_state(
                 continue;
             }
         }
+
         commands
             .entity(actor)
             .insert(FreeAirborne)

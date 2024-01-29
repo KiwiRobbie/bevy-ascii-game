@@ -24,7 +24,6 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<GravityResource>()
             .init_resource::<SolidCollisionCache>()
-            .add_systems(Update, (debug_collision_system, apply_gravity_to_free))
             .add_systems(
                 PostUpdate,
                 (
@@ -37,6 +36,7 @@ impl Plugin for PhysicsPlugin {
                     apply_gravity_to_free,
                     set_animation_target,
                     position_update_transforms_system,
+                    debug_collision_system,
                 )
                     .chain()
                     .before(TransformSystem::TransformPropagate),

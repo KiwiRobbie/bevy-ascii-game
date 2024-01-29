@@ -9,25 +9,25 @@
             animation: "anim/player/states/running.anim.ron"
         ),
         (
-            name: "airborne",
-            animation: "anim/player/states/airborne.anim.ron"
+            name: "air_idle",
+            animation: "anim/player/states/air_idle.anim.ron"
+        ),
+            (
+            name: "air_strafe",
+            animation: "anim/player/states/air_strafe.anim.ron"
         )
     ],
     transitions: [
         (from: "idle", to: "running"),
         (from: "running", to: "idle"),
-        (
-            from: "airborne",
-            to: "idle",
-            transitions: ["anim/player/transitional/landing.anim.ron"]
-        ),
-        (
-            from: "airborne",
-            to: "running",
-            transitions: ["anim/player/transitional/landing.anim.ron"]
-        ),
-        (from: "idle", to: "airborne"),
-        (from: "running", to: "airborne"),
+
+        (from: "air_idle", to: "air_strafe"),
+        (from: "air_strafe", to: "air_idle"),
+        
+        (from: "idle", to: "air_idle"),
+        (from: "running", to: "air_strafe"),
+
+
 
     ]
 )
