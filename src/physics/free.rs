@@ -2,7 +2,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        query::With,
+        query::{With, Without},
         system::{Commands, Query, Res},
     },
     time::Time,
@@ -70,6 +70,7 @@ pub fn update_free_actor_state(
     mut commands: Commands,
     mut q_solids: Query<&mut RidingEntities, FilterSolids>,
     q_free_actors: Query<(Entity, &Position, &Velocity, &Collider), With<FreeMarker>>,
+    q_grounded_extra: Query<(Entity), (Without<FreeMarker>, With<FreeGrounded>)>,
     solid_collision_cache: Res<SolidCollisionCache>,
 ) {
     for (actor, position, velocity, collider) in q_free_actors.iter() {
@@ -94,5 +95,9 @@ pub fn update_free_actor_state(
             .entity(actor)
             .insert(FreeAirborne)
             .remove::<FreeGrounded>();
+    }
+
+    for actor in q_grounded_extra.iter() {
+        commands.entity(actor).remove::<FreeGrounded>();
     }
 }

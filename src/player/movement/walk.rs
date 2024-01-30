@@ -3,7 +3,10 @@ use bevy::{
     math::Vec2,
 };
 
-use crate::{physics::movement::Movement, player::input::PlayerInputMovement};
+use crate::{
+    physics::{free::FreeGrounded, movement::Movement, velocity::Velocity},
+    player::input::PlayerInputMovement,
+};
 
 use super::MovementFilter;
 
@@ -12,9 +15,18 @@ pub struct PlayerWalkSpeed {
     pub speed: f32,
 }
 pub fn player_walk_system(
-    mut q_player: Query<(&mut Movement, &PlayerInputMovement, &PlayerWalkSpeed), MovementFilter>,
+    mut q_player: Query<
+        (
+            &mut Movement,
+            &mut Velocity,
+            &PlayerInputMovement,
+            &PlayerWalkSpeed,
+            Option<&FreeGrounded>,
+        ),
+        MovementFilter,
+    >,
 ) {
-    for (mut movement, input, settings) in q_player.iter_mut() {
+    for (mut movement, mut velocity, input, settings, grounded) in q_player.iter_mut() {
         let horizontal = if input.horizontal < -0.5 {
             -1.0
         } else if input.horizontal > 0.5 {
@@ -24,5 +36,8 @@ pub fn player_walk_system(
         };
 
         movement.add(Vec2::X * horizontal * settings.speed);
+        if grounded.is_some() {
+            velocity.velocity = Vec2::ZERO;
+        }
     }
 }

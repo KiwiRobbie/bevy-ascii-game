@@ -22,7 +22,7 @@ pub struct PlayerJumpVelocity {
 
 impl Default for PlayerJumpVelocity {
     fn default() -> Self {
-        Self { velocity: 50.0 }
+        Self { velocity: 40.0 }
     }
 }
 

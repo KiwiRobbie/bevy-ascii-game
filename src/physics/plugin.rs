@@ -36,7 +36,7 @@ impl Plugin for PhysicsPlugin {
                     apply_gravity_to_free,
                     set_animation_target,
                     position_update_transforms_system,
-                    debug_collision_system,
+                    // debug_collision_system,
                 )
                     .chain()
                     .before(TransformSystem::TransformPropagate),

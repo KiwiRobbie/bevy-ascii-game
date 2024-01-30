@@ -5,7 +5,10 @@ use bevy::{
 
 use self::{
     jump::{player_jump_system, PlayerJumpVelocity},
-    lunge::{player_lunge_start_system, player_lunge_update_system, PlayerLungeSettings},
+    lunge::{
+        player_lunge_cooldown_update, player_lunge_start_system, player_lunge_update_system,
+        PlayerLungeSettings,
+    },
     walk::{player_walk_system, PlayerWalkSpeed},
 };
 
@@ -25,6 +28,7 @@ impl Plugin for PlayerMovementPlugin {
                 player_jump_system,
                 player_lunge_start_system,
                 player_lunge_update_system,
+                player_lunge_cooldown_update,
             )
                 .chain(),
         );

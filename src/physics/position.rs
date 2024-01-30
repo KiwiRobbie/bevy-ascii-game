@@ -29,7 +29,7 @@ pub fn position_update_transforms_system(
             y: (position.position.y * font_size.line_spacing() as i32) as f32,
             z: transform.translation.z,
         });
-        gizmos.circle_2d(transform.translation.xy(), 5.0, Color::BLUE);
+        // gizmos.circle_2d(transform.translation.xy(), 5.0, Color::BLUE);
     }
 }
 

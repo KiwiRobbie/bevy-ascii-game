@@ -2,7 +2,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        query::With,
+        query::{With, Without},
         system::{Commands, Query, Res},
     },
     math::Vec2,
@@ -11,8 +11,9 @@ use bevy::{
 
 use crate::{
     physics::{
-        free::FreeMarker,
+        free::{FreeGrounded, FreeMarker},
         movement::{Movement, MovementObstructed},
+        velocity::Velocity,
     },
     player::{
         input::{PlayerInputLunge, PlayerInputMarker, PlayerInputMovement},
@@ -29,17 +30,26 @@ pub struct PlayerLunging {
     pub speed: f32,
 }
 
+#[derive(Debug, Component)]
+pub struct PlayerLungeCooldown {
+    pub timer: f32,
+}
+
 #[derive(Debug, Component, Clone)]
 pub struct PlayerLungeSettings {
     pub speed: f32,
     pub duration: f32,
+    pub cooldown: f32,
+    pub exit_velocity: f32,
 }
 
 impl Default for PlayerLungeSettings {
     fn default() -> Self {
         Self {
-            speed: 100.0,
-            duration: 0.4,
+            speed: 80.0,
+            duration: 0.25,
+            cooldown: 0.5,
+            exit_velocity: 50.0,
         }
     }
 }
@@ -48,7 +58,12 @@ pub fn player_lunge_start_system(
     mut commands: Commands,
     q_player: Query<
         (Entity, &PlayerInputMovement, &PlayerLungeSettings),
-        (MovementFilter, With<FreeMarker>, With<PlayerInputLunge>),
+        (
+            MovementFilter,
+            With<FreeMarker>,
+            With<PlayerInputLunge>,
+            Without<PlayerLungeCooldown>,
+        ),
     >,
 ) {
     for (entity, movement_input, settings) in q_player.iter() {
@@ -60,29 +75,30 @@ pub fn player_lunge_start_system(
 
         commands
             .entity(entity)
-            .insert(PlayerLunging {
+            .insert((PlayerLunging {
                 direction,
                 speed: settings.speed,
                 timer: settings.duration,
-            })
+            },))
             .remove::<PlayerInputMarker>()
             .remove::<FreeMarker>();
     }
 }
 pub fn player_lunge_update_system(
     mut commands: Commands,
-    mut q_player: Query<
+    mut q_player_lunging: Query<
         (
             Entity,
             &mut PlayerLunging,
             &mut Movement,
             Option<&MovementObstructed>,
+            &PlayerLungeSettings,
         ),
         With<PlayerMarker>,
     >,
     time: Res<Time>,
 ) {
-    for (entity, mut lunging, mut movement, obstructed) in q_player.iter_mut() {
+    for (entity, mut lunging, mut movement, obstructed, settings) in q_player_lunging.iter_mut() {
         lunging.timer -= time.delta_seconds();
         let obstructed = if let Some(obstructed) = obstructed {
             lunging.direction.x > 0.0 && obstructed.x.is_some()
@@ -96,10 +112,39 @@ pub fn player_lunge_update_system(
         if obstructed || lunging.timer <= 0.0 {
             commands
                 .entity(entity)
-                .insert((FreeMarker, PlayerInputMarker))
+                .insert((
+                    FreeMarker,
+                    PlayerInputMarker,
+                    PlayerLungeCooldown {
+                        timer: settings.cooldown,
+                    },
+                    Velocity {
+                        velocity: Vec2 {
+                            x: lunging.direction.x * settings.exit_velocity,
+                            y: 0.0,
+                        },
+                    },
+                ))
                 .remove::<PlayerLunging>();
         }
 
         movement.add(lunging.direction * lunging.speed * time.delta_seconds());
+    }
+}
+
+pub fn player_lunge_cooldown_update(
+    mut commands: Commands,
+    mut q_player_cooldown: Query<(Entity, &mut PlayerLungeCooldown, Option<&FreeGrounded>)>,
+    time: Res<Time>,
+) {
+    for (entity, mut cooldown, grounded) in q_player_cooldown.iter_mut() {
+        if cooldown.timer > 0.0 {
+            cooldown.timer -= time.delta_seconds();
+        }
+        if cooldown.timer <= 0.0 {
+            if grounded.is_some() {
+                commands.entity(entity).remove::<PlayerLungeCooldown>();
+            }
+        }
     }
 }

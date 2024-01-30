@@ -14,7 +14,9 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 
-use super::{PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement};
+use super::{
+    PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement, PlayerInputReset,
+};
 
 #[derive(Debug, Component)]
 pub struct PlayerInputController(pub Gamepad);
@@ -72,6 +74,15 @@ fn player_controller_input_buttons(
             commands.entity(entity).insert(PlayerInputLunge);
         } else {
             commands.entity(entity).remove::<PlayerInputLunge>();
+        }
+
+        if buttons.pressed(GamepadButton {
+            gamepad: *gamepad,
+            button_type: GamepadButtonType::Start,
+        }) {
+            commands.entity(entity).insert(PlayerInputReset);
+        } else {
+            commands.entity(entity).remove::<PlayerInputReset>();
         }
     }
 }

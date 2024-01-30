@@ -10,7 +10,7 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::gamepad::{GamepadConnection, GamepadConnectionEvent, Gamepads},
+    input::gamepad::{Gamepad, GamepadConnection, GamepadConnectionEvent, Gamepads},
     math::{IVec2, UVec2, Vec2},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
@@ -38,6 +38,7 @@ use bevy_ascii_game::{
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
         movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
+        reset::{create_player, create_player_with_gamepad},
         PlayerBundle, PlayerPlugin,
     },
 };
@@ -86,8 +87,6 @@ fn main() {
     app.run();
 }
 
-const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-
 fn moving_platform(
     mut q_solid_movement: Query<(&mut Movement, &mut Velocity, &Position), FilterSolids>,
     time: Res<Time>,
@@ -111,11 +110,7 @@ fn handle_gamepads(
     for ev in ev_gamepad.read() {
         match ev.connection {
             GamepadConnection::Connected(_) => {
-                create_player(&mut commands, &server)
-                    .insert(PlayerInputController(ev.gamepad))
-                    .insert(GlyphSolidColor {
-                        color: Color::hsl(360.0 * (1.0 + ev.gamepad.id as f32) / 6.0, 1.0, 0.6),
-                    });
+                create_player_with_gamepad(&mut commands, &server, ev.gamepad);
             }
             GamepadConnection::Disconnected => {
                 for (player, PlayerInputController(gamepad)) in q_players.iter() {
@@ -137,11 +132,7 @@ fn setup_system(
     // Player
 
     for gamepad in gamepads.iter() {
-        create_player(&mut commands, &server)
-            .insert(PlayerInputController(gamepad))
-            .insert(GlyphSolidColor {
-                color: Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6),
-            });
+        create_player_with_gamepad(&mut commands, &server, gamepad);
     }
     //         .insert(GlyphSolidColor {
     //         });
@@ -369,46 +360,6 @@ fn keyboard_input_system(
 //     }
 // }
 
-fn create_player<'w, 's, 'a>(
-    commands: &'a mut Commands<'w, 's>,
-    server: &Res<AssetServer>,
-) -> bevy::ecs::system::EntityCommands<'w, 's, 'a> {
-    commands.spawn((
-        GlyphAnimationGraphBundle::from_source(server.load("anim/player/player.agraph.ron")),
-        FontAtlasUser,
-        CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().collect()),
-        FontSize(32),
-        PlayerBundle {
-            actor: ActorPhysicsBundle {
-                position: PositionBundle {
-                    position: Position {
-                        position: IVec2 { x: -20, y: 0 },
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-                collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::ZERO,
-                        size: UVec2 { x: 6, y: 5 },
-                    }),
-                },
-
-                ..Default::default()
-            },
-            movement: PlayerMovementBundle {
-                walk_speed: PlayerWalkSpeed { speed: 1.0 },
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-    ))
-}
-
 fn on_resize_system(
     mut resize_reader: EventReader<WindowResized>,
     mut q_font_size: Query<&mut FontSize>,
@@ -422,3 +373,4 @@ fn on_resize_system(
         **res_font_size = size;
     }
 }
+const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";

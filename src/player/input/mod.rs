@@ -36,3 +36,6 @@ pub struct PlayerInputMovement {
     pub horizontal: f32,
     pub vertical: f32,
 }
+
+#[derive(Debug, Default, Component, Clone)]
+pub struct PlayerInputReset;

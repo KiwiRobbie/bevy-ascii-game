@@ -11,7 +11,9 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 
-use super::{PlayerInputJump, PlayerInputMarker, PlayerInputMovement};
+use super::{
+    PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement, PlayerInputReset,
+};
 
 #[derive(Debug, Component, Clone)]
 pub struct PlayerInputKeyboardMarker;
@@ -30,16 +32,16 @@ fn player_keyboard_input_movement(
     let mut horizontal = 0.0;
     let mut vertical = 0.0;
 
-    if keyboard.pressed(KeyCode::D) {
+    if keyboard.pressed(KeyCode::Right) {
         horizontal += 1.0;
     }
-    if keyboard.pressed(KeyCode::A) {
+    if keyboard.pressed(KeyCode::Left) {
         horizontal -= 1.0;
     }
-    if keyboard.pressed(KeyCode::W) {
+    if keyboard.pressed(KeyCode::Up) {
         vertical += 1.0;
     }
-    if keyboard.pressed(KeyCode::S) {
+    if keyboard.pressed(KeyCode::Down) {
         vertical -= 1.0;
     }
 
@@ -53,7 +55,7 @@ fn player_keyboard_input_movement(
     }
 }
 
-fn player_keyboard_input_jump(
+fn player_keyboard_input_buttons(
     mut commands: Commands,
     keyboard: Res<Input<KeyCode>>,
     q_players: Query<
@@ -66,11 +68,22 @@ fn player_keyboard_input_jump(
     >,
 ) {
     for entity in q_players.iter() {
-        commands.entity(entity).remove::<PlayerInputJump>();
-    }
-    if keyboard.pressed(KeyCode::Space) {
-        for entity in q_players.iter() {
+        if keyboard.pressed(KeyCode::C) {
             commands.entity(entity).insert(PlayerInputJump);
+        } else {
+            commands.entity(entity).remove::<PlayerInputJump>();
+        }
+
+        if keyboard.pressed(KeyCode::X) {
+            commands.entity(entity).insert(PlayerInputLunge);
+        } else {
+            commands.entity(entity).remove::<PlayerInputLunge>();
+        }
+
+        if keyboard.pressed(KeyCode::R) {
+            commands.entity(entity).insert(PlayerInputReset);
+        } else {
+            commands.entity(entity).remove::<PlayerInputReset>();
         }
     }
 }
@@ -80,7 +93,10 @@ impl Plugin for PlayerKeyboardInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
             PreUpdate,
-            (player_keyboard_input_movement, player_keyboard_input_jump),
+            (
+                player_keyboard_input_movement,
+                player_keyboard_input_buttons,
+            ),
         );
     }
 }
