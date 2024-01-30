@@ -3,6 +3,7 @@ use std::sync::Arc;
 use bevy::{
     prelude::*,
     render::{
+        extract_component::{ExtractComponent, ExtractComponentPlugin},
         render_graph::RenderGraphApp,
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
@@ -38,12 +39,15 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<GlyphTexture>();
-
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(
                 ExtractSchedule,
-                (extract_glyph_sprites, extract_glyph_animations),
+                (
+                    extract_glyph_sprites,
+                    extract_glyph_animations,
+                    extract_solid_color,
+                ),
             )
             .add_systems(
                 Render,
@@ -151,9 +155,13 @@ impl ExtractedGlyphTexture {
 
 #[derive(Component, Clone)]
 pub struct GlyphSprite {
-    pub color: Color,
     pub texture: Handle<GlyphTexture>,
     pub offset: IVec2,
+}
+
+#[derive(Component, Clone, ExtractComponent)]
+pub struct GlyphSolidColor {
+    pub color: Color,
 }
 
 #[derive(Component)]
@@ -233,7 +241,6 @@ fn extract_glyph_sprites(
             entity,
             (
                 offset_transform,
-                sprite.clone(),
                 ExtractedAtlas(atlas.clone()),
                 font_size.clone(),
                 extracted_glyph_texture,
@@ -266,16 +273,7 @@ fn extract_glyph_animations(
         };
         let transform: Transform = (*global_transform).into();
 
-        // TODO: Add frame offsets to glyph animations
         let offset_transform: GlobalTransform = transform.into();
-
-        // let offset_transform: GlobalTransform = (transform
-        //     * Transform::from_translation(Vec3::new(
-        //         sprite.offset.x as f32,
-        //         sprite.offset.y as f32,
-        //         0.0,
-        //     )))
-        // .into();
 
         let font = fonts.get(font.id()).unwrap();
 
@@ -301,6 +299,15 @@ fn extract_glyph_animations(
                 extracted_glyph_texture,
             ),
         )]);
+    }
+}
+
+fn extract_solid_color(
+    mut commands: Commands,
+    q_glyph_animations: Extract<Query<(Entity, &GlyphSolidColor)>>,
+) {
+    for (entity, color) in q_glyph_animations.iter() {
+        commands.insert_or_spawn_batch([(entity, color.clone())]);
     }
 }
 
@@ -403,7 +410,7 @@ fn prepare_buffers(
     mut commands: Commands,
     query: Query<(
         Entity,
-        Option<&GlyphSprite>,
+        Option<&GlyphSolidColor>,
         &GlobalTransform,
         &GpuGlyphTexture,
         &ExtractedGlyphTexture,
@@ -411,12 +418,12 @@ fn prepare_buffers(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
-    for (entity, sprite, global_transform, gpu_glyph_texture, extracted_glyph_texture) in
+    for (entity, color, global_transform, gpu_glyph_texture, extracted_glyph_texture) in
         query.iter()
     {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
-            color: sprite
-                .map(|sprite| sprite.color.into())
+            color: color
+                .map(|color| color.color.into())
                 .unwrap_or(Color::WHITE.into()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,

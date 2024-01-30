@@ -28,6 +28,9 @@ pub struct PlayerInputBundle {
 #[derive(Component, Default, Debug)]
 pub struct PlayerInputJump;
 
+#[derive(Component, Default, Debug)]
+pub struct PlayerInputLunge;
+
 #[derive(Debug, Default, Component, Clone)]
 pub struct PlayerInputMovement {
     pub horizontal: f32,

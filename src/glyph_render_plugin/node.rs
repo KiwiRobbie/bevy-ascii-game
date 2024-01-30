@@ -12,13 +12,11 @@ use bevy::{
 };
 use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
 
-use crate::glyph_animation::GlyphAnimation;
-
 use super::{
     generation_descriptors::{self},
     raster_descriptors,
     render_resources::{GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer},
-    AtlasGpuBuffers, GlyphModelUniformBuffer, GlyphPipelineData, GlyphSprite, GlyphTextureInfo,
+    AtlasGpuBuffers, GlyphModelUniformBuffer, GlyphPipelineData, GlyphTextureInfo,
 };
 
 type RenderResourceQuery = (
@@ -30,10 +28,10 @@ type RenderResourceQuery = (
     &'static GlyphVertexBuffer,
 );
 
-type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
+// type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
 
 pub struct GlyphGenerationNode {
-    query: QueryState<RenderResourceQuery, RenderResourceFilter>,
+    query: QueryState<RenderResourceQuery>,
     q_view: QueryState<&'static ViewTarget>,
     entities: Vec<Entity>,
 }
@@ -155,6 +153,7 @@ impl render_graph::Node for GlyphGenerationNode {
                     render_device,
                     glyph_pipeline_data,
                     world,
+                    glyph_uniform_buffer,
                     glyph_model_uniforms,
                     atlas_buffers,
                 );

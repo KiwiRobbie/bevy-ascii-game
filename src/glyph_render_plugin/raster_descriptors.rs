@@ -10,17 +10,20 @@ use wgpu::{
     StorageTextureAccess, TextureFormat, TextureViewDimension,
 };
 
-use super::{AtlasGpuBuffers, GlyphModelUniform, GlyphModelUniformBuffer, GlyphPipelineData};
+use super::{
+    render_resources::GlyphUniformBuffer, AtlasGpuBuffers, GlyphModelUniform,
+    GlyphModelUniformBuffer, GlyphPipelineData, GlyphUniforms,
+};
 
-pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 3] = [
+pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 4] = [
     // UNIFORMS
     BindGroupLayoutEntry {
         binding: 0,
-        visibility: ShaderStages::VERTEX_FRAGMENT,
+        visibility: ShaderStages::FRAGMENT,
         ty: BindingType::Buffer {
             ty: BufferBindingType::Uniform,
             has_dynamic_offset: false,
-            min_binding_size: BufferSize::new(ViewUniform::SHADER_SIZE.get()),
+            min_binding_size: BufferSize::new(GlyphUniforms::SHADER_SIZE.get()),
         },
         count: None,
     },
@@ -30,12 +33,22 @@ pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 3] = [
         ty: BindingType::Buffer {
             ty: BufferBindingType::Uniform,
             has_dynamic_offset: false,
-            min_binding_size: BufferSize::new(GlyphModelUniform::SHADER_SIZE.get()),
+            min_binding_size: BufferSize::new(ViewUniform::SHADER_SIZE.get()),
         },
         count: None,
     },
     BindGroupLayoutEntry {
         binding: 2,
+        visibility: ShaderStages::VERTEX_FRAGMENT,
+        ty: BindingType::Buffer {
+            ty: BufferBindingType::Uniform,
+            has_dynamic_offset: false,
+            min_binding_size: BufferSize::new(GlyphModelUniform::SHADER_SIZE.get()),
+        },
+        count: None,
+    },
+    BindGroupLayoutEntry {
+        binding: 3,
         visibility: ShaderStages::VERTEX_FRAGMENT,
         ty: BindingType::StorageTexture {
             access: StorageTextureAccess::ReadOnly,
@@ -50,6 +63,7 @@ pub fn create_bind_group(
     render_device: &bevy::render::renderer::RenderDevice,
     glyph_pipeline_data: &GlyphPipelineData,
     world: &World,
+    glyph_uniform_buffer: &GlyphUniformBuffer,
     glyph_model_uniforms: &GlyphModelUniformBuffer,
     atlas_buffers: &AtlasGpuBuffers,
 ) -> bevy::render::render_resource::BindGroup {
@@ -59,14 +73,18 @@ pub fn create_bind_group(
         &[
             BindGroupEntry {
                 binding: 0,
-                resource: world.resource::<ViewUniforms>().uniforms.binding().unwrap(),
+                resource: glyph_uniform_buffer.binding().unwrap(),
             },
             BindGroupEntry {
                 binding: 1,
-                resource: glyph_model_uniforms.binding().unwrap(),
+                resource: world.resource::<ViewUniforms>().uniforms.binding().unwrap(),
             },
             BindGroupEntry {
                 binding: 2,
+                resource: glyph_model_uniforms.binding().unwrap(),
+            },
+            BindGroupEntry {
+                binding: 3,
                 resource: bevy::render::render_resource::BindingResource::TextureView(
                     &atlas_buffers
                         .data

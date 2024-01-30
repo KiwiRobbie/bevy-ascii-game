@@ -23,7 +23,7 @@ use bevy_ascii_game::{
     font::{font_load_system, CustomFont, CustomFontLoader, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimationAssetLoader, GlyphAnimationSource},
     glyph_animation_graph::{bundle::GlyphAnimationGraphBundle, plugin::GlyphAnimationGraphPlugin},
-    glyph_render_plugin::{GlyphRenderPlugin, GlyphSprite, GlyphTexture},
+    glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
     physics::{
         actor::ActorPhysicsBundle,
         collision::{Aabb, Collider, CollisionShape},
@@ -109,7 +109,11 @@ fn handle_gamepads(
     for ev in ev_gamepad.read() {
         match ev.connection {
             GamepadConnection::Connected(_) => {
-                create_player(&mut commands, &server).insert(PlayerInputController(ev.gamepad));
+                create_player(&mut commands, &server)
+                    .insert(PlayerInputController(ev.gamepad))
+                    .insert(GlyphSolidColor {
+                        color: Color::hsl(360.0 * (1.0 + ev.gamepad.id as f32) / 6.0, 1.0, 0.6),
+                    });
             }
             GamepadConnection::Disconnected => {
                 for (player, PlayerInputController(gamepad)) in q_players.iter() {
@@ -131,14 +135,24 @@ fn setup_system(
     // Player
 
     for gamepad in gamepads.iter() {
-        create_player(&mut commands, &server).insert(PlayerInputController(gamepad));
+        create_player(&mut commands, &server)
+            .insert(PlayerInputController(gamepad))
+            .insert(GlyphSolidColor {
+                color: Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6),
+            });
     }
-    create_player(&mut commands, &server).insert(PlayerInputKeyboardMarker);
+    //         .insert(GlyphSolidColor {
+    //         });
+    // }
+    create_player(&mut commands, &server)
+        .insert(PlayerInputKeyboardMarker)
+        .insert(GlyphSolidColor {
+            color: Color::hsl(0.0, 1.0, 0.6),
+        });
 
     // Sliding Box
     commands.spawn((
         GlyphSprite {
-            color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
             }),
@@ -166,7 +180,6 @@ fn setup_system(
     // Stationary box
     commands.spawn((
         GlyphSprite {
-            color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
             }),
@@ -195,7 +208,6 @@ fn setup_system(
     // Falling box
     commands.spawn((
         GlyphSprite {
-            color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| ".".repeat(3)).collect::<Vec<String>>(),
             }),
@@ -228,7 +240,6 @@ fn setup_system(
         FontAtlasUser,
         FontSize(32),
         GlyphSprite {
-            color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
             }),
@@ -243,7 +254,6 @@ fn setup_system(
     // Floor
     commands.spawn((
         GlyphSprite {
-            color: Color::WHITE,
             texture: glyph_textures.add(GlyphTexture {
                 data: (0..2).map(|_| "#".repeat(100)).collect::<Vec<String>>(),
             }),
