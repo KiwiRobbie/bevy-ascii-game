@@ -14,7 +14,7 @@ use bevy::{
     math::{IVec2, UVec2, Vec2},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
-    window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
+    window::{ReceivedCharacter, Window, WindowPlugin, WindowResized, WindowResolution},
     DefaultPlugins,
 };
 
@@ -60,12 +60,14 @@ fn main() {
     .add_plugins((FontAtlasPlugin, PhysicsPlugin, GlyphRenderPlugin))
     .init_asset::<GlyphAnimationSource>()
     .init_asset_loader::<GlyphAnimationAssetLoader>()
+    .init_resource::<FontSize>()
     .add_systems(Startup, setup_system)
     .add_systems(
         Update,
         (
             keyboard_input_system,
             font_load_system,
+            on_resize_system,
             // looping_animation_player_system,
             moving_platform,
             handle_gamepads,
@@ -405,4 +407,18 @@ fn create_player<'w, 's, 'a>(
         Gravity::default(),
         Velocity::default(),
     ))
+}
+
+fn on_resize_system(
+    mut resize_reader: EventReader<WindowResized>,
+    mut q_font_size: Query<&mut FontSize>,
+    mut res_font_size: ResMut<FontSize>,
+) {
+    if let Some(e) = resize_reader.read().last() {
+        let size = (e.width / 60.0) as u32;
+        for mut font_size in q_font_size.iter_mut() {
+            **font_size = size
+        }
+        **res_font_size = size;
+    }
 }

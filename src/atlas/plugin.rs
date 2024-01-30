@@ -60,7 +60,8 @@ fn update_atlases_system(
         // render.format(Format::Subpixel);
         render.format(Format::CustomSubpixel([0.0, 0.0, 0.0]));
 
-        let mut builder = AtlasBuilder::new(font_ref, render, scaler);
+        dbg!(format!("Building at {}", **font_size));
+        let mut builder = AtlasBuilder::new(font_ref, render, scaler, **font_size as f32);
         for character in new_chars {
             builder.insert_char(*character);
         }

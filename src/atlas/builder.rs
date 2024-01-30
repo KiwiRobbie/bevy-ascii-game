@@ -24,10 +24,16 @@ pub struct AtlasBuilder<'a> {
     packed_positions: Vec<UVec2>,
     characters: HashSet<char>,
     size: u32,
+    font_size: f32,
 }
 
 impl<'a> AtlasBuilder<'a> {
-    pub fn new(font: swash::FontRef<'a>, render: Render<'a>, scaler: Scaler<'a>) -> Self {
+    pub fn new(
+        font: swash::FontRef<'a>,
+        render: Render<'a>,
+        scaler: Scaler<'a>,
+        font_size: f32,
+    ) -> Self {
         // let metrics = font.metrics(&[]);
 
         Self {
@@ -38,6 +44,7 @@ impl<'a> AtlasBuilder<'a> {
             packed_positions: vec![],
             characters: HashSet::new(),
             size: 0,
+            font_size,
         }
     }
 
@@ -54,7 +61,7 @@ impl<'a> AtlasBuilder<'a> {
             *alpha = 0xff;
         }
 
-        let metrics = self.font.metrics(&[]).scale(32.0);
+        let metrics = self.font.metrics(&[]).scale(self.font_size);
 
         self.rendered.push(RenderedGlyph {
             glyph_id,

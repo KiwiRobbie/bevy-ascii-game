@@ -1,10 +1,16 @@
 use bevy::{
-    ecs::{bundle::Bundle, component::Component, system::Query},
+    ecs::{
+        bundle::Bundle,
+        component::Component,
+        system::{Query, Res},
+    },
     gizmos::gizmos::Gizmos,
     math::{IVec2, Vec2, Vec3, Vec3Swizzles},
     render::color::Color,
     transform::components::{GlobalTransform, Transform},
 };
+
+use crate::font::FontSize;
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct Position {
@@ -15,11 +21,12 @@ pub struct Position {
 pub fn position_update_transforms_system(
     mut q_position_transforms: Query<(&mut Transform, &Position)>,
     mut gizmos: Gizmos,
+    font_size: Res<FontSize>,
 ) {
     for (mut transform, position) in q_position_transforms.iter_mut() {
         *transform = transform.with_translation(Vec3 {
-            x: (position.position.x * 19) as f32,
-            y: (position.position.y * 40) as f32,
+            x: (position.position.x * font_size.advance() as i32) as f32,
+            y: (position.position.y * font_size.line_spacing() as i32) as f32,
             z: transform.translation.z,
         });
         gizmos.circle_2d(transform.translation.xy(), 5.0, Color::BLUE);

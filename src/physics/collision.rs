@@ -1,9 +1,15 @@
 use bevy::{
-    ecs::{component::Component, entity::Entity, system::Query},
+    ecs::{
+        component::Component,
+        entity::Entity,
+        system::{Query, Res},
+    },
     gizmos::gizmos::Gizmos,
     math::{IVec2, UVec2, Vec2},
     render::color::Color,
 };
+
+use crate::font::FontSize;
 
 use super::{
     actor::Actor,
@@ -131,11 +137,20 @@ pub struct OffsetCollision<'a> {
 pub fn debug_collision_system(
     mut gizmos: Gizmos,
     q_colliders: Query<(&Collider, &Position, Option<&Solid>, Option<&Actor>)>,
+    font_size: Res<FontSize>,
 ) {
     for (collider, position, solid, actor) in q_colliders.iter() {
         for shape in collider.shape.colliders() {
-            let min = (position.position + shape.min).as_vec2() * Vec2 { x: 19.0, y: 40.0 };
-            let size = shape.size.as_vec2() * Vec2 { x: 19.0, y: 40.0 };
+            let min = (position.position + shape.min).as_vec2()
+                * Vec2 {
+                    x: font_size.advance() as f32,
+                    y: font_size.line_spacing() as f32,
+                };
+            let size = shape.size.as_vec2()
+                * Vec2 {
+                    x: font_size.advance() as f32,
+                    y: font_size.line_spacing() as f32,
+                };
 
             let center = min + 0.5 * size;
 

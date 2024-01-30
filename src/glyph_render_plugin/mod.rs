@@ -95,7 +95,12 @@ pub struct ExtractedGlyphTexture {
 }
 
 impl ExtractedGlyphTexture {
-    pub fn extract(source: &GlyphTexture, atlas: &FontAtlasSource, font: FontRef) -> Self {
+    pub fn extract(
+        source: &GlyphTexture,
+        atlas: &FontAtlasSource,
+        font: FontRef,
+        font_size: &FontSize,
+    ) -> Self {
         let text = &source.data;
         let height = text.len();
         let width = text[0].len();
@@ -116,8 +121,8 @@ impl ExtractedGlyphTexture {
             data,
             width: width as u32,
             height: height as u32,
-            advance: 19u32,
-            line_spacing: 40u32,
+            advance: font_size.advance(),
+            line_spacing: font_size.line_spacing(),
         }
     }
 
@@ -125,6 +130,7 @@ impl ExtractedGlyphTexture {
         source: &GlyphAnimationSource,
         atlas: &FontAtlasSource,
         font: FontRef,
+        font_size: &FontSize,
         frame: usize,
     ) -> Self {
         let text = &source.frames[frame].data;
@@ -147,8 +153,8 @@ impl ExtractedGlyphTexture {
             data,
             width: width as u32,
             height: height as u32,
-            advance: 19u32,
-            line_spacing: 40u32,
+            advance: font_size.advance(),
+            line_spacing: font_size.line_spacing(),
         }
     }
 }
@@ -218,8 +224,8 @@ fn extract_glyph_sprites(
         let transform: Transform = (*global_transform).into();
         let offset_transform: GlobalTransform = (transform
             * Transform::from_translation(Vec3::new(
-                (19 * sprite.offset.x) as f32,
-                (40 * sprite.offset.y) as f32,
+                (font_size.advance() as i32 * sprite.offset.x) as f32,
+                (font_size.line_spacing() as i32 * sprite.offset.y) as f32,
                 0.0,
             )))
         .into();
@@ -235,6 +241,7 @@ fn extract_glyph_sprites(
             glyph_textures.get(sprite.texture.id()).unwrap(),
             atlas,
             font.as_ref(),
+            font_size,
         );
 
         commands.insert_or_spawn_batch([(
@@ -286,6 +293,7 @@ fn extract_glyph_animations(
             animation_source,
             atlas,
             font.as_ref(),
+            font_size,
             animation.frame as usize,
         );
 

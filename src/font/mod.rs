@@ -5,15 +5,30 @@ use bevy::{
         component::Component,
         entity::Entity,
         event::EventReader,
-        system::{Commands, Query},
+        system::{Commands, Query, Resource},
     },
     prelude::{Deref, DerefMut},
     reflect::TypePath,
 };
 use swash::{CacheKey, FontRef};
 
-#[derive(Component, PartialEq, Eq, Hash, Clone)]
+#[derive(Resource, Component, PartialEq, Eq, Hash, Clone, Deref, DerefMut)]
 pub struct FontSize(pub u32);
+
+impl FontSize {
+    pub fn advance(&self) -> u32 {
+        ((**self as f32) * 19.0 / 32.0) as u32
+    }
+    pub fn line_spacing(&self) -> u32 {
+        ((**self as f32) * 40.0 / 32.0) as u32
+    }
+}
+
+impl Default for FontSize {
+    fn default() -> Self {
+        Self(32)
+    }
+}
 
 #[derive(Component, DerefMut, Deref, Clone)]
 pub struct CustomFont(pub Handle<CustomFontSource>);
