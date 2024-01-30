@@ -29,7 +29,10 @@
         (from: "air_strafe", to: "air_idle"),
         
         (from: "idle", to: "air_idle"),
+        (from: "air_idle", to: "idle"),
         (from: "running", to: "air_strafe"),
+        (from: "air_strafe", to: "running"),
+
 
         (from: "lunging", to: "air_strafe"),
         (from: "lunging", to: "running"),

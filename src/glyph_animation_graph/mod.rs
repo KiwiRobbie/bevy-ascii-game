@@ -1,9 +1,11 @@
+use std::collections::VecDeque;
+
 use anyhow::Context;
 use bevy::{
     asset::{io::Reader, Asset, AssetLoader, AsyncReadExt, Handle},
     ecs::component::Component,
     reflect::TypePath,
-    utils::hashbrown::HashMap,
+    utils::hashbrown::{HashMap, HashSet},
 };
 use serde::Deserialize;
 
@@ -107,46 +109,35 @@ impl GlyphAnimationGraphSource {
     }
 
     pub fn traverse(&self, src: usize, dest: usize) -> GlyphAnimationTransition {
-        let mut path = Vec::with_capacity(2);
-        path.push(src);
+        let mut visited: HashSet<usize> = HashSet::new();
+        let mut queue = VecDeque::<(usize, Vec<Handle<GlyphAnimationSource>>)>::new();
+
+        queue.push_back((src, vec![]));
+        while let Some((node, path)) = queue.pop_front() {
+            if node == dest {
+                return GlyphAnimationTransition {
+                    transitions: Some(path),
+                    destination: self.states[dest].animation.clone(),
+                };
+            }
+            visited.insert(node);
+            for transition in &self.transitions[node] {
+                let child = transition.to;
+                if !visited.contains(&transition.to) {
+                    let mut path = path.clone();
+                    if let Some(animation) = &transition.animation {
+                        path.push(animation.clone());
+                    }
+
+                    queue.push_back((child, path));
+                }
+            }
+        }
 
         GlyphAnimationTransition {
-            transitions: self.recursive_traversal(dest, &path, &vec![]),
-            destination: self.states[src].animation.clone(),
+            transitions: None,
+            destination: self.states[dest].animation.clone(),
         }
-    }
-
-    fn recursive_traversal(
-        &self,
-        dest: usize,
-        path: &Vec<usize>,
-        transition_animations: &Vec<Handle<GlyphAnimationSource>>,
-    ) -> Option<Vec<Handle<GlyphAnimationSource>>> {
-        // BFS traversal of graph
-
-        let node = *path.last().unwrap();
-
-        if node == dest {
-            return Some(transition_animations.clone());
-        }
-
-        for child in self.transitions[node].iter() {
-            if path.contains(&child.to) {
-                continue;
-            }
-            let mut path = path.clone();
-            path.push(child.to);
-
-            let mut transition_animations = transition_animations.clone();
-            if let Some(animation) = child.animation.as_ref() {
-                transition_animations.push(animation.clone());
-            }
-
-            if let Some(path) = self.recursive_traversal(dest, &path, &transition_animations) {
-                return Some(path);
-            };
-        }
-        None
     }
 }
 

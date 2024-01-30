@@ -11,7 +11,11 @@ use bevy::{
 };
 
 use crate::{
-    physics::{free::FreeMarker, movement::Movement, velocity::Velocity},
+    physics::{
+        free::FreeMarker,
+        movement::{Movement, MovementObstructed},
+        velocity::Velocity,
+    },
     player::{
         input::{PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement},
         PlayerMarker,
@@ -37,7 +41,7 @@ impl Default for PlayerLungeSettings {
     fn default() -> Self {
         Self {
             speed: 100.0,
-            duration: 0.25,
+            duration: 0.4,
         }
     }
 }
@@ -69,12 +73,29 @@ pub fn player_lunge_start_system(
 }
 pub fn player_lunge_update_system(
     mut commands: Commands,
-    mut q_player: Query<(Entity, &mut PlayerLunging, &mut Movement), With<PlayerMarker>>,
+    mut q_player: Query<
+        (
+            Entity,
+            &mut PlayerLunging,
+            &mut Movement,
+            Option<&MovementObstructed>,
+        ),
+        With<PlayerMarker>,
+    >,
     time: Res<Time>,
 ) {
-    for (entity, mut lunging, mut movement) in q_player.iter_mut() {
+    for (entity, mut lunging, mut movement, obstructed) in q_player.iter_mut() {
         lunging.timer -= time.delta_seconds();
-        if lunging.timer <= 0.0 {
+        let obstructed = if let Some(obstructed) = obstructed {
+            lunging.direction.x > 0.0 && obstructed.x.is_some()
+                || lunging.direction.y > 0.0 && obstructed.y.is_some()
+                || lunging.direction.x < 0.0 && obstructed.neg_x.is_some()
+                || lunging.direction.x < 0.0 && obstructed.neg_y.is_some()
+        } else {
+            false
+        };
+
+        if obstructed || lunging.timer <= 0.0 {
             commands
                 .entity(entity)
                 .insert((FreeMarker, PlayerInputMarker))
