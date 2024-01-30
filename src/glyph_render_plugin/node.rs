@@ -1,7 +1,7 @@
 use bevy::{
     ecs::{
         entity::Entity,
-        query::{Or, QueryState, With},
+        query::QueryState,
         world::{FromWorld, World},
     },
     render::{

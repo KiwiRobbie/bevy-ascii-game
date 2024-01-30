@@ -3,7 +3,7 @@ use std::sync::Arc;
 use bevy::{
     prelude::*,
     render::{
-        extract_component::{ExtractComponent, ExtractComponentPlugin},
+        extract_component::ExtractComponent,
         render_graph::RenderGraphApp,
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},

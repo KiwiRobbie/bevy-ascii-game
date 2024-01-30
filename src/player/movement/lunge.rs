@@ -1,9 +1,8 @@
 use bevy::{
     ecs::{
-        bundle::Bundle,
         component::Component,
         entity::Entity,
-        query::{With, Without},
+        query::With,
         system::{Commands, Query, Res},
     },
     math::Vec2,
@@ -14,15 +13,14 @@ use crate::{
     physics::{
         free::FreeMarker,
         movement::{Movement, MovementObstructed},
-        velocity::Velocity,
     },
     player::{
-        input::{PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement},
+        input::{PlayerInputLunge, PlayerInputMarker, PlayerInputMovement},
         PlayerMarker,
     },
 };
 
-use super::{jump::PlayerJumpVelocity, MovementFilter};
+use super::MovementFilter;
 
 #[derive(Debug, Component)]
 pub struct PlayerLunging {
