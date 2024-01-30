@@ -79,9 +79,8 @@ impl AssetLoader for GlyphAnimationAssetLoader {
                     FrameIndex::NextY => cursor + UVec2::Y * frame.size.1,
                 };
 
-                cursor -= frame_step; // Cancel step for first frame when reading sequence of several frames
+                // Cancel step for first frame when reading sequence of several frames
                 for _ in 0..frame_count {
-                    cursor += frame_step;
                     frames.push(GlyphAnimationFrame::new(
                         &frame,
                         frames_data.get(&frame.asset).unwrap(),
@@ -93,6 +92,7 @@ impl AssetLoader for GlyphAnimationAssetLoader {
                         CountDirection::Y(_) => FrameIndex::NextY,
                         CountDirection::Single => break,
                     };
+                    cursor += frame_step;
                 }
             }
 

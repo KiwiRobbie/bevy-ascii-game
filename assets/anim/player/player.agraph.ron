@@ -12,9 +12,13 @@
             name: "air_idle",
             animation: "anim/player/states/air_idle.anim.ron"
         ),
-            (
+        (
             name: "air_strafe",
             animation: "anim/player/states/air_strafe.anim.ron"
+        ),
+        (
+            name: "lunging",
+            animation: "anim/player/states/lunging.anim.ron"
         )
     ],
     transitions: [
@@ -27,7 +31,9 @@
         (from: "idle", to: "air_idle"),
         (from: "running", to: "air_strafe"),
 
-
-
+        (from: "lunging", to: "air_strafe"),
+        (from: "lunging", to: "running"),
+        (from: "air_strafe", to: "lunging", animation:"anim/player/transitional/lunging.anim.ron"),
+        (from: "running", to: "lunging", animation:"anim/player/transitional/lunging.anim.ron"),
     ]
 )

@@ -60,7 +60,7 @@ impl AssetLoader for GlyphAnimationGraphAssetLoader {
                     "Invalid state name {} in transition {} -> {}",
                     &transition.from, &transition.from, &transition.to
                 ))?;
-                let to = state_names.get(&transition.from).context(format!(
+                let to = state_names.get(&transition.to).context(format!(
                     "Invalid state name {} in transition {} -> {}",
                     &transition.to, &transition.from, &transition.to
                 ))?;
@@ -122,6 +122,8 @@ impl GlyphAnimationGraphSource {
         path: &Vec<usize>,
         transition_animations: &Vec<Handle<GlyphAnimationSource>>,
     ) -> Option<Vec<Handle<GlyphAnimationSource>>> {
+        // BFS traversal of graph
+
         let node = *path.last().unwrap();
 
         if node == dest {
@@ -164,7 +166,16 @@ struct GlyphAnimationGraphStateMeta {
 struct GlyphAnimationGraphTransitionMeta {
     from: String,
     to: String,
+    #[serde(default, deserialize_with = "wrap_some")]
     animation: Option<String>,
+}
+
+fn wrap_some<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: String = serde::Deserialize::deserialize(deserializer)?;
+    Ok(Some(s))
 }
 
 #[derive(Asset, TypePath)]

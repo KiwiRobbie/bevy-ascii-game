@@ -97,6 +97,8 @@ pub fn animation_graph_traverse(
         if current.current_state != target {
             let transition = graph_source.traverse(current.current_state, target);
             current.current_state = target;
+
+            dbg!(&transition.transitions);
             current.transitional_states = transition.transitions.unwrap_or(vec![]);
         }
     }
