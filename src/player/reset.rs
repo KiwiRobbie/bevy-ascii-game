@@ -10,19 +10,19 @@ use bevy::{
     render::color::Color,
 };
 
-use crate::{
+use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
     font::{CustomFont, FontSize},
     glyph_animation_graph::bundle::GlyphAnimationGraphBundle,
     glyph_render_plugin::{GlyphSolidColor, GlyphSpriteMirrored},
-    physics::{
-        actor::ActorPhysicsBundle,
-        collision::{Aabb, Collider, CollisionShape},
-        free::FreeMarker,
-        gravity::Gravity,
-        position::{Position, PositionBundle},
-        velocity::Velocity,
-    },
+};
+use grid_physics::{
+    actor::ActorPhysicsBundle,
+    collision::{Aabb, Collider, CollisionShape},
+    free::FreeMarker,
+    gravity::Gravity,
+    position::{Position, PositionBundle},
+    velocity::Velocity,
 };
 
 use super::{

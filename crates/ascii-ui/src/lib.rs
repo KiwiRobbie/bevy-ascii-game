@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use bevy::{
     app::{Plugin, PreUpdate, Update},
     asset::Assets,
@@ -14,12 +16,9 @@ use bevy::{
     math::{IVec2, UVec2, Vec2},
     render::color::Color,
 };
-use glyph_render::{
-    font::FontSize,
-    glyph_render_plugin::{GlyphSprite, GlyphTexture},
-};
-use grid_physics::position::Position;
-use std::ops::RangeInclusive;
+
+use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTexture};
+use grid_physics::position::{GridSize, Position};
 
 #[derive(Component, Clone, Debug)]
 pub struct Positioned {
@@ -496,15 +495,11 @@ pub fn recurse_apply_position(
 pub fn debug_positions(
     mut gizmos: Gizmos,
     q_positioned: Query<&Positioned>,
-    res_font_size: Res<FontSize>,
+    grid_size: Res<GridSize>,
 ) {
     for positioned in q_positioned.iter() {
-        let offset = positioned.offset.as_vec2()
-            * UVec2::new(res_font_size.advance(), res_font_size.line_spacing()).as_vec2()
-            * Vec2::new(1.0, -1.0);
-        let size = positioned.size.as_vec2()
-            * UVec2::new(res_font_size.advance(), res_font_size.line_spacing()).as_vec2()
-            * Vec2::new(1.0, -1.0);
+        let offset = positioned.offset.as_vec2() * grid_size.as_vec2() * Vec2::new(1.0, -1.0);
+        let size = positioned.size.as_vec2() * grid_size.as_vec2() * Vec2::new(1.0, -1.0);
         let center = offset + 0.5 * size;
 
         gizmos.rect_2d(center, 0.0, size, Color::ORANGE);

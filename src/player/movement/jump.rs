@@ -1,16 +1,13 @@
+use crate::player::input::PlayerInputJump;
 use bevy::ecs::{
     component::Component,
     entity::Entity,
     query::With,
     system::{Commands, Query},
 };
-
-use crate::{
-    physics::{
-        free::{FreeGrounded, FreeMarker},
-        velocity::Velocity,
-    },
-    player::input::PlayerInputJump,
+use grid_physics::{
+    free::{FreeGrounded, FreeMarker},
+    velocity::Velocity,
 };
 
 use super::MovementFilter;

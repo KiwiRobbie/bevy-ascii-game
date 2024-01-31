@@ -4,7 +4,7 @@ use bevy::{
     utils::{HashMap, HashSet},
 };
 
-use crate::util::text_mirror::mirror_lines;
+use text_util::text_mirror::mirror_lines;
 
 use super::{GlyphAnimationFrame, GlyphAnimationSource};
 pub mod meta;

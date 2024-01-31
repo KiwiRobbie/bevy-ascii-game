@@ -1,3 +1,4 @@
+use crate::player::PlayerMarker;
 use bevy::{
     ecs::{
         component::Component,
@@ -7,8 +8,7 @@ use bevy::{
     },
     math::IVec2,
 };
-
-use crate::{glyph_render_plugin::GlyphSpriteMirrored, player::PlayerMarker};
+use glyph_render::glyph_render_plugin::GlyphSpriteMirrored;
 
 use super::PlayerMovementMarker;
 

@@ -26,28 +26,28 @@ use bevy::{
     DefaultPlugins,
 };
 
-use bevy_ascii_game::{
+use bevy_ascii_game::player::{
+    input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
+    reset::{create_player, create_player_with_gamepad},
+    PlayerPlugin,
+};
+use glyph_render::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
     font::{font_load_system, CustomFont, FontSize},
     glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
-    physics::{
-        actor::ActorPhysicsBundle,
-        collision::{Aabb, Collider, CollisionShape},
-        free::FreeMarker,
-        gravity::Gravity,
-        movement::Movement,
-        plugin::PhysicsPlugin,
-        position::{Position, PositionBundle},
-        solid::{FilterSolids, SolidPhysicsBundle},
-        velocity::Velocity,
-    },
-    player::{
-        input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
-        reset::{create_player, create_player_with_gamepad},
-        PlayerPlugin,
-    },
+};
+use grid_physics::{
+    actor::ActorPhysicsBundle,
+    collision::{Aabb, Collider, CollisionShape},
+    free::FreeMarker,
+    gravity::Gravity,
+    movement::Movement,
+    plugin::PhysicsPlugin,
+    position::{GridSize, Position, PositionBundle},
+    solid::{FilterSolids, SolidPhysicsBundle},
+    velocity::Velocity,
 };
 
 fn main() {
@@ -341,6 +341,7 @@ fn on_resize_system(
     mut resize_reader: EventReader<WindowResized>,
     mut q_font_size: Query<&mut FontSize>,
     mut res_font_size: ResMut<FontSize>,
+    mut grid_size: ResMut<GridSize>,
 ) {
     if let Some(e) = resize_reader.read().last() {
         let size = (e.width / 60.0) as u32;
@@ -348,6 +349,7 @@ fn on_resize_system(
             **font_size = size
         }
         **res_font_size = size;
+        **grid_size = UVec2::new(res_font_size.advance(), res_font_size.line_spacing());
     }
 }
 fn set_new_font_size(

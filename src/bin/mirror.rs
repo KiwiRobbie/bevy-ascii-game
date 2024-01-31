@@ -1,5 +1,5 @@
-use bevy_ascii_game::util::text_mirror::mirror_lines;
 use std::{env, fs};
+use text_util::text_mirror::mirror_lines;
 fn main() {
     let args: Vec<String> = env::args().collect();
     let Some(file) = args.get(1) else {

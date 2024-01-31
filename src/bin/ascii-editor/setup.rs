@@ -10,7 +10,7 @@ use bevy::{
     math::{IVec2, UVec2},
     transform::components::{GlobalTransform, Transform},
 };
-use bevy_ascii_game::{
+use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
     font::{CustomFont, CustomFontSource, FontSize},
 };

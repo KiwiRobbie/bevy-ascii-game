@@ -9,16 +9,14 @@ use bevy::{
     time::Time,
 };
 
-use crate::{
-    physics::{
-        free::{FreeGrounded, FreeMarker},
-        movement::{Movement, MovementObstructed},
-        velocity::Velocity,
-    },
-    player::{
-        input::{PlayerInputLunge, PlayerInputMarker},
-        PlayerMarker,
-    },
+use crate::player::{
+    input::{PlayerInputLunge, PlayerInputMarker},
+    PlayerMarker,
+};
+use grid_physics::{
+    free::{FreeGrounded, FreeMarker},
+    movement::{Movement, MovementObstructed},
+    velocity::Velocity,
 };
 
 use super::{direction::PlayerDirection, MovementFilter};

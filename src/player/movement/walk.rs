@@ -1,14 +1,10 @@
+use super::{direction::PlayerDirection, MovementFilter};
+use crate::player::input::PlayerInputMovement;
 use bevy::{
     ecs::{component::Component, system::Query},
     math::Vec2,
 };
-
-use crate::{
-    physics::{free::FreeGrounded, movement::Movement, velocity::Velocity},
-    player::input::PlayerInputMovement,
-};
-
-use super::{direction::PlayerDirection, MovementFilter};
+use grid_physics::{free::FreeGrounded, movement::Movement, velocity::Velocity};
 
 #[derive(Component, Debug, Default, Clone)]
 pub struct PlayerWalkSpeed {

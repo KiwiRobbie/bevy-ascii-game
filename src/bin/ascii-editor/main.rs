@@ -26,28 +26,28 @@ use bevy::{
     DefaultPlugins,
 };
 
-use bevy_ascii_game::{
+use bevy_ascii_game::player::{
+    input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
+    reset::{create_player, create_player_with_gamepad},
+    PlayerPlugin,
+};
+use glyph_render::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
     font::{font_load_system, CustomFont, FontSize},
     glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
-    physics::{
-        actor::ActorPhysicsBundle,
-        collision::{Aabb, Collider, CollisionShape},
-        free::FreeMarker,
-        gravity::Gravity,
-        movement::Movement,
-        plugin::PhysicsPlugin,
-        position::{Position, PositionBundle},
-        solid::{FilterSolids, SolidPhysicsBundle},
-        velocity::Velocity,
-    },
-    player::{
-        input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
-        reset::{create_player, create_player_with_gamepad},
-        PlayerPlugin,
-    },
+};
+use grid_physics::{
+    actor::ActorPhysicsBundle,
+    collision::{Aabb, Collider, CollisionShape},
+    free::FreeMarker,
+    gravity::Gravity,
+    movement::Movement,
+    plugin::PhysicsPlugin,
+    position::{Position, PositionBundle},
+    solid::{FilterSolids, SolidPhysicsBundle},
+    velocity::Velocity,
 };
 use setup::setup_ui;
 use ui::UiPlugin;

@@ -4,7 +4,7 @@ use bevy::{
     transform::TransformSystem,
 };
 
-use crate::player::animation::set_animation_target;
+use crate::{collision::debug_collision_system, position::GridSize};
 
 use super::{
     actor::actor_move_system,
@@ -24,6 +24,7 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<GravityResource>()
             .init_resource::<SolidCollisionCache>()
+            .init_resource::<GridSize>()
             .add_systems(
                 PostUpdate,
                 (
@@ -34,9 +35,8 @@ impl Plugin for PhysicsPlugin {
                     obstruct_velocity,
                     apply_velocity_to_free,
                     apply_gravity_to_free,
-                    set_animation_target,
                     position_update_transforms_system,
-                    // debug_collision_system,
+                    debug_collision_system,
                 )
                     .chain()
                     .before(TransformSystem::TransformPropagate),

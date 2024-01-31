@@ -4,9 +4,8 @@ use bevy::ecs::{
     system::{Commands, Query},
 };
 
-use crate::{
-    glyph_animation_graph::player::GlyphAnimationGraphTarget, physics::free::FreeGrounded,
-};
+use glyph_render::glyph_animation_graph::player::GlyphAnimationGraphTarget;
+use grid_physics::free::FreeGrounded;
 
 use super::{input::PlayerInputMovement, movement::lunge::PlayerLunging, PlayerMarker};
 

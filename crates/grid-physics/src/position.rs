@@ -2,13 +2,20 @@ use bevy::{
     ecs::{
         bundle::Bundle,
         component::Component,
-        system::{Query, Res},
+        system::{Query, Res, Resource},
     },
-    math::{IVec2, Vec2, Vec3},
+    math::{IVec2, UVec2, Vec2, Vec3},
+    prelude::{Deref, DerefMut},
     transform::components::{GlobalTransform, Transform},
 };
 
-use crate::font::FontSize;
+#[derive(Debug, Resource, DerefMut, Deref)]
+pub struct GridSize(pub UVec2);
+impl Default for GridSize {
+    fn default() -> Self {
+        Self(UVec2 { x: 19, y: 40 })
+    }
+}
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct Position {
@@ -18,12 +25,12 @@ pub struct Position {
 
 pub fn position_update_transforms_system(
     mut q_position_transforms: Query<(&mut Transform, &Position)>,
-    font_size: Res<FontSize>,
+    font_size: Res<GridSize>,
 ) {
     for (mut transform, position) in q_position_transforms.iter_mut() {
         *transform = transform.with_translation(Vec3 {
-            x: (position.position.x * font_size.advance() as i32) as f32,
-            y: (position.position.y * font_size.line_spacing() as i32) as f32,
+            x: (position.position.x * font_size.x as i32) as f32,
+            y: (position.position.y * font_size.y as i32) as f32,
             z: transform.translation.z,
         });
     }
