@@ -58,9 +58,9 @@ impl Plugin for GlyphRenderPlugin {
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
                 &[
-                    bevy::core_pipeline::core_2d::graph::node::TONEMAPPING,
+                    bevy::core_pipeline::core_2d::graph::node::MAIN_PASS,
                     "glyph_generation",
-                    bevy::core_pipeline::core_2d::graph::node::END_MAIN_PASS_POST_PROCESSING,
+                    bevy::core_pipeline::core_2d::graph::node::BLOOM,
                 ],
             );
     }
@@ -568,7 +568,7 @@ impl FromWorld for GlyphPipelineData {
                     shader_defs: Vec::new(),
                     entry_point: "fragment".into(),
                     targets: vec![Some(ColorTargetState {
-                        format: TextureFormat::Rgba8UnormSrgb,
+                        format: TextureFormat::Rgba16Float,
                         blend: Some(BlendState::ALPHA_BLENDING),
                         write_mask: ColorWrites::ALL,
                     })],

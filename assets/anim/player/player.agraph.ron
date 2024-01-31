@@ -32,8 +32,10 @@
             from: "air_strafe",
             to: "air_idle",
         ),
-        (from: "idle", to: "air_idle"),
-        (from: "air_idle", to: "idle"),
+        (from: "idle", to: "air_idle",             animation: "anim/player/transitional/landing.anim.ron",
+),
+        (from: "air_idle", to: "idle",             animation: "anim/player/transitional/landing.anim.ron",
+),
         (
             from: "running",
             to: "air_strafe",

@@ -3,16 +3,24 @@
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
-    core_pipeline::core_2d::Camera2dBundle,
+    core_pipeline::{
+        bloom::{BloomPlugin, BloomSettings},
+        core_2d::{Camera2d, Camera2dBundle},
+    },
     ecs::{
         component::Component,
         entity::Entity,
         event::EventReader,
+        query::Added,
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent, Gamepads},
     math::{IVec2, UVec2, Vec2},
-    render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
+    render::{
+        camera::{Camera, CameraRenderGraph},
+        color::Color,
+        texture::ImagePlugin,
+    },
     time::Time,
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResized, WindowResolution},
     DefaultPlugins,
@@ -68,6 +76,7 @@ fn main() {
             keyboard_input_system,
             font_load_system,
             on_resize_system,
+            set_new_font_size,
             // looping_animation_player_system,
             moving_platform,
             handle_gamepads,
@@ -134,7 +143,7 @@ fn setup_system(
     create_player(&mut commands, &server)
         .insert(PlayerInputKeyboardMarker)
         .insert(GlyphSolidColor {
-            color: Color::hsl(0.0, 1.0, 0.6),
+            color: Color::hsl(0.0, 1.0, 0.6).as_rgba_linear() * 10.0,
         });
 
     // Sliding Box
@@ -262,10 +271,25 @@ fn setup_system(
         },
     ));
 
-    commands.spawn(Camera2dBundle {
-        camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
-        ..Default::default()
-    });
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                hdr: true,
+                ..Default::default()
+            },
+            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
+            camera_2d: Camera2d {
+                clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::Custom(
+                    Color::BLACK,
+                ),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        BloomSettings {
+            ..Default::default()
+        },
+    ));
 }
 
 #[derive(Component)]
@@ -325,6 +349,14 @@ fn on_resize_system(
             **font_size = size
         }
         **res_font_size = size;
+    }
+}
+fn set_new_font_size(
+    mut q_new_font_size: Query<&mut FontSize, Added<FontSize>>,
+    res_font_size: ResMut<FontSize>,
+) {
+    for mut font_size in q_new_font_size.iter_mut() {
+        **font_size = res_font_size.0;
     }
 }
 const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
