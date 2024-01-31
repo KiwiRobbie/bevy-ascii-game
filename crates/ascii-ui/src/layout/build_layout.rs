@@ -58,7 +58,6 @@ pub fn recurse_apply_position(
     world: &World,
     entity: Entity,
 ) {
-    commands.entity(entity).log_components();
     let Some(widget) = world.get::<WidgetLayout>(entity) else {
         println!("no widget");
         return;
