@@ -50,6 +50,9 @@ features = [
 
 [lib]
 
+[[bin]]
+name = "mirror"
+
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 0

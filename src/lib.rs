@@ -9,3 +9,5 @@ pub mod glyph_sprite;
 pub mod physics;
 
 pub mod player;
+
+pub mod util;

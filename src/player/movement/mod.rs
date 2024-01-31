@@ -4,6 +4,7 @@ use bevy::{
 };
 
 use self::{
+    direction::{player_update_sprite_mirror, PlayerDirection},
     jump::{player_jump_system, PlayerJumpVelocity},
     lunge::{
         player_lunge_cooldown_update, player_lunge_start_system, player_lunge_update_system,
@@ -14,6 +15,7 @@ use self::{
 
 use super::PlayerMarker;
 
+pub mod direction;
 pub mod jump;
 pub mod lunge;
 pub mod walk;
@@ -29,6 +31,7 @@ impl Plugin for PlayerMovementPlugin {
                 player_lunge_start_system,
                 player_lunge_update_system,
                 player_lunge_cooldown_update,
+                player_update_sprite_mirror,
             )
                 .chain(),
         );
@@ -44,5 +47,6 @@ pub struct PlayerMovementBundle {
     pub walk_speed: PlayerWalkSpeed,
     pub jump_velocity: PlayerJumpVelocity,
     pub lunge_settings: PlayerLungeSettings,
+    pub direction: PlayerDirection,
 }
 type MovementFilter = (With<PlayerMarker>, With<PlayerMovementMarker>);

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bevy::{
     app::{Plugin, PostUpdate},
-    asset::Assets,
+    asset::{AssetApp, Assets},
     ecs::{
         query::{Added, Changed, Or},
         system::{Query, Res, ResMut},
@@ -13,7 +13,7 @@ use swash::{
     zeno::Format,
 };
 
-use crate::font::{CustomFont, CustomFontSource, FontLoadedMarker, FontSize};
+use crate::font::{CustomFont, CustomFontLoader, CustomFontSource, FontLoadedMarker, FontSize};
 
 use super::{AtlasBuilder, CharacterSet, FontAtlasCache, FontAtlasUser};
 
@@ -73,6 +73,8 @@ pub struct FontAtlasPlugin;
 impl Plugin for FontAtlasPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(PostUpdate, update_atlases_system)
-            .init_resource::<FontAtlasCache>();
+            .init_resource::<FontAtlasCache>()
+            .init_asset::<CustomFontSource>()
+            .init_asset_loader::<CustomFontLoader>();
     }
 }

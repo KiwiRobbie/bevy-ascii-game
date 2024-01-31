@@ -17,7 +17,7 @@ use swash::FontRef;
 use crate::{
     atlas::{FontAtlasCache, FontAtlasSource},
     font::{CustomFont, CustomFontSource, FontLoadedMarker, FontSize},
-    glyph_animation::{GlyphAnimation, GlyphAnimationSource},
+    glyph_animation::{GlyphAnimation, GlyphAnimationFrame, GlyphAnimationSource},
     glyph_render_plugin::render_resources::{
         GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
     },
@@ -38,7 +38,7 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<GlyphTexture>();
+        app.init_asset::<GlyphTexture>().init_resource::<FontSize>();
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(
@@ -87,6 +87,7 @@ pub struct GlyphTexture {
 #[derive(Component, Clone)]
 pub struct ExtractedGlyphTexture {
     pub data: Box<[u8]>,
+
     pub width: u32,
     pub height: u32,
 
@@ -127,13 +128,11 @@ impl ExtractedGlyphTexture {
     }
 
     pub fn extract_animation(
-        source: &GlyphAnimationSource,
+        text: &Vec<String>,
         atlas: &FontAtlasSource,
         font: FontRef,
         font_size: &FontSize,
-        frame: usize,
     ) -> Self {
-        let text = &source.frames[frame].data;
         let height = text.len();
         let width = text[0].len();
 
@@ -269,18 +268,35 @@ fn extract_glyph_animations(
                 &GlyphAnimation,
                 &CustomFont,
                 &FontSize,
+                Option<&GlyphSpriteMirrored>,
             ),
             (With<FontLoadedMarker>, Without<GlyphSprite>),
         >,
     >,
 ) {
-    for (entity, global_transform, animation, font, font_size) in q_glyph_animations.iter() {
+    for (entity, global_transform, animation, font, font_size, flipped) in q_glyph_animations.iter()
+    {
         let Some(animation_source) = glyph_animations.get(animation.source.id()) else {
             continue;
         };
-        let transform: Transform = (*global_transform).into();
 
-        let offset_transform: GlobalTransform = transform.into();
+        let frame = animation.frame as usize;
+        let GlyphAnimationFrame { data: text, offset } = &(if flipped.is_some() {
+            (animation_source.frames[frame].1.as_ref()).unwrap_or(&animation_source.frames[frame].0)
+        } else {
+            &animation_source.frames[frame].0
+        });
+
+        let transform: Transform = (*global_transform).into();
+        let offset_transform: GlobalTransform = (Transform::from_translation(
+            offset.extend(0).as_vec3()
+                * Vec3::new(
+                    font_size.advance() as f32,
+                    font_size.line_spacing() as f32,
+                    0.0,
+                ),
+        ) * transform)
+            .into();
 
         let font = fonts.get(font.id()).unwrap();
 
@@ -289,13 +305,8 @@ fn extract_glyph_animations(
             .get(&(font_size.clone(), font.key()))
             .unwrap();
 
-        let extracted_glyph_texture = ExtractedGlyphTexture::extract_animation(
-            animation_source,
-            atlas,
-            font.as_ref(),
-            font_size,
-            animation.frame as usize,
-        );
+        let extracted_glyph_texture =
+            ExtractedGlyphTexture::extract_animation(&text, atlas, font.as_ref(), font_size);
 
         commands.insert_or_spawn_batch([(
             entity,
@@ -309,6 +320,9 @@ fn extract_glyph_animations(
         )]);
     }
 }
+
+#[derive(Debug, Component, Clone)]
+pub struct GlyphSpriteMirrored;
 
 fn extract_solid_color(
     mut commands: Commands,

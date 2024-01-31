@@ -14,7 +14,7 @@ use crate::{
     atlas::{CharacterSet, FontAtlasUser},
     font::{CustomFont, FontSize},
     glyph_animation_graph::bundle::GlyphAnimationGraphBundle,
-    glyph_render_plugin::GlyphSolidColor,
+    glyph_render_plugin::{GlyphSolidColor, GlyphSpriteMirrored},
     physics::{
         actor::ActorPhysicsBundle,
         collision::{Aabb, Collider, CollisionShape},
@@ -73,6 +73,7 @@ pub fn create_player<'w, 's, 'a>(
         CustomFont(server.load("FiraCode-Regular.ttf")),
         CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
+        GlyphSpriteMirrored,
         PlayerBundle {
             actor: ActorPhysicsBundle {
                 position: PositionBundle {

@@ -20,7 +20,6 @@ pub struct Position {
 
 pub fn position_update_transforms_system(
     mut q_position_transforms: Query<(&mut Transform, &Position)>,
-    mut gizmos: Gizmos,
     font_size: Res<FontSize>,
 ) {
     for (mut transform, position) in q_position_transforms.iter_mut() {
@@ -29,7 +28,6 @@ pub fn position_update_transforms_system(
             y: (position.position.y * font_size.line_spacing() as i32) as f32,
             z: transform.translation.z,
         });
-        // gizmos.circle_2d(transform.translation.xy(), 5.0, Color::BLUE);
     }
 }
 

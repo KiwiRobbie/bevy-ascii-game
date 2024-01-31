@@ -2,7 +2,7 @@
 
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
-    asset::{AssetApp, AssetServer, Assets},
+    asset::{AssetServer, Assets},
     core_pipeline::core_2d::Camera2dBundle,
     ecs::{
         component::Component,
@@ -10,7 +10,7 @@ use bevy::{
         event::EventReader,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::gamepad::{Gamepad, GamepadConnection, GamepadConnectionEvent, Gamepads},
+    input::gamepad::{GamepadConnection, GamepadConnectionEvent, Gamepads},
     math::{IVec2, UVec2, Vec2},
     render::{camera::CameraRenderGraph, color::Color, texture::ImagePlugin},
     time::Time,
@@ -20,9 +20,9 @@ use bevy::{
 
 use bevy_ascii_game::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
-    font::{font_load_system, CustomFont, CustomFontLoader, CustomFontSource, FontSize},
-    glyph_animation::{GlyphAnimationAssetLoader, GlyphAnimationSource},
-    glyph_animation_graph::{bundle::GlyphAnimationGraphBundle, plugin::GlyphAnimationGraphPlugin},
+    font::{font_load_system, CustomFont, FontSize},
+    glyph_animation::GlyphAnimationPlugin,
+    glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
     physics::{
         actor::ActorPhysicsBundle,
@@ -37,9 +37,8 @@ use bevy_ascii_game::{
     },
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
-        movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
         reset::{create_player, create_player_with_gamepad},
-        PlayerBundle, PlayerPlugin,
+        PlayerPlugin,
     },
 };
 
@@ -56,12 +55,12 @@ fn main() {
                 ..Default::default()
             }),
         PlayerPlugin,
+        GlyphAnimationPlugin,
         GlyphAnimationGraphPlugin,
+        FontAtlasPlugin,
+        PhysicsPlugin,
+        GlyphRenderPlugin,
     ))
-    .add_plugins((FontAtlasPlugin, PhysicsPlugin, GlyphRenderPlugin))
-    .init_asset::<GlyphAnimationSource>()
-    .init_asset_loader::<GlyphAnimationAssetLoader>()
-    .init_resource::<FontSize>()
     .add_systems(Startup, setup_system)
     .add_systems(
         Update,
@@ -73,9 +72,7 @@ fn main() {
             moving_platform,
             handle_gamepads,
         ),
-    )
-    .init_asset::<CustomFontSource>()
-    .init_asset_loader::<CustomFontLoader>();
+    );
 
     #[cfg(debug_assertions)]
     std::fs::write(
@@ -130,13 +127,10 @@ fn setup_system(
     gamepads: Res<Gamepads>,
 ) {
     // Player
-
     for gamepad in gamepads.iter() {
         create_player_with_gamepad(&mut commands, &server, gamepad);
     }
-    //         .insert(GlyphSolidColor {
-    //         });
-    // }
+
     create_player(&mut commands, &server)
         .insert(PlayerInputKeyboardMarker)
         .insert(GlyphSolidColor {
@@ -319,46 +313,6 @@ fn keyboard_input_system(
         }
     }
 }
-
-// #[derive(Component)]
-// pub struct LoopingAnimationPlayer {
-//     pub frame_rate: u32,
-//     pub start_time: Option<f64>,
-// }
-// impl LoopingAnimationPlayer {
-//     fn new(frame_rate: u32) -> Self {
-//         Self {
-//             frame_rate,
-//             start_time: None,
-//         }
-//     }
-// }
-
-// fn looping_animation_player_system(
-//     mut q_glyph_animation: Query<(&mut GlyphAnimation, &mut LoopingAnimationPlayer)>,
-//     glyph_animation_sources: Res<Assets<GlyphAnimationSource>>,
-//     time: Res<Time>,
-// ) {
-//     // TODO: Fix visual glitch caused by wrapping every hour!
-//     let elapsed = time.elapsed_seconds_wrapped_f64();
-
-//     for (mut animation, mut player) in q_glyph_animation.iter_mut() {
-//         let Some(source) = glyph_animation_sources.get(animation.source.id()) else {
-//             continue;
-//         };
-
-//         let start_time = match player.start_time {
-//             Some(t) => t,
-//             None => {
-//                 player.start_time = Some(elapsed);
-//                 elapsed
-//             }
-//         };
-
-//         let frame = ((elapsed - start_time) * player.frame_rate as f64).round() as u32;
-//         animation.frame = frame.rem_euclid(source.frames.len() as u32);
-//     }
-// }
 
 fn on_resize_system(
     mut resize_reader: EventReader<WindowResized>,

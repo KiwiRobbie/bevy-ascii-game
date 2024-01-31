@@ -21,7 +21,7 @@ use crate::{
     },
 };
 
-use super::MovementFilter;
+use super::{direction::PlayerDirection, MovementFilter};
 
 #[derive(Debug, Component)]
 pub struct PlayerLunging {
@@ -57,7 +57,7 @@ impl Default for PlayerLungeSettings {
 pub fn player_lunge_start_system(
     mut commands: Commands,
     q_player: Query<
-        (Entity, &PlayerInputMovement, &PlayerLungeSettings),
+        (Entity, &PlayerDirection, &PlayerLungeSettings),
         (
             MovementFilter,
             With<FreeMarker>,
@@ -66,17 +66,11 @@ pub fn player_lunge_start_system(
         ),
     >,
 ) {
-    for (entity, movement_input, settings) in q_player.iter() {
-        let direction = if movement_input.horizontal.is_sign_positive() {
-            Vec2::X
-        } else {
-            Vec2::NEG_X
-        };
-
+    for (entity, direction, settings) in q_player.iter() {
         commands
             .entity(entity)
             .insert((PlayerLunging {
-                direction,
+                direction: direction.get().as_vec2(),
                 speed: settings.speed,
                 timer: settings.duration,
             },))

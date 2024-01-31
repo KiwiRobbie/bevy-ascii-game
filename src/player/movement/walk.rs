@@ -8,7 +8,10 @@ use crate::{
     player::input::PlayerInputMovement,
 };
 
-use super::MovementFilter;
+use super::{
+    direction::{self, PlayerDirection},
+    MovementFilter,
+};
 
 #[derive(Component, Debug, Default, Clone)]
 pub struct PlayerWalkSpeed {
@@ -19,6 +22,7 @@ pub fn player_walk_system(
         (
             &mut Movement,
             &mut Velocity,
+            &mut PlayerDirection,
             &PlayerInputMovement,
             &PlayerWalkSpeed,
             Option<&FreeGrounded>,
@@ -26,10 +30,14 @@ pub fn player_walk_system(
         MovementFilter,
     >,
 ) {
-    for (mut movement, mut velocity, input, settings, grounded) in q_player.iter_mut() {
+    for (mut movement, mut velocity, mut direction, input, settings, grounded) in
+        q_player.iter_mut()
+    {
         let horizontal = if input.horizontal < -0.5 {
+            direction.set_x(-1);
             -1.0
         } else if input.horizontal > 0.5 {
+            direction.set_x(1);
             1.0
         } else {
             0.0
