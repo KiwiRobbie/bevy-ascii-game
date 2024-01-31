@@ -38,6 +38,7 @@ use glyph_render::{
 };
 use grid_physics::{plugin::PhysicsPlugin, position::GridSize};
 use setup::setup_ui;
+use ui::plugin::UiPlugin;
 
 pub mod setup;
 
@@ -59,7 +60,7 @@ fn main() {
         FontAtlasPlugin,
         PhysicsPlugin,
         GlyphRenderPlugin,
-        ui::UiPlugin,
+        UiPlugin,
     ))
     .add_systems(Startup, (setup_system, setup_ui))
     .add_systems(
