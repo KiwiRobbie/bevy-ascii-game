@@ -4,7 +4,7 @@ use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
     core_pipeline::{
-        bloom::{BloomPlugin, BloomSettings},
+        bloom::BloomSettings,
         core_2d::{Camera2d, Camera2dBundle},
     },
     ecs::{
@@ -77,7 +77,6 @@ fn main() {
             font_load_system,
             on_resize_system,
             set_new_font_size,
-            // looping_animation_player_system,
             moving_platform,
             handle_gamepads,
         ),

@@ -8,7 +8,7 @@ use crate::player::animation::set_animation_target;
 
 use super::{
     actor::actor_move_system,
-    collision::debug_collision_system,
+    // collision::debug_collision_system,
     free::{
         apply_gravity_to_free, apply_velocity_to_free, obstruct_velocity, update_free_actor_state,
     },
