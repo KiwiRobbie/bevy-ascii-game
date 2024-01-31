@@ -1,17 +1,10 @@
-use attachments::border::Border;
 use bevy::{
-    asset::Assets,
-    ecs::{
-        component::Component,
-        entity::Entity,
-        system::{Commands, Query, Res, ResMut},
-    },
+    ecs::system::{Query, Res},
     gizmos::gizmos::Gizmos,
-    math::{IVec2, UVec2, Vec2},
+    math::Vec2,
     render::color::Color,
 };
-use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTexture};
-use grid_physics::position::{GridSize, Position};
+use grid_physics::position::GridSize;
 use layout::positioned::Positioned;
 
 pub mod attachments;

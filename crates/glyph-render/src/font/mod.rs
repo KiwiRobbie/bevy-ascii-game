@@ -1,11 +1,12 @@
 use anyhow::anyhow;
 use bevy::{
-    asset::{Asset, AssetEvent, AssetLoader, Handle},
+    asset::{Asset, AssetEvent, AssetLoader, AssetServer, Handle},
     ecs::{
         component::Component,
         entity::Entity,
         event::EventReader,
-        system::{Commands, Query, Resource},
+        query::Without,
+        system::{Commands, Query, Res, Resource},
     },
     prelude::{Deref, DerefMut},
     reflect::TypePath,
@@ -123,7 +124,8 @@ pub struct FontLoadedMarker;
 pub fn font_load_system(
     mut commands: Commands,
     mut ev_asset: EventReader<AssetEvent<CustomFontSource>>,
-    q_font_references: Query<(Entity, &CustomFont)>,
+    q_font_references: Query<(Entity, &CustomFont), Without<FontLoadedMarker>>,
+    server: Res<AssetServer>,
 ) {
     for ev in ev_asset.read() {
         if let AssetEvent::LoadedWithDependencies { id } = ev {
@@ -132,6 +134,11 @@ pub fn font_load_system(
                     commands.entity(entity).insert(FontLoadedMarker);
                 }
             }
+        }
+    }
+    for (entity, font) in q_font_references.iter() {
+        if server.is_loaded_with_dependencies(font.id()) {
+            commands.entity(entity).insert(FontLoadedMarker);
         }
     }
 }

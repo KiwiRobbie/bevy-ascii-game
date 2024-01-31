@@ -14,7 +14,7 @@ use bevy::{
         query::Added,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::gamepad::{GamepadConnection, GamepadConnectionEvent, Gamepads},
+    input::gamepad::{GamepadConnection, GamepadConnectionEvent},
     math::{IVec2, UVec2, Vec2},
     render::{
         camera::{Camera, CameraRenderGraph},
@@ -132,12 +132,11 @@ fn setup_system(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    gamepads: Res<Gamepads>,
 ) {
     // Player
-    for gamepad in gamepads.iter() {
-        create_player_with_gamepad(&mut commands, &server, gamepad);
-    }
+    // for gamepad in gamepads.iter() {
+    //     create_player_with_gamepad(&mut commands, &server, gamepad);
+    // }
 
     create_player(&mut commands, &server)
         .insert(PlayerInputKeyboardMarker)

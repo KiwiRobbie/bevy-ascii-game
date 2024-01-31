@@ -56,6 +56,7 @@ pub fn player_update_sprite_mirror(
     q_player: Query<(Entity, &PlayerDirection), (With<PlayerMarker>, With<PlayerMovementMarker>)>,
 ) {
     for (player, direction) in q_player.iter() {
+        commands.entity(player).log_components();
         if direction.get().x == -1 {
             commands.entity(player).insert(GlyphSpriteMirrored);
         } else {
