@@ -17,7 +17,6 @@ pub fn divider_render(
     q_text: Query<(Entity, &Positioned, &Divider)>,
 ) {
     for (entity, positioned, divider) in q_text.iter() {
-        dbg!(entity, positioned);
         commands.entity(entity).insert((
             Position {
                 position: positioned.offset * IVec2::new(1, -1)

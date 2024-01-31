@@ -17,7 +17,6 @@ pub fn text_render(
     q_text: Query<(Entity, &Positioned, &Text)>,
 ) {
     for (entity, positioned, text) in q_text.iter() {
-        dbg!(entity, positioned);
         commands.entity(entity).insert((
             Position {
                 position: positioned.offset * IVec2::new(1, -1)
