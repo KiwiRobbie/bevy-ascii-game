@@ -1,3 +1,5 @@
+use crate::ui::Border;
+
 use super::ui;
 use bevy::{
     asset::{AssetServer, Handle},
@@ -14,18 +16,17 @@ use bevy_ascii_game::{
 };
 
 pub fn setup_ui(mut commands: Commands, server: Res<AssetServer>) {
-    let font = server.load("FiraCode-Regular.ttf");
-
+    let font = &server.load("FiraCode-Regular.ttf");
     let text_a = commands
         .spawn((
-            UiRenderBundle::from_font(font.clone()),
+            UiRenderBundle::from_font(font),
             ui::Text {
                 text: "Text A".into(),
             },
             ui::Widget::new::<ui::TextLogic>(),
         ))
         .id();
-    let text_b = commands
+    let text_b: bevy::prelude::Entity = commands
         .spawn((
             UiRenderBundle::from_font(font),
             ui::Text {
@@ -35,22 +36,56 @@ pub fn setup_ui(mut commands: Commands, server: Res<AssetServer>) {
         ))
         .id();
 
-    let row = commands
+    let divider: bevy::prelude::Entity = commands
         .spawn((
-            ui::Row {
-                children: vec![text_a, text_b],
+            UiRenderBundle::from_font(font),
+            ui::Divider { character: '=' },
+            ui::Widget::new::<ui::DividerLogic>(),
+        ))
+        .id();
+
+    let text_1: bevy::prelude::Entity = commands
+        .spawn((
+            UiRenderBundle::from_font(font),
+            ui::Text {
+                text: "Text 1".into(),
             },
-            ui::Widget::new::<ui::RowLogic>(),
+            ui::Widget::new::<ui::TextLogic>(),
+        ))
+        .id();
+
+    let text_2: bevy::prelude::Entity = commands
+        .spawn((
+            UiRenderBundle::from_font(font),
+            ui::Text {
+                text: "Text 2".into(),
+            },
+            ui::Widget::new::<ui::TextLogic>(),
+        ))
+        .id();
+    let column = commands
+        .spawn((
+            ui::Column {
+                children: vec![text_a, text_b, divider, text_1, text_2],
+            },
+            ui::Widget::new::<ui::ColumnLogic>(),
         ))
         .id();
 
     commands.spawn((
-        ui::Widget::new::<ui::RootLogic>(),
-        ui::Root { child: row },
+        ui::Root,
+        ui::Container { child: column },
+        ui::Widget::new::<ui::ContainerLogic>(),
         ui::Positioned {
             offset: IVec2::ZERO,
-            size: UVec2 { x: 30, y: 20 },
+            size: UVec2 { x: 15, y: 10 },
         },
+        ui::BorderBundle::new(Border::symmetric(
+            Some('|'),
+            Some('-'),
+            Some([',', '.', '`', '\'']),
+        )),
+        UiRenderBundle::from_font(font),
     ));
 }
 
@@ -65,9 +100,9 @@ pub struct UiRenderBundle {
 }
 
 impl UiRenderBundle {
-    pub fn from_font(font: Handle<CustomFontSource>) -> Self {
+    pub fn from_font(font: &Handle<CustomFontSource>) -> Self {
         Self {
-            font: CustomFont(font),
+            font: CustomFont(font.clone()),
             font_atlas_user: FontAtlasUser,
             character_set: Default::default(),
             font_size: Default::default(),
