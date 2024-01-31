@@ -33,10 +33,9 @@ use super::{
 
 pub fn player_reset_system(
     mut commands: Commands,
-    server: Res<AssetServer>,
-    q_player: Query<(Entity, &PlayerInputController), With<PlayerInputReset>>,
+    q_player: Query<Entity, With<PlayerInputReset>>,
 ) {
-    for (player, PlayerInputController(gamepad)) in q_player.iter() {
+    for player in q_player.iter() {
         commands.entity(player).insert((
             Position {
                 position: IVec2::ZERO,
@@ -46,8 +45,6 @@ pub fn player_reset_system(
                 ..Default::default()
             },
         ));
-        // commands.entity(player).despawn();
-        // create_player_with_gamepad(&mut commands, &server, *gamepad);
     }
 }
 

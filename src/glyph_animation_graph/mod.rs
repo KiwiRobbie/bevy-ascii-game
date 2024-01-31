@@ -52,7 +52,7 @@ impl AssetLoader for GlyphAnimationGraphAssetLoader {
                 }
 
                 states.push(GlyphAnimationGraphState {
-                    name: state.name,
+                    // name: state.name,
                     animation: load_context.load(state.animation),
                 });
             }
@@ -177,7 +177,6 @@ pub struct GlyphAnimationGraphSource {
 }
 
 struct GlyphAnimationGraphState {
-    name: String,
     animation: Handle<GlyphAnimationSource>,
 }
 

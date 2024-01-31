@@ -16,7 +16,7 @@ use crate::{
         velocity::Velocity,
     },
     player::{
-        input::{PlayerInputLunge, PlayerInputMarker, PlayerInputMovement},
+        input::{PlayerInputLunge, PlayerInputMarker},
         PlayerMarker,
     },
 };

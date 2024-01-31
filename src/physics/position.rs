@@ -4,9 +4,7 @@ use bevy::{
         component::Component,
         system::{Query, Res},
     },
-    gizmos::gizmos::Gizmos,
-    math::{IVec2, Vec2, Vec3, Vec3Swizzles},
-    render::color::Color,
+    math::{IVec2, Vec2, Vec3},
     transform::components::{GlobalTransform, Transform},
 };
 

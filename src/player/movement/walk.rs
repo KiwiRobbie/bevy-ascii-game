@@ -8,10 +8,7 @@ use crate::{
     player::input::PlayerInputMovement,
 };
 
-use super::{
-    direction::{self, PlayerDirection},
-    MovementFilter,
-};
+use super::{direction::PlayerDirection, MovementFilter};
 
 #[derive(Component, Debug, Default, Clone)]
 pub struct PlayerWalkSpeed {
