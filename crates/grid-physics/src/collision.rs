@@ -5,7 +5,7 @@ use bevy::{
         system::{Query, Res},
     },
     gizmos::gizmos::Gizmos,
-    math::{IVec2, UVec2, Vec2},
+    math::{IVec2, UVec2},
     render::color::Color,
 };
 
