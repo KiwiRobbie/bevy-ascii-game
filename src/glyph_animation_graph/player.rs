@@ -50,7 +50,9 @@ pub fn animation_graph_player(
     for (entity, graph, mut current, animation, settings) in q_players.iter_mut() {
         if let Some(mut animation) = animation {
             current.frame_timer += time.delta_seconds() * settings.framerate;
-            let animation_source = glyph_animations.get(animation.source.clone()).unwrap();
+            let Some(animation_source) = glyph_animations.get(animation.source.clone()) else {
+                continue;
+            };
             if current.frame_timer > 1.0 {
                 animation.frame += current.frame_timer as u32;
                 current.frame_timer -= current.frame_timer.floor();

@@ -13,6 +13,7 @@ use bevy::{
 use swash::{CacheKey, FontRef};
 
 #[derive(Resource, Component, PartialEq, Eq, Hash, Clone, Deref, DerefMut)]
+
 pub struct FontSize(pub u32);
 
 impl FontSize {
@@ -23,7 +24,6 @@ impl FontSize {
         ((**self as f32) * 40.0 / 32.0) as u32
     }
 }
-
 impl Default for FontSize {
     fn default() -> Self {
         Self(32)

@@ -12,6 +12,12 @@ mod builder;
 mod plugin;
 #[derive(Component, DerefMut, Deref, Clone)]
 pub struct CharacterSet(pub HashSet<char>);
+impl Default for CharacterSet {
+    fn default() -> Self {
+        const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+        Self(CHARSET.chars().collect())
+    }
+}
 
 pub use plugin::FontAtlasPlugin;
 
