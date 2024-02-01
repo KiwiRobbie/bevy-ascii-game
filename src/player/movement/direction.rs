@@ -32,13 +32,13 @@ impl PlayerDirection {
         self.0 = dir;
     }
     pub fn set_x(&mut self, x: i32) {
-        if x < -1 || x > 1 {
+        if !(-1..=1).contains(&x) {
             panic!();
         }
         self.0.x = x;
     }
     pub fn set_y(&mut self, y: i32) {
-        if y < -1 || y > 1 {
+        if !(-1..=1).contains(&y) {
             panic!();
         }
         self.0.y = y;

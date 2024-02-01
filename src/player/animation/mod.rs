@@ -28,20 +28,16 @@ pub fn set_animation_target(
 
         let target = if lunging {
             "lunging"
-        } else {
-            if grounded {
-                if movement {
-                    "running"
-                } else {
-                    "idle"
-                }
+        } else if grounded {
+            if movement {
+                "running"
             } else {
-                if movement {
-                    "air_strafe"
-                } else {
-                    "air_idle"
-                }
+                "idle"
             }
+        } else if movement {
+            "air_strafe"
+        } else {
+            "air_idle"
         };
 
         commands

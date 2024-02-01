@@ -284,7 +284,6 @@ fn setup_system(
                 clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::Custom(
                     Color::BLACK,
                 ),
-                ..Default::default()
             },
             ..Default::default()
         },

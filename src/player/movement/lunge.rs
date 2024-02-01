@@ -133,10 +133,8 @@ pub fn player_lunge_cooldown_update(
         if cooldown.timer > 0.0 {
             cooldown.timer -= time.delta_seconds();
         }
-        if cooldown.timer <= 0.0 {
-            if grounded.is_some() {
-                commands.entity(entity).remove::<PlayerLungeCooldown>();
-            }
+        if cooldown.timer <= 0.0 && grounded.is_some() {
+            commands.entity(entity).remove::<PlayerLungeCooldown>();
         }
     }
 }
