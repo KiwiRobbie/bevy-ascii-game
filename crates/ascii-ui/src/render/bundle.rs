@@ -1,11 +1,10 @@
 use bevy::{
-    asset::Handle,
     ecs::{bundle::Bundle, component::Component},
     transform::components::{GlobalTransform, Transform},
 };
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
-    font::{CustomFont, CustomFontSource, FontSize},
+    font::FontSize,
 };
 
 #[derive(Debug, Component)]

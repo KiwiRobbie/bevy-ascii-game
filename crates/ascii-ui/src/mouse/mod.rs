@@ -7,7 +7,7 @@ use bevy::{
         system::{Commands, Query, Res},
     },
     input::{mouse::MouseButton, Input},
-    math::{IVec2, Vec2},
+    math::IVec2,
     render::{camera::Camera, color::Color},
     transform::components::GlobalTransform,
     window::{PrimaryWindow, Window},

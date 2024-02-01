@@ -32,10 +32,10 @@ pub fn inspector_init_system(
     }
 }
 
-fn get_components_ids<'a>(
-    world: &'a World,
+fn get_components_ids(
+    world: &World,
     entity: Entity,
-) -> Option<impl Iterator<Item = ComponentId> + 'a> {
+) -> Option<impl Iterator<Item = ComponentId> + '_> {
     // components and entities are linked through archetypes
 
     for archetype in world.archetypes().iter() {
@@ -132,7 +132,7 @@ pub fn inspector_fetch_system(
                     let Some(ptr) = world.get_by_id(target, component_id) else {
                         continue;
                     };
-                    let Some(info) = get_component_info(&world, component_id) else {
+                    let Some(info) = get_component_info(world, component_id) else {
                         continue;
                     };
 

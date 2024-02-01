@@ -1,12 +1,8 @@
-use bevy::{
-    asset::Handle,
-    ecs::{
-        component::Component,
-        entity::Entity,
-        system::{Commands, Query},
-    },
+use bevy::ecs::{
+    component::Component,
+    entity::Entity,
+    system::{Commands, Query},
 };
-use glyph_render::font::CustomFontSource;
 
 use crate::mouse::{IntractableMarker, TriggeredMarker};
 

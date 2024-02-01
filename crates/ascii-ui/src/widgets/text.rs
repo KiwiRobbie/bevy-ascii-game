@@ -1,5 +1,4 @@
 use bevy::{
-    asset::Handle,
     ecs::{
         bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
         system::Commands, world::World,
@@ -7,7 +6,6 @@ use bevy::{
     math::UVec2,
     reflect::Reflect,
 };
-use glyph_render::font::CustomFontSource;
 
 use crate::{
     layout::{
