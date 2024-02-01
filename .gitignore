@@ -1,3 +1,4 @@
 /target
 render-graph.*
 *.tracy
+graph.png
