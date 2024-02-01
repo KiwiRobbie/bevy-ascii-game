@@ -58,7 +58,6 @@ pub fn checkbox_interaction_system(
 ) {
     for (entity, checkbox, enabled, triggered) in q_checkboxes.iter() {
         if triggered.is_some() {
-            dbg!(entity);
             if enabled.is_some() {
                 commands
                     .entity(entity)

@@ -73,7 +73,6 @@ pub fn mouse_interaction(
                         color: Color::ORANGE,
                     });
                 if q_mouse_buttons.just_pressed(MouseButton::Left) {
-                    dbg!(entity);
                     commands.entity(entity).insert(TriggeredMarker);
                 }
             }

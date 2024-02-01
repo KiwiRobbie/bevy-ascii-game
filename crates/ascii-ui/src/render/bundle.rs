@@ -1,6 +1,6 @@
 use bevy::{
     asset::Handle,
-    ecs::bundle::Bundle,
+    ecs::{bundle::Bundle, component::Component},
     transform::components::{GlobalTransform, Transform},
 };
 use glyph_render::{
@@ -8,8 +8,12 @@ use glyph_render::{
     font::{CustomFont, CustomFontSource, FontSize},
 };
 
+#[derive(Debug, Component)]
+pub struct RenderWidgetMarker;
+
 #[derive(Bundle)]
 pub struct RenderBundle {
+    pub render_widget_marker: RenderWidgetMarker,
     pub font_atlas_user: FontAtlasUser,
     pub font: CustomFont,
     pub character_set: CharacterSet,
@@ -21,6 +25,7 @@ pub struct RenderBundle {
 impl RenderBundle {
     pub fn from_font(font: &Handle<CustomFontSource>) -> Self {
         Self {
+            render_widget_marker: RenderWidgetMarker,
             font: CustomFont(font.clone()),
             font_atlas_user: FontAtlasUser,
             character_set: Default::default(),

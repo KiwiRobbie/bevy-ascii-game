@@ -1,8 +1,5 @@
 use super::ui::{attachments, widgets};
-use ascii_ui::{
-    attachments::{border::Border, main_axis::MainAxisAlignment},
-    mouse::IntractableMarker,
-};
+use ascii_ui::attachments::border::Border;
 use bevy::{
     asset::AssetServer,
     ecs::system::{Commands, Res},
@@ -32,6 +29,7 @@ pub fn setup_ui(mut commands: Commands, server: Res<AssetServer>) {
         Some(column),
         (
             attachments::Root {
+                enabled: true,
                 position: IVec2::ZERO,
                 size: UVec2 { x: 30, y: 10 },
             },
@@ -43,19 +41,4 @@ pub fn setup_ui(mut commands: Commands, server: Res<AssetServer>) {
             attachments::RenderBundle::from_font(font),
         ),
     );
-
-    // commands.spawn((
-    //     ui::Root {
-    //         position: IVec2::ZERO,
-    //         size: UVec2 { x: 15, y: 10 },
-    //     },
-    //     ui::Container { child: column },
-    //     ui::WidgetLayout::new::<ui::ContainerLogic>(),
-    //     ui::BorderBundle::new(Border::symmetric(
-    //         Some('|'),
-    //         Some('-'),
-    //         Some([',', '.', '`', '\'']),
-    //     )),
-    //     ui::RenderBundle::from_font(font),
-    // ));
 }

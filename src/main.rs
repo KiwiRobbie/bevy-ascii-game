@@ -26,10 +26,13 @@ use bevy::{
     DefaultPlugins,
 };
 
-use bevy_ascii_game::player::{
-    input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
-    reset::{create_player, create_player_with_gamepad},
-    PlayerPlugin,
+use bevy_ascii_game::{
+    debug_menu::plugin::DebugMenuPlugin,
+    player::{
+        input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
+        reset::{create_player, create_player_with_gamepad},
+        PlayerPlugin,
+    },
 };
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
@@ -68,6 +71,7 @@ fn main() {
         FontAtlasPlugin,
         PhysicsPlugin,
         GlyphRenderPlugin,
+        DebugMenuPlugin,
     ))
     .add_systems(Startup, setup_system)
     .add_systems(

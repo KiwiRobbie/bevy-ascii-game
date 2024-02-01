@@ -4,8 +4,10 @@ use bevy::{
         component::Component,
         system::{Query, Res, Resource},
     },
+    gizmos::gizmos::Gizmos,
     math::{IVec2, UVec2, Vec2, Vec3},
     prelude::{Deref, DerefMut},
+    render::color::Color,
     transform::components::{GlobalTransform, Transform},
 };
 

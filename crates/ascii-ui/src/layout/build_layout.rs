@@ -26,29 +26,29 @@ pub fn build_layout(
     world: &World,
 ) {
     for (entity, widget, root) in q_root.iter() {
-        (widget.logic).layout(
-            entity,
-            &Constraint {
-                width: Some(0..=root.size.x),
-                height: Some(0..=root.size.y),
-            },
-            world,
-            &mut commands,
-        );
-        commands.entity(entity).insert(Positioned {
-            offset: root.position,
-            size: root.size,
-        });
+        if root.enabled {
+            (widget.logic).layout(
+                entity,
+                &Constraint {
+                    width: Some(0..=root.size.x),
+                    height: Some(0..=root.size.y),
+                },
+                world,
+                &mut commands,
+            );
+            commands.entity(entity).insert(Positioned {
+                offset: root.position,
+                size: root.size,
+            });
+        }
     }
 }
 
-pub fn propagate_positions(
-    mut commands: Commands,
-    q_root: Query<Entity, With<Root>>,
-    world: &World,
-) {
-    for root_entity in q_root.iter() {
-        recurse_apply_position(&mut commands, IVec2::ZERO, world, root_entity);
+pub fn propagate_positions(mut commands: Commands, q_root: Query<(Entity, &Root)>, world: &World) {
+    for (root_entity, root) in q_root.iter() {
+        if root.enabled {
+            recurse_apply_position(&mut commands, IVec2::ZERO, world, root_entity);
+        }
     }
 }
 

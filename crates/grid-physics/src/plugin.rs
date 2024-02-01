@@ -4,7 +4,7 @@ use bevy::{
     transform::TransformSystem,
 };
 
-use crate::{collision::debug_collision_system, position::GridSize};
+use crate::{debug::DebugPlugin, position::GridSize};
 
 use super::{
     actor::actor_move_system,
@@ -36,10 +36,10 @@ impl Plugin for PhysicsPlugin {
                     apply_velocity_to_free,
                     apply_gravity_to_free,
                     position_update_transforms_system,
-                    debug_collision_system,
                 )
                     .chain()
                     .before(TransformSystem::TransformPropagate),
-            );
+            )
+            .add_plugins(DebugPlugin);
     }
 }

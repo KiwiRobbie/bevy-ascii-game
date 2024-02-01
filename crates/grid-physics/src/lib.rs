@@ -13,3 +13,5 @@ pub mod free;
 pub mod direction;
 
 pub mod plugin;
+
+pub mod debug;

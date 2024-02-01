@@ -71,7 +71,6 @@ fn main() {
         PhysicsPlugin,
         GlyphRenderPlugin,
         UiPlugin,
-        UiTypesPlugin,
     ))
     .add_systems(Startup, (setup_system, setup_ui))
     .add_systems(

@@ -2,10 +2,11 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        system::{Query, Res},
+        system::{Query, Res, Resource},
     },
     gizmos::gizmos::Gizmos,
     math::{IVec2, UVec2},
+    prelude::{Deref, DerefMut},
     render::color::Color,
 };
 
@@ -132,25 +133,4 @@ impl Collider {
 pub struct OffsetCollision<'a> {
     pub shape: &'a CollisionShape,
     pub offset: IVec2,
-}
-
-pub fn debug_collision_system(
-    mut gizmos: Gizmos,
-    q_colliders: Query<(&Collider, &Position, Option<&Solid>, Option<&Actor>)>,
-    font_size: Res<GridSize>,
-) {
-    for (collider, position, solid, actor) in q_colliders.iter() {
-        for shape in collider.shape.colliders() {
-            let min = (position.position + shape.min).as_vec2() * font_size.as_vec2();
-            let size = shape.size.as_vec2() * font_size.as_vec2();
-
-            let center = min + 0.5 * size;
-
-            if solid.is_some() {
-                gizmos.rect_2d(center, 0.0, size, Color::GREEN);
-            } else if actor.is_some() {
-                gizmos.rect_2d(center, 0.0, size, Color::RED);
-            }
-        }
-    }
 }
