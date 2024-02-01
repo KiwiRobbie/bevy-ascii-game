@@ -7,7 +7,7 @@ use bevy::{
         system::{Commands, Query, Res},
     },
     input::{mouse::MouseButton, Input},
-    math::Vec2,
+    math::{IVec2, Vec2},
     render::{camera::Camera, color::Color},
     transform::components::GlobalTransform,
     window::{PrimaryWindow, Window},
@@ -62,7 +62,10 @@ pub fn mouse_interaction(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
     {
-        let cursor_position = (Vec2::new(1.0, -1.0) * position / grid_size.as_vec2()).as_ivec2();
+        let position = position / grid_size.as_vec2();
+        let position = position.as_ivec2() + IVec2::Y;
+
+        let cursor_position = IVec2::new(1, -1) * position;
 
         for (entity, positioned) in q_intractable.iter() {
             if positioned.contains(cursor_position) {

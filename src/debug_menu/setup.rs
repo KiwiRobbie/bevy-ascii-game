@@ -4,7 +4,10 @@ use ascii_ui::{
 };
 use bevy::{
     asset::AssetServer,
-    ecs::system::{Commands, Res, ResMut},
+    ecs::{
+        component::Component,
+        system::{Commands, Res, ResMut},
+    },
     math::{IVec2, UVec2},
     prelude::Entity,
 };
@@ -18,6 +21,10 @@ pub fn setup_ui(
 ) {
     let font = &server.load("FiraCode-Regular.ttf");
 
+    let f3: Entity = widgets::TextBundle::spawn(&mut commands, "[F3 Debug Menu]".into(), font, ());
+
+    let divider_a: Entity = widgets::DividerBundle::spawn(&mut commands, '=', font);
+
     let player_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), font, ());
     let solid_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text B".into(), font, ());
     let actor_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text c".into(), font, ());
@@ -26,7 +33,7 @@ pub fn setup_ui(
     menu_state.solid_count_text = Some(solid_count);
     menu_state.actor_count_text = Some(actor_count);
 
-    let divider: Entity = widgets::DividerBundle::spawn(&mut commands, '=', font);
+    let divider_b: Entity = widgets::DividerBundle::spawn(&mut commands, '-', font);
 
     let debug_position =
         widgets::CheckboxBuilder::spawn(&mut commands, "Debug Position".into(), font);
@@ -41,10 +48,12 @@ pub fn setup_ui(
     let column = widgets::ColumnBundle::spawn(
         &mut commands,
         vec![
+            f3,
+            divider_a,
             player_count,
             solid_count,
             actor_count,
-            divider,
+            divider_b,
             debug_position,
             debug_colliders,
             debug_ui,
@@ -57,9 +66,9 @@ pub fn setup_ui(
         Some(column),
         (
             attachments::Root {
-                enabled: false,
-                position: IVec2::ZERO,
-                size: UVec2 { x: 30, y: 10 },
+                enabled: true,
+                position: IVec2 { x: 0, y: -1 },
+                size: UVec2 { x: 30, y: 11 },
             },
             attachments::BorderBundle::new(Border::symmetric(
                 Some('|'),
@@ -67,8 +76,12 @@ pub fn setup_ui(
                 Some([',', '.', '`', '\'']),
             )),
             attachments::RenderBundle::from_font(font),
+            DebugMenuMarker,
         ),
     );
 
     menu_state.root_widget = Some(root);
 }
+
+#[derive(Debug, Component)]
+pub struct DebugMenuMarker;

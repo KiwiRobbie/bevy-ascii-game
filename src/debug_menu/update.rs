@@ -15,16 +15,21 @@ use bevy::{
         keyboard::KeyCode,
         Input,
     },
+    math::{IVec2, Vec2},
+    render::camera::Camera,
+    transform::components::GlobalTransform,
+    window::{PrimaryWindow, Window},
 };
 use grid_physics::{
     actor::Actor,
     debug::{DebugCollisions, DebugPositions},
+    position::GridSize,
     solid::Solid,
 };
 
 use crate::player::PlayerMarker;
 
-use super::state::DebugMenuState;
+use super::{setup::DebugMenuMarker, state::DebugMenuState};
 
 pub fn toggle_menu(
     keyboard: Res<Input<KeyCode>>,
@@ -51,7 +56,29 @@ pub fn toggle_menu(
     }
 }
 
-pub fn update(
+pub fn update_position(
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+    mut q_root: Query<&mut Root, With<DebugMenuMarker>>,
+    grid_size: Res<GridSize>,
+) {
+    let Ok((camera, transform)) = q_camera.get_single() else {
+        return;
+    };
+    let Some(rect) = camera.logical_viewport_rect() else {
+        return;
+    };
+
+    let Some(ray) = camera.viewport_to_world(transform, rect.max) else {
+        return;
+    };
+
+    for mut root in q_root.iter_mut() {
+        root.position = (ray.origin.truncate() / grid_size.as_vec2()).as_ivec2()
+            + IVec2::new(-1, 0) * root.size.as_ivec2();
+    }
+}
+
+pub fn update_values(
     state: Res<DebugMenuState>,
     mut collisions: ResMut<DebugCollisions>,
     mut positions: ResMut<DebugPositions>,

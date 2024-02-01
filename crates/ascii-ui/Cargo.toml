@@ -27,7 +27,7 @@ features = [
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
-    "bevy_scene",
+    # "bevy_scene",
     "bevy_winit",
     "bevy_core_pipeline",
     "bevy_pbr",
@@ -45,6 +45,7 @@ features = [
     # "tonemapping_luts",
     # "default_font",
     # "webgl2", 
+
     "dynamic_linking",
 ]
 [dependencies.grid-physics]

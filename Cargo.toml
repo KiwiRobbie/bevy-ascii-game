@@ -28,7 +28,7 @@ features = [
     "bevy_asset",
     # "bevy_audio",
     "bevy_gilrs",
-    "bevy_scene",
+    # "bevy_scene",
     "bevy_winit",
     "bevy_core_pipeline",
     "bevy_pbr",

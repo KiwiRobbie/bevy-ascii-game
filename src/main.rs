@@ -1,5 +1,4 @@
 #![feature(future_join)]
-
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
