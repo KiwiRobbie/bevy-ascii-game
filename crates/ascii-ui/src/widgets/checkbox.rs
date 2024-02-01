@@ -26,13 +26,9 @@ pub struct CheckboxDisabledMarker;
 
 pub struct CheckboxBuilder;
 impl CheckboxBuilder {
-    pub fn spawn(
-        commands: &mut Commands,
-        label: String,
-        font: &Handle<CustomFontSource>,
-    ) -> Entity {
-        let label: Entity = widgets::TextBundle::spawn(commands, label, font, ());
-        let checkbox: Entity = widgets::TextBundle::spawn(commands, "[ ]".into(), font, ());
+    pub fn spawn(commands: &mut Commands, label: String) -> Entity {
+        let label: Entity = widgets::TextBundle::spawn(commands, label, ());
+        let checkbox: Entity = widgets::TextBundle::spawn(commands, "[ ]".into(), ());
         widgets::RowBundle::spawn(
             commands,
             vec![label, checkbox],

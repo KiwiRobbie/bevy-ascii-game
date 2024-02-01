@@ -1,9 +1,12 @@
 use crate::player::input::PlayerInputJump;
-use bevy::ecs::{
-    component::Component,
-    entity::Entity,
-    query::With,
-    system::{Commands, Query},
+use bevy::{
+    ecs::{
+        component::Component,
+        entity::Entity,
+        query::With,
+        system::{Commands, Query},
+    },
+    reflect::Reflect,
 };
 use grid_physics::{
     free::{FreeGrounded, FreeMarker},
@@ -12,7 +15,7 @@ use grid_physics::{
 
 use super::MovementFilter;
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
 pub struct PlayerJumpVelocity {
     pub velocity: f32,
 }

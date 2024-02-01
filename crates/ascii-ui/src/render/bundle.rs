@@ -15,18 +15,16 @@ pub struct RenderWidgetMarker;
 pub struct RenderBundle {
     pub render_widget_marker: RenderWidgetMarker,
     pub font_atlas_user: FontAtlasUser,
-    pub font: CustomFont,
     pub character_set: CharacterSet,
     pub font_size: FontSize,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
 }
 
-impl RenderBundle {
-    pub fn from_font(font: &Handle<CustomFontSource>) -> Self {
+impl Default for RenderBundle {
+    fn default() -> Self {
         Self {
             render_widget_marker: RenderWidgetMarker,
-            font: CustomFont(font.clone()),
             font_atlas_user: FontAtlasUser,
             character_set: Default::default(),
             font_size: Default::default(),

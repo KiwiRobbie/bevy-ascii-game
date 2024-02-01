@@ -7,6 +7,7 @@ use bevy::{
         event::EventReader,
         query::Without,
         system::{Commands, Query, Res, Resource},
+        world::FromWorld,
     },
     prelude::{Deref, DerefMut},
     reflect::TypePath,
@@ -28,6 +29,16 @@ impl FontSize {
 impl Default for FontSize {
     fn default() -> Self {
         Self(32)
+    }
+}
+#[derive(Resource, DerefMut, Deref, Clone)]
+pub struct DefaultFont(pub Handle<CustomFontSource>);
+
+impl FromWorld for DefaultFont {
+    fn from_world(world: &mut bevy::prelude::World) -> Self {
+        let server = world.resource::<AssetServer>();
+        let font = server.load("FiraCode-Regular.ttf");
+        Self(font)
     }
 }
 

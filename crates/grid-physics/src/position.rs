@@ -6,6 +6,7 @@ use bevy::{
     },
     math::{IVec2, UVec2, Vec2, Vec3},
     prelude::{Deref, DerefMut},
+    reflect::Reflect,
     transform::components::{GlobalTransform, Transform},
 };
 
@@ -17,7 +18,7 @@ impl Default for GridSize {
     }
 }
 
-#[derive(Component, Default, Debug, Clone)]
+#[derive(Component, Default, Debug, Clone, Reflect)]
 pub struct Position {
     pub position: IVec2,
     pub remainder: Vec2,

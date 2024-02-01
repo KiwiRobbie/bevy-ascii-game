@@ -1,5 +1,4 @@
 use bevy::{
-    asset::Handle,
     ecs::{
         bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
         system::Commands, world::World,
@@ -7,7 +6,6 @@ use bevy::{
     math::UVec2,
     reflect::Reflect,
 };
-use glyph_render::font::CustomFontSource;
 
 use crate::{
     layout::{
@@ -51,18 +49,14 @@ pub struct DividerBundle {
     pub render: RenderBundle,
 }
 impl DividerBundle {
-    pub fn new(character: char, font: &Handle<CustomFontSource>) -> Self {
+    pub fn new(character: char) -> Self {
         Self {
             layout: WidgetLayout::new::<DividerLogic>(),
-            render: RenderBundle::from_font(font),
+            render: RenderBundle::default(),
             divider: Divider { character },
         }
     }
-    pub fn spawn(
-        commands: &mut Commands,
-        character: char,
-        font: &Handle<CustomFontSource>,
-    ) -> Entity {
-        commands.spawn(Self::new(character, font)).id()
+    pub fn spawn(commands: &mut Commands, character: char) -> Entity {
+        commands.spawn(Self::new(character)).id()
     }
 }

@@ -257,7 +257,6 @@ fn setup_system(
             offset: IVec2::ZERO,
         },
         FontAtlasUser,
-        CustomFont(server.load("FiraCode-Regular.ttf")),
         CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
         SolidPhysicsBundle {

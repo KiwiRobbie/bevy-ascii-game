@@ -1,4 +1,4 @@
-use bevy::ecs::component::Component;
+use bevy::{ecs::component::Component, math::UVec2};
 
 use crate::layout::constraint::Constraint;
 #[derive(Debug, Component, Default, Clone)]
@@ -29,6 +29,12 @@ impl EdgeInsets {
             } else {
                 None
             },
+        }
+    }
+    pub fn inflate(&self, size: UVec2) -> UVec2 {
+        UVec2 {
+            x: size.x + self.left + self.right,
+            y: size.y + self.top + self.bottom,
         }
     }
 }

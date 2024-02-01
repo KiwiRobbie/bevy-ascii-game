@@ -16,7 +16,7 @@ use swash::FontRef;
 
 use crate::{
     atlas::{FontAtlasCache, FontAtlasSource},
-    font::{CustomFont, CustomFontSource, FontLoadedMarker, FontSize},
+    font::{CustomFont, CustomFontSource, DefaultFont, FontLoadedMarker, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationFrame, GlyphAnimationSource},
     glyph_render_plugin::render_resources::{
         GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
@@ -212,12 +212,13 @@ fn extract_glyph_sprites(
                 Entity,
                 &GlobalTransform,
                 &GlyphSprite,
-                &CustomFont,
+                Option<&CustomFont>,
                 &FontSize,
             ),
-            (With<FontLoadedMarker>, Without<GlyphAnimation>),
+            Without<GlyphAnimation>,
         >,
     >,
+    default_font: Extract<Res<DefaultFont>>,
 ) {
     for (entity, global_transform, sprite, font, font_size) in q_glyph_sprite.iter() {
         let transform: Transform = (*global_transform).into();
@@ -229,7 +230,9 @@ fn extract_glyph_sprites(
             )))
         .into();
 
-        let font = fonts.get(font.id()).unwrap();
+        let font = fonts
+            .get(font.map(|f| f.id()).unwrap_or(default_font.id()))
+            .unwrap();
 
         let atlas = atlas_cache
             .cached
@@ -266,13 +269,14 @@ fn extract_glyph_animations(
                 Entity,
                 &GlobalTransform,
                 &GlyphAnimation,
-                &CustomFont,
+                Option<&CustomFont>,
                 &FontSize,
                 Option<&GlyphSpriteMirrored>,
             ),
-            (With<FontLoadedMarker>, Without<GlyphSprite>),
+            Without<GlyphSprite>,
         >,
     >,
+    default_font: Extract<Res<DefaultFont>>,
 ) {
     for (entity, global_transform, animation, font, font_size, flipped) in q_glyph_animations.iter()
     {
@@ -298,7 +302,9 @@ fn extract_glyph_animations(
         ) * transform)
             .into();
 
-        let font = fonts.get(font.id()).unwrap();
+        let font = fonts
+            .get(font.map(|f| f.id()).unwrap_or(default_font.id()))
+            .unwrap();
 
         let atlas = atlas_cache
             .cached

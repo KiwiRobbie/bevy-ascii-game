@@ -13,7 +13,9 @@ use swash::{
     zeno::Format,
 };
 
-use crate::font::{CustomFont, CustomFontLoader, CustomFontSource, FontLoadedMarker, FontSize};
+use crate::font::{
+    CustomFont, CustomFontLoader, CustomFontSource, DefaultFont, FontLoadedMarker, FontSize,
+};
 
 use super::{AtlasBuilder, CharacterSet, FontAtlasCache, FontAtlasUser};
 
@@ -27,10 +29,14 @@ type FontUpdatedFilter = Or<(
 fn update_atlases_system(
     mut atlas_cache: ResMut<FontAtlasCache>,
     fonts: Res<Assets<CustomFontSource>>,
-    q_users: Query<(&FontSize, &CustomFont, &CharacterSet), (&FontAtlasUser, FontUpdatedFilter)>,
+    q_users: Query<
+        (&FontSize, Option<&CustomFont>, &CharacterSet),
+        (&FontAtlasUser, FontUpdatedFilter),
+    >,
+    default_font: Res<DefaultFont>,
 ) {
     for (font_size, font, character_set) in q_users.iter() {
-        let Some(font) = fonts.get(font.id()) else {
+        let Some(font) = fonts.get(font.map(|f| f.id()).unwrap_or(default_font.id())) else {
             continue;
         };
         let key = (font_size.clone(), font.key());
@@ -75,6 +81,7 @@ impl Plugin for FontAtlasPlugin {
         app.add_systems(PostUpdate, update_atlases_system)
             .init_resource::<FontAtlasCache>()
             .init_asset::<CustomFontSource>()
-            .init_asset_loader::<CustomFontLoader>();
+            .init_asset_loader::<CustomFontLoader>()
+            .init_resource::<DefaultFont>();
     }
 }

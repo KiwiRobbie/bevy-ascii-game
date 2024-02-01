@@ -8,7 +8,7 @@ use bevy::{
 };
 
 use crate::{
-    attachments::padding::Padding,
+    attachments::{self, padding::Padding},
     layout::{
         constraint::Constraint,
         positioned::Positioned,
@@ -43,7 +43,11 @@ impl WidgetLayoutLogic for ContainerLogic {
 
         let constraint = padding.0.shrink_constraint(constraint);
 
-        if let Some(child) = container.child {
+        if let Some(child) = world
+            .get::<attachments::stack::Stack>(entity)
+            .map(|stack| stack.children[stack.active])
+            .or(container.child)
+        {
             let child_widget = world
                 .get::<WidgetLayout>(child)
                 .expect("Container child invalid!");
@@ -59,6 +63,7 @@ impl WidgetLayoutLogic for ContainerLogic {
                 offset,
                 size: constraint.constrain(size),
             });
+            return padding.0.inflate(size);
         }
 
         return constraint.max();
@@ -67,7 +72,13 @@ impl WidgetLayoutLogic for ContainerLogic {
         let container = world
             .get::<Container>(entity)
             .expect("Root logic without Root!");
-        container.child.map_or(vec![], |child| vec![child])
+
+        let child = world
+            .get::<attachments::stack::Stack>(entity)
+            .map(|stack| stack.children[stack.active])
+            .or(container.child);
+
+        child.iter().map(|e| e.clone()).collect()
     }
 }
 

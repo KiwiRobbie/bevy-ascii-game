@@ -2,10 +2,11 @@ pub mod checkbox;
 pub mod column;
 pub mod container;
 pub mod divider;
-pub mod row;
-pub mod text;
-
 pub mod plugin;
+pub mod row;
+pub mod tab_view;
+
+pub mod text;
 
 pub use checkbox::CheckboxBuilder;
 pub use column::ColumnBundle;

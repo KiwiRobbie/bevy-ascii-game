@@ -56,20 +56,15 @@ pub struct TextBundle<T: Bundle> {
     pub attachments: T,
 }
 impl<T: Bundle> TextBundle<T> {
-    pub fn new(text: String, font: &Handle<CustomFontSource>, attachments: T) -> Self {
+    pub fn new(text: String, attachments: T) -> Self {
         Self {
             layout: WidgetLayout::new::<TextLogic>(),
-            render: RenderBundle::from_font(font),
+            render: RenderBundle::default(),
             text: Text { text },
             attachments,
         }
     }
-    pub fn spawn(
-        commands: &mut Commands,
-        text: String,
-        font: &Handle<CustomFontSource>,
-        attachments: T,
-    ) -> Entity {
-        commands.spawn(Self::new(text, font, attachments)).id()
+    pub fn spawn(commands: &mut Commands, text: String, attachments: T) -> Entity {
+        commands.spawn(Self::new(text, attachments)).id()
     }
 }

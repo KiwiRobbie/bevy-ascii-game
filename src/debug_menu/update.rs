@@ -74,7 +74,9 @@ pub fn update_position(
 
     for mut root in q_root.iter_mut() {
         root.position = (ray.origin.truncate() / grid_size.as_vec2()).as_ivec2()
-            + IVec2::new(-1, 0) * root.size.as_ivec2();
+            + IVec2::new(-1, 0) * root.size.as_ivec2()
+            - IVec2::ZERO;
+        root.size.y = (rect.height() / grid_size.y as f32) as u32 - 1;
     }
 }
 

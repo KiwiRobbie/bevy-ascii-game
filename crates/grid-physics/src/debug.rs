@@ -58,10 +58,12 @@ pub fn debug_position_system(
     }
 
     for position in q_position.iter() {
+        let remainder = position.remainder * grid_size.as_vec2();
         let position = position.position * grid_size.as_ivec2();
         let position = position.as_vec2();
 
         gizmos.circle_2d(position, 5.0, Color::BLUE);
+        gizmos.circle_2d(position + remainder, 2.0, Color::RED);
     }
 }
 
