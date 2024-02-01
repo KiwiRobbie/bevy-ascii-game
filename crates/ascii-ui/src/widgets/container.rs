@@ -4,7 +4,7 @@ use bevy::{
         system::Commands, world::World,
     },
     math::{IVec2, UVec2},
-    reflect::{std_traits::ReflectDefault, Reflect},
+    reflect::Reflect,
 };
 
 use crate::{

@@ -1,23 +1,9 @@
 use bevy::{
-    ecs::{
-        component::Component,
-        entity::Entity,
-        system::{Query, Res, Resource},
-    },
-    gizmos::gizmos::Gizmos,
+    ecs::{component::Component, entity::Entity},
     math::{IVec2, UVec2},
-    prelude::{Deref, DerefMut},
-    render::color::Color,
 };
 
-use crate::position::GridSize;
-
-use super::{
-    actor::Actor,
-    direction::Direction,
-    position::Position,
-    solid::{Solid, SolidCollisionCache},
-};
+use super::{direction::Direction, solid::SolidCollisionCache};
 
 #[derive(Component, Default, Clone)]
 pub struct Collider {
