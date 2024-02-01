@@ -37,7 +37,6 @@ fn get_components_ids(
     entity: Entity,
 ) -> Option<impl Iterator<Item = ComponentId> + '_> {
     // components and entities are linked through archetypes
-
     for archetype in world.archetypes().iter() {
         if archetype.entities().iter().any(|a| a.entity() == entity) {
             return Some(archetype.components());
