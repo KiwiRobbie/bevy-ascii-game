@@ -1,6 +1,10 @@
 use bevy::{
-    ecs::{bundle::Bundle, component::Component, entity::Entity, system::Commands, world::World},
+    ecs::{
+        bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
+        system::Commands, world::World,
+    },
     math::{IVec2, UVec2},
+    reflect::{std_traits::ReflectDefault, Reflect},
 };
 
 use crate::{
@@ -12,9 +16,10 @@ use crate::{
     },
 };
 
-#[derive(Debug, Component)]
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
 pub struct Container {
-    pub child: Entity,
+    pub child: Option<Entity>,
 }
 
 #[derive(Debug, Default)]
@@ -29,7 +34,7 @@ impl WidgetLayoutLogic for ContainerLogic {
     ) -> UVec2 {
         let container = world
             .get::<Container>(entity)
-            .expect("Root logic without Root!");
+            .expect("Container Logic without Container!");
 
         let padding = world
             .get::<Padding>(entity)
@@ -38,21 +43,23 @@ impl WidgetLayoutLogic for ContainerLogic {
 
         let constraint = padding.0.shrink_constraint(constraint);
 
-        let child_widget = world
-            .get::<WidgetLayout>(container.child)
-            .expect("Root child missing Widget!");
+        if let Some(child) = container.child {
+            let child_widget = world
+                .get::<WidgetLayout>(child)
+                .expect("Container child invalid!");
 
-        let size = (child_widget.logic).layout(container.child, &constraint, world, commands);
+            let size = (child_widget.logic).layout(child, &constraint, world, commands);
 
-        let offset = IVec2 {
-            x: padding.0.left as i32,
-            y: padding.0.top as i32,
-        };
+            let offset = IVec2 {
+                x: padding.0.left as i32,
+                y: padding.0.top as i32,
+            };
 
-        commands.entity(container.child).insert(Positioned {
-            offset,
-            size: constraint.constrain(size),
-        });
+            commands.entity(child).insert(Positioned {
+                offset,
+                size: constraint.constrain(size),
+            });
+        }
 
         return constraint.max();
     }
@@ -60,7 +67,7 @@ impl WidgetLayoutLogic for ContainerLogic {
         let container = world
             .get::<Container>(entity)
             .expect("Root logic without Root!");
-        vec![container.child]
+        container.child.map_or(vec![], |child| vec![child])
     }
 }
 
@@ -72,7 +79,7 @@ pub struct ContainerBundle<T: Bundle> {
 }
 
 impl<T: Bundle> ContainerBundle<T> {
-    pub fn new(child: Entity, attachments: T) -> Self {
+    pub fn new(child: Option<Entity>, attachments: T) -> Self {
         Self {
             attachments,
             container: Container { child },
@@ -80,7 +87,7 @@ impl<T: Bundle> ContainerBundle<T> {
         }
     }
 
-    pub fn spawn(commands: &mut Commands, child: Entity, attachments: T) -> Entity {
+    pub fn spawn(commands: &mut Commands, child: Option<Entity>, attachments: T) -> Entity {
         commands.spawn(Self::new(child, attachments)).id()
     }
 }

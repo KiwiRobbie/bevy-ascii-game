@@ -1,5 +1,8 @@
 use super::ui::{attachments, widgets};
-use ascii_ui::attachments::border::Border;
+use ascii_ui::{
+    attachments::{border::Border, main_axis::MainAxisAlignment},
+    mouse::IntractableMarker,
+};
 use bevy::{
     asset::AssetServer,
     ecs::system::{Commands, Res},
@@ -10,22 +13,27 @@ use bevy::{
 pub fn setup_ui(mut commands: Commands, server: Res<AssetServer>) {
     let font = &server.load("FiraCode-Regular.ttf");
 
-    let text_a: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), font);
-    let text_b: Entity = widgets::TextBundle::spawn(&mut commands, "Text B".into(), font);
+    let text_a: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), font, ());
+    let text_b: Entity = widgets::TextBundle::spawn(&mut commands, "Text B".into(), font, ());
     let divider: Entity = widgets::DividerBundle::spawn(&mut commands, '=', font);
-    let text_1: Entity = widgets::TextBundle::spawn(&mut commands, "Text 1".into(), font);
-    let text_2: Entity = widgets::TextBundle::spawn(&mut commands, "Text 2".into(), font);
 
-    let column =
-        widgets::ColumnBundle::spawn(&mut commands, vec![text_a, text_b, divider, text_1, text_2]);
+    let debug_a = widgets::CheckboxBuilder::spawn(&mut commands, "Debug Position".into(), font);
+    let debug_b = widgets::CheckboxBuilder::spawn(&mut commands, "Debug Colliders".into(), font);
+    let debug_c = widgets::CheckboxBuilder::spawn(&mut commands, "Debug ECS UI".into(), font);
+
+    let column = widgets::ColumnBundle::spawn(
+        &mut commands,
+        vec![text_a, text_b, divider, debug_a, debug_b, debug_c],
+        (),
+    );
 
     widgets::ContainerBundle::spawn(
         &mut commands,
-        column,
+        Some(column),
         (
             attachments::Root {
                 position: IVec2::ZERO,
-                size: UVec2 { x: 15, y: 10 },
+                size: UVec2 { x: 30, y: 10 },
             },
             attachments::BorderBundle::new(Border::symmetric(
                 Some('|'),

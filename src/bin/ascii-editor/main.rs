@@ -8,17 +8,23 @@ use bevy::{
         core_2d::{Camera2d, Camera2dBundle},
     },
     ecs::{
+        entity::Entity,
         event::EventReader,
-        query::Added,
+        query::{Added, With},
+        reflect::AppTypeRegistry,
         system::{Commands, Query, Res, ResMut},
+        world::World,
     },
     input::gamepad::Gamepads,
     math::UVec2,
+    reflect::TypeRegistryArc,
     render::{
         camera::{Camera, CameraRenderGraph},
         color::Color,
         texture::ImagePlugin,
     },
+    scene::{DynamicScene, DynamicSceneBuilder},
+    transform::components::{GlobalTransform, Transform},
     window::{Window, WindowPlugin, WindowResized, WindowResolution},
     DefaultPlugins,
 };
@@ -38,7 +44,11 @@ use glyph_render::{
 };
 use grid_physics::{plugin::PhysicsPlugin, position::GridSize};
 use setup::setup_ui;
-use ui::plugin::UiPlugin;
+use ui::{
+    layout::positioned::Positioned,
+    plugin::{UiPlugin, UiTypesPlugin},
+    widgets::container::Container,
+};
 
 pub mod setup;
 
@@ -61,6 +71,7 @@ fn main() {
         PhysicsPlugin,
         GlyphRenderPlugin,
         UiPlugin,
+        UiTypesPlugin,
     ))
     .add_systems(Startup, (setup_system, setup_ui))
     .add_systems(

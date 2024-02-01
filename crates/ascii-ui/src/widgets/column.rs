@@ -1,6 +1,10 @@
 use bevy::{
-    ecs::{bundle::Bundle, component::Component, entity::Entity, system::Commands, world::World},
+    ecs::{
+        bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
+        system::Commands, world::World,
+    },
     math::{IVec2, UVec2},
+    reflect::Reflect,
 };
 
 use crate::layout::{
@@ -9,7 +13,8 @@ use crate::layout::{
     widget_layout::{WidgetLayout, WidgetLayoutLogic},
 };
 
-#[derive(Debug, Component)]
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
 pub struct Column {
     pub children: Vec<Entity>,
 }
@@ -71,19 +76,21 @@ impl WidgetLayoutLogic for ColumnLogic {
 }
 
 #[derive(Debug, Bundle)]
-pub struct ColumnBundle {
+pub struct ColumnBundle<T: Bundle> {
     pub column: Column,
     pub layout: WidgetLayout,
+    pub attachments: T,
 }
 
-impl ColumnBundle {
-    pub fn new(children: Vec<Entity>) -> Self {
+impl<T: Bundle> ColumnBundle<T> {
+    pub fn new(children: Vec<Entity>, attachments: T) -> Self {
         Self {
             column: Column { children },
             layout: WidgetLayout::new::<ColumnLogic>(),
+            attachments,
         }
     }
-    pub fn spawn(commands: &mut Commands, children: Vec<Entity>) -> Entity {
-        commands.spawn(Self::new(children)).id()
+    pub fn spawn(commands: &mut Commands, children: Vec<Entity>, attachments: T) -> Entity {
+        commands.spawn(Self::new(children, attachments)).id()
     }
 }

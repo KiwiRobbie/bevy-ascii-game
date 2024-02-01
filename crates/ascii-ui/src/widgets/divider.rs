@@ -1,7 +1,11 @@
 use bevy::{
     asset::Handle,
-    ecs::{bundle::Bundle, component::Component, entity::Entity, system::Commands, world::World},
+    ecs::{
+        bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
+        system::Commands, world::World,
+    },
     math::UVec2,
+    reflect::Reflect,
 };
 use glyph_render::font::CustomFontSource;
 
@@ -13,7 +17,8 @@ use crate::{
     render::bundle::RenderBundle,
 };
 
-#[derive(Debug, Component)]
+#[derive(Component, Debug, Clone, Reflect, Default)]
+#[reflect(Component)]
 pub struct Divider {
     pub character: char,
 }

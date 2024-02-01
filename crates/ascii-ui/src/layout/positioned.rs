@@ -8,3 +8,9 @@ pub struct Positioned {
     pub offset: IVec2,
     pub size: UVec2,
 }
+impl Positioned {
+    pub fn contains(&self, position: IVec2) -> bool {
+        self.offset.cmple(position).all()
+            && position.cmplt(self.offset + self.size.as_ivec2()).all()
+    }
+}
