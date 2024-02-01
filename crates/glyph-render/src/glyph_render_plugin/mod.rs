@@ -16,7 +16,7 @@ use swash::FontRef;
 
 use crate::{
     atlas::{FontAtlasCache, FontAtlasSource},
-    font::{CustomFont, CustomFontSource, DefaultFont, FontLoadedMarker, FontSize},
+    font::{CustomFont, CustomFontSource, DefaultFont, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationFrame, GlyphAnimationSource},
     glyph_render_plugin::render_resources::{
         GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,

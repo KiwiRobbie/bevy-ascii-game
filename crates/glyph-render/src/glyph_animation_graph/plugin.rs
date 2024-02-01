@@ -4,6 +4,8 @@ use bevy::{
     ecs::schedule::IntoSystemConfigs,
 };
 
+use crate::glyph_animation::player::loop_animation_player;
+
 use super::{
     player::{animation_graph_player, animation_graph_traverse},
     GlyphAnimationGraphAssetLoader, GlyphAnimationGraphSource,
@@ -17,7 +19,10 @@ impl Plugin for GlyphAnimationGraphPlugin {
             .init_asset_loader::<GlyphAnimationGraphAssetLoader>()
             .add_systems(
                 PostUpdate,
-                (animation_graph_traverse, animation_graph_player).chain(),
+                (
+                    (animation_graph_traverse, animation_graph_player).chain(),
+                    loop_animation_player,
+                ),
             );
     }
 }

@@ -3,16 +3,15 @@ use std::any::{Any, TypeId};
 use ascii_ui::widgets;
 use bevy::{
     app::{Plugin, Update},
-    asset::AssetServer,
     ecs::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
         query::{Changed, With},
-        system::{Commands, Local, Query, Res, Resource},
-        world::{FromWorld, World},
+        system::{Commands, Query, Res, Resource},
+        world::World,
     },
     math::{IVec2, UVec2, Vec2},
-    reflect::{ReflectFromPtr, ReflectRef, TypeData, TypeRegistry},
+    reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
 use grid_physics::{position::Position, velocity::Velocity};
 
@@ -111,17 +110,13 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
 
 pub fn inspector_fetch_system(
     mut commands: Commands,
-    mut q_inspector: Query<
-        (Entity, &widgets::column::Column, &InspectorTab),
-        Changed<InspectorTab>,
-    >,
-    server: Res<AssetServer>,
+    mut q_inspector: Query<(Entity, &InspectorTab), Changed<InspectorTab>>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
 ) {
     let type_registry = &type_registry.0;
 
-    for (entity, column, inspector) in q_inspector.iter_mut() {
+    for (entity, inspector) in q_inspector.iter_mut() {
         if let Some(target) = inspector.target {
             let mut children = vec![widgets::TextBundle::spawn(
                 &mut commands,

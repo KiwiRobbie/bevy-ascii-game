@@ -37,7 +37,7 @@ use bevy_ascii_game::{
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
     font::{font_load_system, CustomFont, FontSize},
-    glyph_animation::GlyphAnimationPlugin,
+    glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
 };
@@ -150,30 +150,58 @@ fn setup_system(
         });
 
     // Sliding Box
+    // commands.spawn((
+    //     GlyphSprite {
+    //         texture: glyph_textures.add(GlyphTexture {
+    //             data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
+    //         }),
+    //         offset: IVec2::ZERO,
+    //     },
+    //     FontAtlasUser,
+    //     CustomFont(server.load("FiraCode-Regular.ttf")),
+    //     CharacterSet(CHARSET.chars().collect()),
+    //     FontSize(32),
+    //     SolidPhysicsBundle {
+    //         collider: Collider {
+    //             shape: CollisionShape::Aabb(Aabb {
+    //                 min: IVec2::ZERO,
+    //                 size: UVec2 { x: 3, y: 2 },
+    //             }),
+    //         },
+    //         ..Default::default()
+    //     },
+    //     Movement::default(),
+    //     Velocity {
+    //         velocity: Vec2 { x: 50.0, y: 0.0 },
+    //     },
+    // ));
+    // Horse
     commands.spawn((
-        GlyphSprite {
-            texture: glyph_textures.add(GlyphTexture {
-                data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
-            }),
-            offset: IVec2::ZERO,
+        GlyphAnimation {
+            source: server.load("anim/horse/states/gallop.anim.ron"),
+            frame: 0,
+        },
+        GlyphAnimationPlayer {
+            framerate: 10.0,
+            repeat: true,
+            frame_timer: 0.0,
         },
         FontAtlasUser,
         CustomFont(server.load("FiraCode-Regular.ttf")),
         CharacterSet(CHARSET.chars().collect()),
         FontSize(32),
-        SolidPhysicsBundle {
+        ActorPhysicsBundle {
             collider: Collider {
                 shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::ZERO,
-                    size: UVec2 { x: 3, y: 2 },
+                    min: IVec2::new(0, 1),
+                    size: UVec2 { x: 30, y: 12 },
                 }),
             },
             ..Default::default()
         },
-        Movement::default(),
-        Velocity {
-            velocity: Vec2 { x: 50.0, y: 0.0 },
-        },
+        FreeMarker,
+        Gravity::default(),
+        Velocity::default(),
     ));
 
     // Stationary box

@@ -1,13 +1,13 @@
 use bevy::{
     app::{Plugin, PostUpdate},
-    ecs::schedule::{IntoSystemConfigs, SystemSet},
+    ecs::schedule::IntoSystemConfigs,
     transform::TransformSystem,
 };
 
 use crate::{
     debug::DebugPlugin,
     position::GridSize,
-    sets::{physics_systems_enabled, EnablePhysicsSystems, PhysicsPostUpdateSet},
+    sets::{physics_systems_enabled, EnablePhysicsSystems},
 };
 
 use super::{

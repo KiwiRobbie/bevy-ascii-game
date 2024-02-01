@@ -3,10 +3,9 @@ use ascii_ui::{
     widgets,
 };
 use bevy::{
-    asset::AssetServer,
     ecs::{
         component::Component,
-        system::{Commands, Res, ResMut},
+        system::{Commands, ResMut},
     },
     math::{IVec2, UVec2},
     prelude::Entity,
@@ -14,11 +13,7 @@ use bevy::{
 
 use super::{inspector::InspectorTab, state::DebugMenuState};
 
-pub fn setup_ui(
-    mut commands: Commands,
-    server: Res<AssetServer>,
-    mut menu_state: ResMut<DebugMenuState>,
-) {
+pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
     let f3: Entity = widgets::TextBundle::spawn(&mut commands, "[F3 Debug Menu]".into(), ());
 
     let divider_a: Entity = widgets::DividerBundle::spawn(&mut commands, '=');

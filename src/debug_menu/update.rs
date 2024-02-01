@@ -15,11 +15,10 @@ use bevy::{
         keyboard::KeyCode,
         Input,
     },
-    math::{IVec2, Vec2},
+    math::IVec2,
     render::camera::Camera,
     time::Time,
     transform::components::GlobalTransform,
-    window::{PrimaryWindow, Window},
 };
 use grid_physics::{
     actor::Actor,

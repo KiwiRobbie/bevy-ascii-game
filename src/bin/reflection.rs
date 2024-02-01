@@ -1,4 +1,4 @@
-use bevy::reflect::{std_traits::ReflectDefault, Reflect, Struct, TypeRegistry};
+use bevy::reflect::{Reflect, Struct};
 
 #[derive(Debug, Reflect, Default)]
 struct TestStruct {

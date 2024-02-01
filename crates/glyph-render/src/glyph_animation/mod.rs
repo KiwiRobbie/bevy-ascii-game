@@ -9,7 +9,7 @@ use bevy::{
 use self::loader::GlyphAnimationAssetLoader;
 
 mod loader;
-
+pub mod player;
 #[derive(Asset, TypePath)]
 pub struct GlyphAnimationSource {
     pub name: String,
