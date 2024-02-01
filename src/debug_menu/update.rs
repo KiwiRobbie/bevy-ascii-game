@@ -17,6 +17,7 @@ use bevy::{
     },
     math::{IVec2, Vec2},
     render::camera::Camera,
+    time::Time,
     transform::components::GlobalTransform,
     window::{PrimaryWindow, Window},
 };
@@ -24,6 +25,7 @@ use grid_physics::{
     actor::Actor,
     debug::{DebugCollisions, DebugPositions},
     position::GridSize,
+    sets::EnablePhysicsSystems,
     solid::Solid,
 };
 
@@ -84,11 +86,13 @@ pub fn update_values(
     state: Res<DebugMenuState>,
     mut collisions: ResMut<DebugCollisions>,
     mut positions: ResMut<DebugPositions>,
+    mut pause_physics: ResMut<EnablePhysicsSystems>,
     mut q_text: Query<&mut widgets::text::Text>,
     q_checkbox: Query<Option<&CheckboxEnabledMarker>, With<Checkbox>>,
     q_player: Query<(), With<PlayerMarker>>,
     q_solid: Query<(), With<Solid>>,
     q_actor: Query<(), With<Actor>>,
+    time: Res<Time>,
 ) {
     if !state.enabled {
         return;
@@ -102,7 +106,13 @@ pub fn update_values(
         let state = q_checkbox.get(entity).unwrap().is_some();
         **positions = state;
     }
-
+    if let Some(entity) = state.pause_physics_checkbox {
+        let state = q_checkbox.get(entity).unwrap().is_some();
+        **pause_physics = !state;
+    }
+    if let Some(entity) = state.fps_text {
+        q_text.get_mut(entity).unwrap().text = format!("FPS: {:0.2}", 1.0 / time.delta_seconds());
+    }
     if let Some(entity) = state.player_count_text {
         q_text.get_mut(entity).unwrap().text = format!("Player Count: {}", q_player.iter().count());
     }

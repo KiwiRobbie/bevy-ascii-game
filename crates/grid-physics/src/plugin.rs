@@ -1,10 +1,14 @@
 use bevy::{
     app::{Plugin, PostUpdate},
-    ecs::schedule::IntoSystemConfigs,
+    ecs::schedule::{IntoSystemConfigs, SystemSet},
     transform::TransformSystem,
 };
 
-use crate::{debug::DebugPlugin, position::GridSize};
+use crate::{
+    debug::DebugPlugin,
+    position::GridSize,
+    sets::{physics_systems_enabled, EnablePhysicsSystems, PhysicsPostUpdateSet},
+};
 
 use super::{
     actor::actor_move_system,
@@ -25,16 +29,21 @@ impl Plugin for PhysicsPlugin {
         app.init_resource::<GravityResource>()
             .init_resource::<SolidCollisionCache>()
             .init_resource::<GridSize>()
+            .init_resource::<EnablePhysicsSystems>()
             .add_systems(
                 PostUpdate,
                 (
-                    update_collision_cache,
-                    update_free_actor_state,
-                    solid_move_system,
-                    actor_move_system,
-                    obstruct_velocity,
-                    apply_velocity_to_free,
-                    apply_gravity_to_free,
+                    (
+                        update_collision_cache,
+                        update_free_actor_state,
+                        solid_move_system,
+                        actor_move_system,
+                        obstruct_velocity,
+                        apply_velocity_to_free,
+                        apply_gravity_to_free,
+                    )
+                        .chain()
+                        .run_if(physics_systems_enabled),
                     position_update_transforms_system,
                 )
                     .chain()

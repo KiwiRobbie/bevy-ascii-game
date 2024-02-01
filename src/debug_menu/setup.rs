@@ -23,9 +23,11 @@ pub fn setup_ui(
 
     let divider_a: Entity = widgets::DividerBundle::spawn(&mut commands, '=');
 
+    let fps: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), ());
     let player_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), ());
     let solid_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text B".into(), ());
     let actor_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text c".into(), ());
+    menu_state.fps_text = Some(fps);
     menu_state.player_count_text = Some(player_count);
     menu_state.solid_count_text = Some(solid_count);
     menu_state.actor_count_text = Some(actor_count);
@@ -35,13 +37,17 @@ pub fn setup_ui(
     let debug_position = widgets::CheckboxBuilder::spawn(&mut commands, "Debug Position".into());
     let debug_colliders = widgets::CheckboxBuilder::spawn(&mut commands, "Debug Colliders".into());
     let debug_ui = widgets::CheckboxBuilder::spawn(&mut commands, "Debug ECS UI".into());
+    let debug_pause_physics =
+        widgets::CheckboxBuilder::spawn(&mut commands, "Pause Physics".into());
     menu_state.position_checkbox = Some(debug_position);
     menu_state.colliders_checkbox = Some(debug_colliders);
     menu_state.ui_checkbox = Some(debug_ui);
+    menu_state.pause_physics_checkbox = Some(debug_pause_physics);
 
     let settings_column = widgets::ColumnBundle::spawn(
         &mut commands,
         vec![
+            fps,
             player_count,
             solid_count,
             actor_count,
@@ -49,6 +55,7 @@ pub fn setup_ui(
             debug_position,
             debug_colliders,
             debug_ui,
+            debug_pause_physics,
         ],
         (),
     );

@@ -11,6 +11,7 @@ use bevy::{
         entity::Entity,
         event::EventReader,
         query::Added,
+        schedule::IntoSystemConfigs,
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
@@ -48,6 +49,7 @@ use grid_physics::{
     movement::Movement,
     plugin::PhysicsPlugin,
     position::{GridSize, Position, PositionBundle},
+    sets::physics_systems_enabled,
     solid::{FilterSolids, SolidPhysicsBundle},
     velocity::Velocity,
 };
@@ -80,7 +82,7 @@ fn main() {
             font_load_system,
             on_resize_system,
             set_new_font_size,
-            moving_platform,
+            moving_platform.run_if(physics_systems_enabled),
             handle_gamepads,
         ),
     );

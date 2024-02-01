@@ -2,6 +2,7 @@ use bevy::{
     app::{Plugin, Update},
     ecs::{bundle::Bundle, component::Component, query::With, schedule::IntoSystemConfigs},
 };
+use grid_physics::sets::physics_systems_enabled;
 
 use self::{
     direction::{player_update_sprite_mirror, PlayerDirection},
@@ -25,7 +26,7 @@ impl Plugin for PlayerMovementPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
             Update,
-            (
+            ((
                 player_walk_system,
                 player_jump_system,
                 player_lunge_start_system,
@@ -33,6 +34,8 @@ impl Plugin for PlayerMovementPlugin {
                 player_lunge_cooldown_update,
                 player_update_sprite_mirror,
             )
+                .chain()
+                .run_if(physics_systems_enabled),)
                 .chain(),
         );
     }
