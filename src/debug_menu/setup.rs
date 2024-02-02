@@ -11,6 +11,8 @@ use bevy::{
     math::{IVec2, UVec2},
 };
 
+use crate::physics_grids::UiPhysicsGridMarker;
+
 use super::{inspector::InspectorTab, state::DebugMenuState};
 
 pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
@@ -41,9 +43,10 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) 
     .with((
         attachments::Root {
             enabled: true,
-            position: IVec2 { x: 0, y: -1 },
-            size: UVec2 { x: 32, y: 11 },
+            position: IVec2 { x: 0, y: -16 },
+            size: UVec2 { x: 32, y: 24 },
         },
+        UiPhysicsGridMarker,
         attachments::Border::symmetric(Some('|'), Some('-'), Some([',', '.', '`', '\''])).padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,

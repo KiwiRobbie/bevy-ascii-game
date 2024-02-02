@@ -10,26 +10,25 @@ use bevy::{
         component::Component,
         entity::Entity,
         event::EventReader,
-        query::Added,
+        query::{Added, With},
         schedule::IntoSystemConfigs,
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
-    math::{IVec2, UVec2, Vec2},
+    math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
         color::Color,
         texture::ImagePlugin,
     },
     time::Time,
-    transform::components::{GlobalTransform, Transform},
-    utils::hashbrown::HashSet,
-    window::{ReceivedCharacter, Window, WindowPlugin, WindowResized, WindowResolution},
+    window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
 
 use bevy_ascii_game::{
     debug_menu::plugin::DebugMenuPlugin,
+    physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
         reset::{create_player, create_player_with_gamepad},
@@ -37,11 +36,10 @@ use bevy_ascii_game::{
     },
 };
 use glyph_render::{
-    atlas::{CharacterSet, FontAtlasPlugin, FontAtlasUser},
-    font::{font_load_system, CustomFont, FontSize},
+    atlas::FontAtlasPlugin,
+    font::{font_load_system, FontSize},
     glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
-    glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
     glyph_render_plugin::{
         GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored, GlyphTextureSource,
     },
@@ -53,7 +51,7 @@ use grid_physics::{
     gravity::Gravity,
     movement::Movement,
     plugin::PhysicsPlugin,
-    position::{GridSize, Position, PositionBundle},
+    position::{Position, PositionBundle},
     sets::physics_systems_enabled,
     solid::{FilterSolids, SolidPhysicsBundle},
     velocity::Velocity,
@@ -78,6 +76,7 @@ fn main() {
         PhysicsPlugin,
         GlyphRenderPlugin,
         DebugMenuPlugin,
+        PhysicsGridPlugin,
     ))
     .add_systems(Startup, setup_system)
     .add_systems(
@@ -85,8 +84,6 @@ fn main() {
         (
             keyboard_input_system,
             font_load_system,
-            on_resize_system,
-            set_new_font_size,
             moving_platform.run_if(physics_systems_enabled),
             handle_gamepads,
         ),
@@ -121,11 +118,17 @@ fn handle_gamepads(
     server: Res<AssetServer>,
     mut ev_gamepad: EventReader<GamepadConnectionEvent>,
     q_players: Query<(Entity, &PlayerInputController)>,
+    q_main_glyph_buffer: Query<Entity, With<PrimaryGlyphBufferMarker>>,
 ) {
     for ev in ev_gamepad.read() {
         match ev.connection {
             GamepadConnection::Connected(_) => {
-                create_player_with_gamepad(&mut commands, &server, ev.gamepad);
+                create_player_with_gamepad(
+                    &mut commands,
+                    &server,
+                    ev.gamepad,
+                    q_main_glyph_buffer.get_single().unwrap(),
+                );
             }
             GamepadConnection::Disconnected => {
                 for (player, PlayerInputController(gamepad)) in q_players.iter() {
@@ -143,60 +146,13 @@ fn setup_system(
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
 ) {
-    // Player
-    // for gamepad in gamepads.iter() {
-    //     create_player_with_gamepad(&mut commands, &server, gamepad);
-    // }
-
-    let glyph_buffer = commands
-        .spawn((
-            GlyphBuffer {
-                textures: HashSet::new(),
-                size: UVec2 { x: 60, y: 40 },
-            },
-            Transform::default(),
-            GlobalTransform::default(),
-            CustomFont(server.load("FiraCode-Regular.ttf")),
-            CharacterSet(CHARSET.chars().collect()),
-            FontSize(32),
-            FontAtlasUser,
-        ))
-        .id();
-
     create_player(&mut commands, &server)
         .insert(PlayerInputKeyboardMarker)
         .insert(GlyphSolidColor {
             color: Color::hsl(0.0, 1.0, 0.6).as_rgba_linear() * 10.0,
         })
-        .insert(TargetGlyphBuffer(glyph_buffer));
+        .insert(GamePhysicsGridMarker);
 
-    // Sliding Box
-    // commands.spawn((
-    //     GlyphSprite {
-    //         texture: glyph_textures.add(GlyphTexture {
-    //             data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
-    //         }),
-    //         offset: IVec2::ZERO,
-    //     },
-    //     FontAtlasUser,
-    //     CustomFont(server.load("FiraCode-Regular.ttf")),
-    //     CharacterSet(CHARSET.chars().collect()),
-    //     FontSize(32),
-    //     SolidPhysicsBundle {
-    //         collider: Collider {
-    //             shape: CollisionShape::Aabb(Aabb {
-    //                 min: IVec2::ZERO,
-    //                 size: UVec2 { x: 3, y: 2 },
-    //             }),
-    //         },
-    //         ..Default::default()
-    //     },
-    //     Movement::default(),
-    //     Velocity {
-    //         velocity: Vec2 { x: 50.0, y: 0.0 },
-    //     },
-    // ));
-    // Horse
     commands
         .spawn((
             GlyphAnimation {
@@ -208,10 +164,6 @@ fn setup_system(
                 repeat: true,
                 frame_timer: 0.0,
             },
-            FontAtlasUser,
-            CustomFont(server.load("FiraCode-Regular.ttf")),
-            CharacterSet(CHARSET.chars().collect()),
-            FontSize(32),
             ActorPhysicsBundle {
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {
@@ -226,7 +178,7 @@ fn setup_system(
             Gravity::default(),
             Velocity::default(),
         ))
-        .insert(TargetGlyphBuffer(glyph_buffer));
+        .insert(GamePhysicsGridMarker);
     commands
         .spawn((
             GlyphAnimation {
@@ -238,10 +190,6 @@ fn setup_system(
                 repeat: true,
                 frame_timer: 0.0,
             },
-            FontAtlasUser,
-            CustomFont(server.load("FiraCode-Regular.ttf")),
-            CharacterSet(CHARSET.chars().collect()),
-            FontSize(32),
             ActorPhysicsBundle {
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {
@@ -257,80 +205,73 @@ fn setup_system(
             Velocity::default(),
             GlyphSpriteMirrored,
         ))
-        .insert(TargetGlyphBuffer(glyph_buffer));
-    // Stationary box
-    commands.spawn((
-        GlyphSprite {
-            texture: glyph_textures.add(GlyphTextureSource {
-                data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
-            }),
-            offset: IVec2::ZERO,
-        },
-        FontAtlasUser,
-        CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().collect()),
-        FontSize(32),
-        SolidPhysicsBundle {
-            position: IVec2::new(-30, 0).into(),
-            collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::ZERO,
-                    size: UVec2 { x: 3, y: 2 },
-                }),
-            },
-            ..Default::default()
-        },
-        Movement::default(),
-        Velocity {
-            velocity: Vec2 { x: 0.0, y: 0.0 },
-        },
-    ));
+        .insert(GamePhysicsGridMarker);
+    // // Stationary box
+    // commands
+    //     .spawn((
+    //         GlyphSprite {
+    //             texture: glyph_textures.add(GlyphTextureSource {
+    //                 data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
+    //             }),
+    //             offset: IVec2::ZERO,
+    //         },
+    //         SolidPhysicsBundle {
+    //             position: IVec2::new(-30, 0).into(),
+    //             collider: Collider {
+    //                 shape: CollisionShape::Aabb(Aabb {
+    //                     min: IVec2::ZERO,
+    //                     size: UVec2 { x: 3, y: 2 },
+    //                 }),
+    //             },
+    //             ..Default::default()
+    //         },
+    //         Movement::default(),
+    //         Velocity {
+    //             velocity: Vec2 { x: 0.0, y: 0.0 },
+    //         },
+    //     ))
+    //     .insert(GamePhysicsGridMarker);
 
     // Falling box
-    commands.spawn((
-        GlyphSprite {
-            texture: glyph_textures.add(GlyphTextureSource {
-                data: (0..2).map(|_| ".".repeat(3)).collect::<Vec<String>>(),
-            }),
-            offset: IVec2::ZERO,
-        },
-        FontAtlasUser,
-        CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().collect()),
-        FontSize(32),
-        ActorPhysicsBundle {
-            collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::ZERO,
-                    size: UVec2 { x: 3, y: 2 },
-                }),
-            },
-            position: IVec2::new(-30, -10).into(),
-            ..Default::default()
-        },
-        Velocity {
-            velocity: Vec2 { x: 50.0, y: 70.0 },
-        },
-        Gravity::default(),
-        FreeMarker,
-    ));
+    // commands.spawn((
+    //     GlyphSprite {
+    //         texture: glyph_textures.add(GlyphTextureSource {
+    //             data: (0..2).map(|_| ".".repeat(3)).collect::<Vec<String>>(),
+    //         }),
+    //         offset: IVec2::ZERO,
+    //     },
+    //     ActorPhysicsBundle {
+    //         collider: Collider {
+    //             shape: CollisionShape::Aabb(Aabb {
+    //                 min: IVec2::ZERO,
+    //                 size: UVec2 { x: 3, y: 2 },
+    //             }),
+    //         },
+    //         position: IVec2::new(-30, -10).into(),
+    //         ..Default::default()
+    //     },
+    //     Velocity {
+    //         velocity: Vec2 { x: 50.0, y: 70.0 },
+    //     },
+    //     Gravity::default(),
+    //     FreeMarker,
+    // ));
 
     // Keyboard display
-    commands.spawn((
-        CustomFont(server.load("FiraCode-Regular.ttf")),
-        FontAtlasUser,
-        FontSize(32),
-        GlyphSprite {
-            texture: glyph_textures.add(GlyphTextureSource {
-                data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
-            }),
-            offset: IVec2 { x: -16, y: -8 },
-        },
-        PositionBundle {
-            ..Default::default()
-        },
-        KeyboardInputMarker,
-    ));
+    commands
+        .spawn((
+            GlyphSprite {
+                texture: glyph_textures.add(GlyphTextureSource {
+                    data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
+                }),
+                offset: IVec2 { x: 0, y: 0 },
+            },
+            PositionBundle {
+                ..Default::default()
+            },
+            KeyboardInputMarker,
+        ))
+        .insert(GamePhysicsGridMarker);
 
     // Floor
     commands
@@ -341,11 +282,8 @@ fn setup_system(
                 }),
                 offset: IVec2::ZERO,
             },
-            FontAtlasUser,
-            CharacterSet(CHARSET.chars().collect()),
-            FontSize(32),
             SolidPhysicsBundle {
-                position: IVec2::new(-50, 0).into(),
+                position: IVec2::new(0, 0).into(),
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {
                         min: IVec2::ZERO,
@@ -355,7 +293,7 @@ fn setup_system(
                 ..Default::default()
             },
         ))
-        .insert(TargetGlyphBuffer(glyph_buffer));
+        .insert(GamePhysicsGridMarker);
 
     commands.spawn((
         Camera2dBundle {
@@ -422,28 +360,3 @@ fn keyboard_input_system(
         }
     }
 }
-
-fn on_resize_system(
-    mut resize_reader: EventReader<WindowResized>,
-    mut q_font_size: Query<&mut FontSize>,
-    mut res_font_size: ResMut<FontSize>,
-    mut grid_size: ResMut<GridSize>,
-) {
-    if let Some(e) = resize_reader.read().last() {
-        let size = (e.width / 60.0) as u32;
-        for mut font_size in q_font_size.iter_mut() {
-            **font_size = size
-        }
-        **res_font_size = size;
-        **grid_size = UVec2::new(res_font_size.advance(), res_font_size.line_spacing());
-    }
-}
-fn set_new_font_size(
-    mut q_new_font_size: Query<&mut FontSize, Added<FontSize>>,
-    res_font_size: ResMut<FontSize>,
-) {
-    for mut font_size in q_new_font_size.iter_mut() {
-        **font_size = res_font_size.0;
-    }
-}
-const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";

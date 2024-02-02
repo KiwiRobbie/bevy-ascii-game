@@ -3,7 +3,7 @@ use bevy::{
     ecs::schedule::{apply_deferred, IntoSystemConfigs},
 };
 
-use super::build_layout::{build_layout, clear_layout, propagate_positions};
+use super::build_layout::{build_layout, clear_layout, propagate_data_positions};
 
 pub struct LayoutPlugin;
 impl Plugin for LayoutPlugin {
@@ -15,7 +15,7 @@ impl Plugin for LayoutPlugin {
                 apply_deferred,
                 build_layout,
                 apply_deferred,
-                propagate_positions,
+                propagate_data_positions,
             )
                 .chain(),
         );

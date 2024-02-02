@@ -10,6 +10,7 @@ use crate::{
     font::{CustomFont, FontSize},
 };
 pub mod extract;
+pub mod prepare;
 
 #[derive(Component, Clone)]
 pub struct GlyphBuffer {

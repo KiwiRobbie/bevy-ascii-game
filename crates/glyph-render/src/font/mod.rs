@@ -14,7 +14,7 @@ use bevy::{
 };
 use swash::{CacheKey, FontRef};
 
-#[derive(Resource, Component, PartialEq, Eq, Hash, Clone, Deref, DerefMut)]
+#[derive(Component, PartialEq, Eq, Hash, Clone, Deref, DerefMut)]
 
 pub struct FontSize(pub u32);
 

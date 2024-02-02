@@ -11,7 +11,7 @@ use bevy::{
     },
 };
 use bytemuck::{cast_slice, Pod, Zeroable};
-use grid_physics::position::GridSize;
+use grid_physics::grid::PhysicsGrid;
 pub use node::GlyphGenerationNode;
 use swash::FontRef;
 
@@ -19,7 +19,7 @@ use crate::{
     atlas::FontAtlasSource,
     font::FontSize,
     glyph_buffer::{
-        extract::{extract_glyph_buffers, prepare_glyph_buffers},
+        extract::extract_glyph_buffers, prepare::prepare_glyph_buffers,
         update_glyph_buffer_entities,
     },
     glyph_render_plugin::render_resources::{
@@ -43,8 +43,7 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<GlyphTextureSource>()
-            .add_systems(PostUpdate, update_glyph_buffer_entities)
-            .init_resource::<FontSize>();
+            .add_systems(PostUpdate, update_glyph_buffer_entities);
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(
@@ -258,20 +257,20 @@ fn prepare_buffers(
         Option<&GlyphSolidColor>,
         &GlobalTransform,
         &GpuGlyphTexture,
-        &GridSize,
+        &PhysicsGrid,
     )>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
-    for (entity, color, global_transform, gpu_glyph_texture, grid_size) in query.iter() {
+    for (entity, color, global_transform, gpu_glyph_texture, grid) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: color
                 .map(|color| color.color.into())
                 .unwrap_or(Color::WHITE.into()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
-            advance: grid_size.x,
-            line_spacing: grid_size.y,
+            advance: grid.size.x,
+            line_spacing: grid.size.y,
         });
         uniform_buffer.write_buffer(&render_device, &render_queue);
 

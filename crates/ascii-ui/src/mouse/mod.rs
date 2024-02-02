@@ -7,13 +7,13 @@ use bevy::{
         system::{Commands, Query, Res},
     },
     input::{mouse::MouseButton, Input},
-    math::IVec2,
+    math::{IVec2, Vec4Swizzles},
     render::{camera::Camera, color::Color},
-    transform::components::GlobalTransform,
+    transform::components::{GlobalTransform, Transform},
     window::{PrimaryWindow, Window},
 };
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
-use grid_physics::position::GridSize;
+use grid_physics::grid::{PhysicsGrid, PhysicsGridMember};
 
 use crate::layout::positioned::Positioned;
 
@@ -37,12 +37,12 @@ impl Plugin for InteractionPlugin {
 pub fn mouse_interaction(
     mut commands: Commands,
     q_windows: Query<&Window, With<PrimaryWindow>>,
-    q_intractable: Query<(Entity, &Positioned), With<IntractableMarker>>,
+    q_intractable: Query<(Entity, &Positioned, &PhysicsGridMember), With<IntractableMarker>>,
     q_active: Query<Entity, With<ActiveMarker>>,
     q_triggered: Query<Entity, With<TriggeredMarker>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    grid_size: Res<GridSize>,
     q_mouse_buttons: Res<Input<MouseButton>>,
+    q_physics_grid: Query<(&PhysicsGrid, &GlobalTransform)>,
 ) {
     let (camera, camera_transform) = q_camera.single();
 
@@ -60,14 +60,20 @@ pub fn mouse_interaction(
         .single()
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin.truncate())
+        .map(|ray| ray.origin)
     {
-        let position = position / grid_size.as_vec2();
-        let position = position.as_ivec2() + IVec2::Y;
+        for (entity, positioned, grid_member) in q_intractable.iter() {
+            let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
+                continue;
+            };
 
-        let cursor_position = IVec2::new(1, -1) * position;
+            let position = (transform.compute_matrix().inverse() * position.extend(1.0)).xy()
+                / grid.size.as_vec2();
+            let position = position.as_ivec2() + IVec2::Y;
 
-        for (entity, positioned) in q_intractable.iter() {
+            dbg!(position);
+
+            let cursor_position = IVec2::new(1, -1) * position;
             if positioned.contains(cursor_position) {
                 commands
                     .entity(entity)

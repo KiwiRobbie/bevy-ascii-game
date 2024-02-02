@@ -14,6 +14,7 @@ use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
     font::{CustomFont, FontSize},
     glyph_animation_graph::bundle::GlyphAnimationGraphBundle,
+    glyph_buffer::TargetGlyphBuffer,
     glyph_render_plugin::{GlyphSolidColor, GlyphSpriteMirrored},
 };
 use grid_physics::{
@@ -38,7 +39,7 @@ pub fn player_reset_system(
     for player in q_player.iter() {
         commands.entity(player).insert((
             Position {
-                position: IVec2::ZERO,
+                position: IVec2::new(10, 10),
                 remainder: Vec2::ZERO,
             },
             Velocity {
@@ -52,13 +53,15 @@ pub fn create_player_with_gamepad(
     commands: &mut Commands<'_, '_>,
     server: &Res<'_, AssetServer>,
     gamepad: Gamepad,
+    glyph_buffer: Entity,
 ) {
     create_player(commands, server)
         .insert(PlayerInputController(gamepad))
         .insert(GlyphSolidColor {
             color: Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).as_rgba_linear()
                 * 10.0,
-        });
+        })
+        .insert(TargetGlyphBuffer(glyph_buffer));
 }
 
 pub fn create_player<'w, 's, 'a>(
@@ -67,16 +70,11 @@ pub fn create_player<'w, 's, 'a>(
 ) -> bevy::ecs::system::EntityCommands<'w, 's, 'a> {
     commands.spawn((
         GlyphAnimationGraphBundle::from_source(server.load("anim/player/player.agraph.ron")),
-        FontAtlasUser,
-        CustomFont(server.load("FiraCode-Regular.ttf")),
-        CharacterSet(CHARSET.chars().collect()),
-        FontSize(32),
-        GlyphSpriteMirrored,
         PlayerBundle {
             actor: ActorPhysicsBundle {
                 position: PositionBundle {
                     position: Position {
-                        position: IVec2 { x: 0, y: 10 },
+                        position: IVec2 { x: 10, y: 10 },
                         ..Default::default()
                     },
                     ..Default::default()
@@ -101,4 +99,3 @@ pub fn create_player<'w, 's, 'a>(
         Velocity::default(),
     ))
 }
-const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";

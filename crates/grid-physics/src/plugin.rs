@@ -6,7 +6,6 @@ use bevy::{
 
 use crate::{
     debug::DebugPlugin,
-    position::GridSize,
     sets::{physics_systems_enabled, EnablePhysicsSystems},
 };
 
@@ -17,7 +16,7 @@ use super::{
         apply_gravity_to_free, apply_velocity_to_free, obstruct_velocity, update_free_actor_state,
     },
     gravity::GravityResource,
-    position::position_update_transforms_system,
+    // position::position_update_transforms_system,
     solid::{solid_move_system, update_collision_cache, SolidCollisionCache},
 };
 
@@ -28,7 +27,6 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<GravityResource>()
             .init_resource::<SolidCollisionCache>()
-            .init_resource::<GridSize>()
             .init_resource::<EnablePhysicsSystems>()
             .add_systems(
                 PostUpdate,
@@ -44,7 +42,7 @@ impl Plugin for PhysicsPlugin {
                     )
                         .chain()
                         .run_if(physics_systems_enabled),
-                    position_update_transforms_system,
+                    // position_update_transforms_system,
                 )
                     .chain()
                     .before(TransformSystem::TransformPropagate),

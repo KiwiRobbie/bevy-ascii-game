@@ -16,3 +16,5 @@ pub mod plugin;
 
 pub mod debug;
 pub mod sets;
+
+pub mod grid;

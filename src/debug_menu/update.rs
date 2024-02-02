@@ -20,15 +20,16 @@ use bevy::{
     time::Time,
     transform::components::GlobalTransform,
 };
+use glyph_render::glyph_buffer::GlyphBuffer;
 use grid_physics::{
     actor::Actor,
     debug::{DebugCollisions, DebugPositions},
-    position::GridSize,
+    grid::PhysicsGrid,
     sets::EnablePhysicsSystems,
     solid::Solid,
 };
 
-use crate::player::PlayerMarker;
+use crate::{physics_grids::UiPhysicsGrid, player::PlayerMarker};
 
 use super::{setup::DebugMenuMarker, state::DebugMenuState};
 
@@ -58,26 +59,20 @@ pub fn toggle_menu(
 }
 
 pub fn update_position(
-    q_camera: Query<(&Camera, &GlobalTransform)>,
     mut q_root: Query<&mut Root, With<DebugMenuMarker>>,
-    grid_size: Res<GridSize>,
+    ui_grid: Res<UiPhysicsGrid>,
+    q_ui_grid: Query<(&PhysicsGrid, &GlyphBuffer)>,
 ) {
-    let Ok((camera, transform)) = q_camera.get_single() else {
+    let Some(grid) = **ui_grid else {
         return;
     };
-    let Some(rect) = camera.logical_viewport_rect() else {
-        return;
-    };
-
-    let Some(ray) = camera.viewport_to_world(transform, rect.max) else {
+    let Ok((grid, buffer)) = q_ui_grid.get(grid) else {
         return;
     };
 
     for mut root in q_root.iter_mut() {
-        root.position = (ray.origin.truncate() / grid_size.as_vec2()).as_ivec2()
-            + IVec2::new(-1, 0) * root.size.as_ivec2()
-            - IVec2::ZERO;
-        root.size.y = (rect.height() / grid_size.y as f32) as u32 - 1;
+        root.position.y = -(buffer.size.y as i32);
+        root.position.x = buffer.size.x as i32 - root.size.x as i32;
     }
 }
 

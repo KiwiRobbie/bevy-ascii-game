@@ -1,5 +1,6 @@
 use bevy::{
     ecs::{
+        bundle::Bundle,
         entity::Entity,
         query::With,
         system::{Commands, Query},
@@ -7,6 +8,8 @@ use bevy::{
     },
     math::IVec2,
 };
+use glyph_render::glyph_buffer::TargetGlyphBuffer;
+use grid_physics::grid::PhysicsGridMember;
 
 use crate::{
     attachments::Root,
@@ -44,19 +47,30 @@ pub fn build_layout(
     }
 }
 
-pub fn propagate_positions(mut commands: Commands, q_root: Query<(Entity, &Root)>, world: &World) {
-    for (root_entity, root) in q_root.iter() {
+pub fn propagate_data_positions(
+    mut commands: Commands,
+    q_root: Query<(Entity, &TargetGlyphBuffer, &PhysicsGridMember, &Root)>,
+    world: &World,
+) {
+    for (root_entity, target_buffer, grid_member, root) in q_root.iter() {
         if root.enabled {
-            recurse_apply_position(&mut commands, IVec2::ZERO, world, root_entity);
+            recurse_apply_data(
+                &mut commands,
+                IVec2::ZERO,
+                world,
+                root_entity,
+                &(target_buffer.clone(), grid_member.clone()),
+            );
         }
     }
 }
 
-pub fn recurse_apply_position(
+pub fn recurse_apply_data<B: Bundle + Clone>(
     commands: &mut Commands,
     parent_offset: IVec2,
     world: &World,
     entity: Entity,
+    bundle: &B,
 ) {
     let Some(widget) = world.get::<WidgetLayout>(entity) else {
         println!("no widget");
@@ -69,12 +83,15 @@ pub fn recurse_apply_position(
     let children = (widget.logic).children(entity, world);
 
     let new_offset = position.offset + parent_offset;
-    commands.entity(entity).insert(Positioned {
-        offset: new_offset,
-        size: position.size,
-    });
+    commands.entity(entity).insert((
+        Positioned {
+            offset: new_offset,
+            size: position.size,
+        },
+        bundle.clone(),
+    ));
 
     for child in children.iter() {
-        recurse_apply_position(commands, new_offset, world, *child);
+        recurse_apply_data(commands, new_offset, world, *child, bundle);
     }
 }
