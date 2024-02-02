@@ -9,7 +9,7 @@ use bevy::{
 
 use super::{GlyphAnimation, GlyphAnimationSource};
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Clone)]
 pub struct GlyphAnimationPlayer {
     pub framerate: f32,
     pub repeat: bool,

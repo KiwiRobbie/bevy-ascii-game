@@ -14,10 +14,6 @@ pub trait WidgetBuilder<'a, 'b> {
     fn apply(self, commands: &mut Commands) -> WidgetBuilderFn<'b>;
 }
 
-pub trait WidgetSaver<'a, T> {
-    fn save_id(self, store: &'a mut T) -> WidgetBuilderFn<'a>;
-}
-
 impl<'a, 'b> WidgetBuilder<'a, 'b> for WidgetBuilderFn<'a> {
     fn entity(entity: Entity) -> WidgetBuilderFn<'a> {
         Box::new(move |_| entity)
@@ -34,7 +30,9 @@ impl<'a, 'b> WidgetBuilder<'a, 'b> for WidgetBuilderFn<'a> {
         Box::new(move |_: &mut Commands| entity)
     }
 }
-
+pub trait WidgetSaver<'a, T> {
+    fn save_id(self, store: &'a mut T) -> WidgetBuilderFn<'a>;
+}
 impl<'a> WidgetSaver<'a, Entity> for WidgetBuilderFn<'a> {
     fn save_id(self, store: &'a mut Entity) -> Self {
         Box::new(move |commands: &mut Commands| {
@@ -44,7 +42,6 @@ impl<'a> WidgetSaver<'a, Entity> for WidgetBuilderFn<'a> {
         })
     }
 }
-
 impl<'a> WidgetSaver<'a, Option<Entity>> for WidgetBuilderFn<'a> {
     fn save_id(self, store: &'a mut Option<Entity>) -> Self {
         Box::new(move |commands: &mut Commands| {

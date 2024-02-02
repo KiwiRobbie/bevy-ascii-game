@@ -24,5 +24,12 @@ pub fn mirror_lines(lines: &[String]) -> Vec<String> {
     mirror_lines_with(lines, map)
 }
 
-const MIRROR_CHARS: [(char, char); 5] =
-    [('\\', '/'), ('\'', '`'), ('<', '>'), ('p', 'q'), ('b', 'd')];
+const MIRROR_CHARS: [(char, char); 7] = [
+    ('\\', '/'),
+    ('\'', '`'),
+    ('<', '>'),
+    ('p', 'q'),
+    ('b', 'd'),
+    ('[', ']'),
+    ('(', ')'),
+];
