@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::{bundle::Bundle, component::Component},
-    math::UVec2,
-};
+use bevy::{ecs::component::Component, math::UVec2};
 
 use super::padding::{EdgeInsets, Padding};
 
@@ -64,21 +61,17 @@ impl Border {
             .collect()
     }
 }
-#[derive(Debug, Bundle)]
-pub struct BorderBundle {
-    pub border: Border,
-    pub padding: Padding,
-}
-impl BorderBundle {
-    pub fn new(border: Border) -> Self {
-        Self {
-            border: border.clone(),
-            padding: Padding(EdgeInsets {
-                top: border.top.is_some() as u32,
-                bottom: border.bottom.is_some() as u32,
-                left: border.left.is_some() as u32,
-                right: border.right.is_some() as u32,
+
+impl Border {
+    pub fn padded(self) -> (Padding, Self) {
+        (
+            Padding(EdgeInsets {
+                top: self.top.is_some() as u32,
+                bottom: self.bottom.is_some() as u32,
+                left: self.left.is_some() as u32,
+                right: self.right.is_some() as u32,
             }),
-        }
+            self,
+        )
     }
 }

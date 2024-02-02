@@ -1,7 +1,7 @@
 use ascii_ui::{
-    attachments::{self, border::Border},
+    attachments,
     widget_builder::{WidgetBuilder, WidgetSaver},
-    widgets::{self, Checkbox, Column, Container, Divider, TabView, Text},
+    widgets::{Checkbox, Column, Container, Divider, TabView, Text},
 };
 use bevy::{
     ecs::{
@@ -44,11 +44,7 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) 
             position: IVec2 { x: 0, y: -1 },
             size: UVec2 { x: 32, y: 11 },
         },
-        attachments::BorderBundle::new(Border::symmetric(
-            Some('|'),
-            Some('-'),
-            Some([',', '.', '`', '\'']),
-        )),
+        attachments::Border::symmetric(Some('|'), Some('-'), Some([',', '.', '`', '\''])).padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
     ))
