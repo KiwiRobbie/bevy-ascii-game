@@ -14,6 +14,7 @@ use crate::{
         positioned::Positioned,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
+    widget_builder::WidgetBuilderFn,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -149,5 +150,24 @@ impl<T: Bundle> RowBundle<T> {
     }
     pub fn spawn(commands: &mut Commands, children: Vec<Entity>, attachments: T) -> Entity {
         commands.spawn(Self::new(children, attachments)).id()
+    }
+}
+
+impl Row {
+    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let mut children_entities = vec![];
+            for child in children.into_iter() {
+                children_entities.push((child)(commands));
+            }
+            commands
+                .spawn((
+                    Self {
+                        children: children_entities,
+                    },
+                    WidgetLayout::new::<RowLogic>(),
+                ))
+                .id()
+        })
     }
 }

@@ -4,7 +4,10 @@ use bevy::ecs::{
     system::{Commands, Query},
 };
 
-use crate::mouse::{IntractableMarker, TriggeredMarker};
+use crate::{
+    mouse::{IntractableMarker, TriggeredMarker},
+    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+};
 
 use super::super::attachments;
 use super::super::widgets;
@@ -19,23 +22,6 @@ pub struct CheckboxEnabledMarker;
 
 #[derive(Debug, Component)]
 pub struct CheckboxDisabledMarker;
-
-pub struct CheckboxBuilder;
-impl CheckboxBuilder {
-    pub fn spawn(commands: &mut Commands, label: String) -> Entity {
-        let label: Entity = widgets::TextBundle::spawn(commands, label, ());
-        let checkbox: Entity = widgets::TextBundle::spawn(commands, "[ ]".into(), ());
-        widgets::RowBundle::spawn(
-            commands,
-            vec![label, checkbox],
-            (
-                attachments::MainAxisAlignment::SpaceBetween,
-                IntractableMarker,
-                Checkbox { checkbox },
-            ),
-        )
-    }
-}
 
 pub fn checkbox_interaction_system(
     mut commands: Commands,
@@ -63,5 +49,24 @@ pub fn checkbox_interaction_system(
                 q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text = "[x]".into();
             }
         };
+    }
+}
+impl Checkbox {
+    pub fn build<'a>(label: String) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let mut toggle_text = Entity::PLACEHOLDER;
+            widgets::Row::build(vec![
+                widgets::Text::build(label),
+                widgets::Text::build("[ ]".into()).save_id(&mut toggle_text),
+            ])
+            .apply(commands)
+            .with((
+                attachments::MainAxisAlignment::SpaceBetween,
+                IntractableMarker,
+                Checkbox {
+                    checkbox: toggle_text,
+                },
+            ))(commands)
+        })
     }
 }

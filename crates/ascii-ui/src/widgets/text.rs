@@ -13,6 +13,7 @@ use crate::{
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     render::bundle::RenderBundle,
+    widget_builder::WidgetBuilderFn,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -64,5 +65,19 @@ impl<T: Bundle> TextBundle<T> {
     }
     pub fn spawn(commands: &mut Commands, text: String, attachments: T) -> Entity {
         commands.spawn(Self::new(text, attachments)).id()
+    }
+}
+
+impl Text {
+    pub fn build<'a>(text: String) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            commands
+                .spawn((
+                    Self { text },
+                    RenderBundle::default(),
+                    WidgetLayout::new::<TextLogic>(),
+                ))
+                .id()
+        })
     }
 }

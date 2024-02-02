@@ -18,6 +18,4 @@ fn main() {
     for (original, mirrored) in lines.iter().zip(mirrored_lines.iter()) {
         println!("{}  |  {}", original, mirrored);
     }
-
-    // println!("{}", file);
 }

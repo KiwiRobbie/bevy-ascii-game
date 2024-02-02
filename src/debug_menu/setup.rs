@@ -1,6 +1,7 @@
 use ascii_ui::{
     attachments::{self, border::Border},
-    widgets,
+    widget_builder::{WidgetBuilder, WidgetSaver},
+    widgets::{self, Checkbox, Column, Container, Divider, TabView, Text},
 };
 use bevy::{
     ecs::{
@@ -8,87 +9,50 @@ use bevy::{
         system::{Commands, ResMut},
     },
     math::{IVec2, UVec2},
-    prelude::Entity,
 };
 
 use super::{inspector::InspectorTab, state::DebugMenuState};
 
 pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
-    let f3: Entity = widgets::TextBundle::spawn(&mut commands, "[F3 Debug Menu]".into(), ());
+    let menu_state = &mut *menu_state;
 
-    let divider_a: Entity = widgets::DividerBundle::spawn(&mut commands, '=');
+    let settings_tab = Column::build(vec![
+        Text::build("".into()).save_id(&mut menu_state.fps_text),
+        Text::build("".into()).save_id(&mut menu_state.player_count_text),
+        Text::build("".into()).save_id(&mut menu_state.actor_count_text),
+        Text::build("".into()).save_id(&mut menu_state.solid_count_text),
+        Divider::build('-'),
+        Checkbox::build("Debug Position".into()).save_id(&mut menu_state.position_checkbox),
+        Checkbox::build("Debug Colliders".into()).save_id(&mut menu_state.colliders_checkbox),
+        Checkbox::build("Debug ECS UI".into()).save_id(&mut menu_state.ui_checkbox),
+        Checkbox::build("Pause Physics".into()).save_id(&mut menu_state.pause_checkbox),
+    ])(&mut commands);
 
-    let fps: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), ());
-    let player_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text A".into(), ());
-    let solid_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text B".into(), ());
-    let actor_count: Entity = widgets::TextBundle::spawn(&mut commands, "Text c".into(), ());
-    menu_state.fps_text = Some(fps);
-    menu_state.player_count_text = Some(player_count);
-    menu_state.solid_count_text = Some(solid_count);
-    menu_state.actor_count_text = Some(actor_count);
+    let inspector_tab = Column::build(vec![]).with(InspectorTab::default())(&mut commands);
 
-    let divider_b: Entity = widgets::DividerBundle::spawn(&mut commands, '-');
-
-    let debug_position = widgets::CheckboxBuilder::spawn(&mut commands, "Debug Position".into());
-    let debug_colliders = widgets::CheckboxBuilder::spawn(&mut commands, "Debug Colliders".into());
-    let debug_ui = widgets::CheckboxBuilder::spawn(&mut commands, "Debug ECS UI".into());
-    let debug_pause_physics =
-        widgets::CheckboxBuilder::spawn(&mut commands, "Pause Physics".into());
-    menu_state.position_checkbox = Some(debug_position);
-    menu_state.colliders_checkbox = Some(debug_colliders);
-    menu_state.ui_checkbox = Some(debug_ui);
-    menu_state.pause_physics_checkbox = Some(debug_pause_physics);
-
-    let settings_column = widgets::ColumnBundle::spawn(
-        &mut commands,
-        vec![
-            fps,
-            player_count,
-            solid_count,
-            actor_count,
-            divider_b,
-            debug_position,
-            debug_colliders,
-            debug_ui,
-            debug_pause_physics,
-        ],
-        (),
-    );
-
-    let inspector_column =
-        widgets::ColumnBundle::spawn(&mut commands, vec![], InspectorTab::default());
-
-    let container_inner = widgets::tab_view::TabViewBuilder::spawn(
-        &mut commands,
-        vec![
-            ("Settings".into(), settings_column),
-            ("Inspector".into(), inspector_column),
-        ],
-    );
-
-    let column =
-        widgets::ColumnBundle::spawn(&mut commands, vec![f3, divider_a, container_inner], ());
-
-    let root = widgets::ContainerBundle::spawn(
-        &mut commands,
-        Some(column),
-        (
-            attachments::Root {
-                enabled: true,
-                position: IVec2 { x: 0, y: -1 },
-                size: UVec2 { x: 32, y: 11 },
-            },
-            attachments::BorderBundle::new(Border::symmetric(
-                Some('|'),
-                Some('-'),
-                Some([',', '.', '`', '\'']),
-            )),
-            attachments::RenderBundle::default(),
-            DebugMenuMarker,
-        ),
-    );
-
-    menu_state.root_widget = Some(root);
+    Container::build(Some(Column::build(vec![
+        Text::build("[F3 Debug Menu]".into()),
+        Divider::build('='),
+        TabView::build(vec![
+            ("Settings".into(), settings_tab),
+            ("Inspector".into(), inspector_tab),
+        ]),
+    ])))
+    .with((
+        attachments::Root {
+            enabled: true,
+            position: IVec2 { x: 0, y: -1 },
+            size: UVec2 { x: 32, y: 11 },
+        },
+        attachments::BorderBundle::new(Border::symmetric(
+            Some('|'),
+            Some('-'),
+            Some([',', '.', '`', '\'']),
+        )),
+        attachments::RenderBundle::default(),
+        DebugMenuMarker,
+    ))
+    .save_id(&mut menu_state.root_widget)(&mut commands);
 }
 
 #[derive(Debug, Component)]

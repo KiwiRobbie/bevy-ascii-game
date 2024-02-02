@@ -105,7 +105,7 @@ pub fn update_values(
         let state = q_checkbox.get(entity).unwrap().is_some();
         **positions = state;
     }
-    if let Some(entity) = state.pause_physics_checkbox {
+    if let Some(entity) = state.pause_checkbox {
         let state = q_checkbox.get(entity).unwrap().is_some();
         **pause_physics = !state;
     }

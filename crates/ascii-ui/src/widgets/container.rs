@@ -14,6 +14,7 @@ use crate::{
         positioned::Positioned,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
+    widget_builder::WidgetBuilderFn,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -100,5 +101,16 @@ impl<T: Bundle> ContainerBundle<T> {
 
     pub fn spawn(commands: &mut Commands, child: Option<Entity>, attachments: T) -> Entity {
         commands.spawn(Self::new(child, attachments)).id()
+    }
+}
+
+impl Container {
+    pub fn build<'a>(child: Option<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let child = child.map(|child| child(commands));
+            commands
+                .spawn((Self { child }, WidgetLayout::new::<ContainerLogic>()))
+                .id()
+        })
     }
 }

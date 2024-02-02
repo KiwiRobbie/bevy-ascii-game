@@ -12,7 +12,7 @@ pub struct DebugMenuState {
     pub position_checkbox: Option<Entity>,
     pub colliders_checkbox: Option<Entity>,
     pub ui_checkbox: Option<Entity>,
-    pub pause_physics_checkbox: Option<Entity>,
+    pub pause_checkbox: Option<Entity>,
 }
 
 impl Default for DebugMenuState {
@@ -29,7 +29,7 @@ impl Default for DebugMenuState {
             colliders_checkbox: None,
             position_checkbox: None,
             ui_checkbox: None,
-            pause_physics_checkbox: None,
+            pause_checkbox: None,
         }
     }
 }

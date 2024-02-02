@@ -7,10 +7,13 @@ use bevy::{
     reflect::Reflect,
 };
 
-use crate::layout::{
-    constraint::Constraint,
-    positioned::Positioned,
-    widget_layout::{WidgetLayout, WidgetLayoutLogic},
+use crate::{
+    layout::{
+        constraint::Constraint,
+        positioned::Positioned,
+        widget_layout::{WidgetLayout, WidgetLayoutLogic},
+    },
+    widget_builder::WidgetBuilderFn,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -75,22 +78,21 @@ impl WidgetLayoutLogic for ColumnLogic {
     }
 }
 
-#[derive(Debug, Bundle)]
-pub struct ColumnBundle<T: Bundle> {
-    pub column: Column,
-    pub layout: WidgetLayout,
-    pub attachments: T,
-}
-
-impl<T: Bundle> ColumnBundle<T> {
-    pub fn new(children: Vec<Entity>, attachments: T) -> Self {
-        Self {
-            column: Column { children },
-            layout: WidgetLayout::new::<ColumnLogic>(),
-            attachments,
-        }
-    }
-    pub fn spawn(commands: &mut Commands, children: Vec<Entity>, attachments: T) -> Entity {
-        commands.spawn(Self::new(children, attachments)).id()
+impl Column {
+    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let mut children_entities = vec![];
+            for child in children.into_iter() {
+                children_entities.push((child)(commands));
+            }
+            commands
+                .spawn((
+                    Self {
+                        children: children_entities,
+                    },
+                    WidgetLayout::new::<ColumnLogic>(),
+                ))
+                .id()
+        })
     }
 }

@@ -8,6 +8,7 @@ use bevy::ecs::{
 use crate::{
     attachments::{stack::Stack, MainAxisAlignment},
     mouse::{IntractableMarker, TriggeredMarker},
+    widget_builder::{WidgetBuilder, WidgetBuilderFn},
 };
 
 use super::{
@@ -22,46 +23,6 @@ pub struct TabView {
     pub title: Entity,
     pub right: Entity,
     pub stack: Entity,
-}
-
-pub struct TabViewBuilder;
-impl TabViewBuilder {
-    pub fn spawn(commands: &mut Commands, children: Vec<(String, Entity)>) -> Entity {
-        let tabs = children.iter().map(|(name, _)| name.clone()).collect();
-
-        let left = widgets::TextBundle::spawn(commands, "<-".into(), IntractableMarker);
-        let title = widgets::TextBundle::spawn(commands, "[ Tab View ]".into(), ());
-        let right = widgets::TextBundle::spawn(commands, "->".into(), IntractableMarker);
-
-        let header = widgets::RowBundle::spawn(
-            commands,
-            vec![left, title, right],
-            attachments::MainAxisAlignment::SpaceAround,
-        );
-        let stack = widgets::ContainerBundle::spawn(
-            commands,
-            None,
-            (attachments::StackBuilder::new(
-                children.iter().map(|(_, tab)| *tab).collect(),
-                0,
-            ),),
-        );
-
-        widgets::ColumnBundle::spawn(
-            commands,
-            vec![header, stack],
-            (
-                MainAxisAlignment::Start,
-                TabView {
-                    left,
-                    title,
-                    right,
-                    stack,
-                    tabs,
-                },
-            ),
-        )
-    }
 }
 
 pub fn tab_view_interaction_system(
@@ -98,5 +59,42 @@ pub fn tab_view_interaction_system(
                 text.text = format!("[ {} ]", tab_view.tabs[stack.active].clone());
             }
         }
+    }
+}
+impl TabView {
+    pub fn build<'a>(children: Vec<(String, Entity)>) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let tab_titles = children.iter().map(|(name, _)| name.clone()).collect();
+            let tab_entities = children.iter().map(|(_, tab)| *tab).collect();
+
+            let left = widgets::Text::build("<-".into()).with(IntractableMarker)(commands);
+            let title = widgets::Text::build("[ Tab View ]".into())(commands);
+            let right = widgets::Text::build("->".into()).with(IntractableMarker)(commands);
+
+            let stack = widgets::Container::build(None)
+                .with((attachments::StackBuilder::new(tab_entities, 0),))(
+                commands
+            );
+
+            widgets::Column::build(vec![
+                widgets::Row::build(vec![
+                    WidgetBuilderFn::entity(left),
+                    WidgetBuilderFn::entity(title),
+                    WidgetBuilderFn::entity(right),
+                ])
+                .with(attachments::MainAxisAlignment::SpaceAround),
+                WidgetBuilderFn::entity(stack),
+            ])
+            .with((
+                MainAxisAlignment::Start,
+                TabView {
+                    left,
+                    title,
+                    right,
+                    stack,
+                    tabs: tab_titles,
+                },
+            ))(commands)
+        })
     }
 }

@@ -1,6 +1,9 @@
 use std::any::{Any, TypeId};
 
-use ascii_ui::widgets;
+use ascii_ui::{
+    widget_builder::{WidgetBuilder, WidgetBuilderFn},
+    widgets,
+};
 use bevy::{
     app::{Plugin, Update},
     ecs::{
@@ -49,20 +52,20 @@ type BuildEcsUi = fn(&dyn Any, &mut Commands) -> Entity;
 
 fn uvec2_ui(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<UVec2>().unwrap();
-    widgets::TextBundle::spawn(commands, format!("({}, {})", data.x, data.y), ())
+    widgets::Text::build(format!("({}, {})", data.x, data.y))(commands)
 }
 fn ivec2_ui(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<IVec2>().unwrap();
-    widgets::TextBundle::spawn(commands, format!("({}, {})", data.x, data.y), ())
+    widgets::Text::build(format!("({}, {})", data.x, data.y))(commands)
 }
 fn vec2_ui(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<Vec2>().unwrap();
-    widgets::TextBundle::spawn(commands, format!("({:0.3}, {:0.3})", data.x, data.y), ())
+    widgets::Text::build(format!("({:0.3}, {:0.3})", data.x, data.y))(commands)
 }
 
 fn float_ui<T: std::fmt::Display + 'static>(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<T>().unwrap();
-    widgets::TextBundle::spawn(commands, format!("{:0.3}", data), ())
+    widgets::Text::build(format!("{:0.3}", data))(commands)
 }
 
 #[derive(Debug, Clone)]
@@ -117,10 +120,8 @@ pub fn inspector_fetch_system(
 
     for (entity, inspector) in q_inspector.iter_mut() {
         if let Some(target) = inspector.target {
-            let mut children = vec![widgets::TextBundle::spawn(
+            let mut children = vec![widgets::Text::build(format!("Entity: {:?}", target))(
                 &mut commands,
-                format!("Entity: {:?}", target),
-                (),
             )];
 
             if let Some(component_ids) = get_components_ids(world, target)
@@ -164,19 +165,18 @@ pub fn inspector_fetch_system(
 
                         let mut field_widgets = Vec::new();
 
-                        field_widgets.push(widgets::text::TextBundle::spawn(
-                            &mut commands,
-                            format!("+-{} = ", name),
-                            (),
-                        ));
+                        field_widgets.push(widgets::text::Text::build(format!("+-{} = ", name)));
 
                         if let Some(ui_for) =
                             type_registry.get_type_data::<EcsUiFor>(field.type_id())
                         {
-                            field_widgets.push((ui_for.fn_readonly)(field.as_any(), &mut commands));
+                            field_widgets.push(WidgetBuilderFn::entity((ui_for.fn_readonly)(
+                                field.as_any(),
+                                &mut commands,
+                            )));
                         }
 
-                        children.push(widgets::RowBundle::spawn(&mut commands, field_widgets, ()));
+                        children.push(widgets::Row::build(field_widgets)(&mut commands));
                     }
                 }
             }

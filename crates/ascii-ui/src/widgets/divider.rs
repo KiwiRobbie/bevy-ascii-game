@@ -13,6 +13,7 @@ use crate::{
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     render::bundle::RenderBundle,
+    widget_builder::WidgetBuilderFn,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -58,5 +59,19 @@ impl DividerBundle {
     }
     pub fn spawn(commands: &mut Commands, character: char) -> Entity {
         commands.spawn(Self::new(character)).id()
+    }
+}
+
+impl Divider {
+    pub fn build<'a>(character: char) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            commands
+                .spawn((
+                    Self { character },
+                    RenderBundle::default(),
+                    WidgetLayout::new::<DividerLogic>(),
+                ))
+                .id()
+        })
     }
 }
