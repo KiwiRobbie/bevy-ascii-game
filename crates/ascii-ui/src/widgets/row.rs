@@ -1,7 +1,7 @@
 use bevy::{
     ecs::{
-        bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
-        system::Commands, world::World,
+        component::Component, entity::Entity, reflect::ReflectComponent, system::Commands,
+        world::World,
     },
     math::{IVec2, UVec2},
     reflect::Reflect,
@@ -130,26 +130,6 @@ impl WidgetLayoutLogic for RowLogic {
             .expect("Row logic without Row!")
             .children
             .clone()
-    }
-}
-
-#[derive(Debug, Bundle)]
-pub struct RowBundle<T: Bundle> {
-    pub column: Row,
-    pub layout: WidgetLayout,
-    pub attachments: T,
-}
-
-impl<T: Bundle> RowBundle<T> {
-    pub fn new(children: Vec<Entity>, attachments: T) -> Self {
-        Self {
-            column: Row { children },
-            layout: WidgetLayout::new::<RowLogic>(),
-            attachments,
-        }
-    }
-    pub fn spawn(commands: &mut Commands, children: Vec<Entity>, attachments: T) -> Entity {
-        commands.spawn(Self::new(children, attachments)).id()
     }
 }
 

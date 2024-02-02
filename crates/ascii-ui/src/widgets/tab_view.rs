@@ -1,9 +1,4 @@
-use bevy::ecs::{
-    component::Component,
-    entity::Entity,
-    query::With,
-    system::{Commands, Query},
-};
+use bevy::ecs::{component::Component, entity::Entity, query::With, system::Query};
 
 use crate::{
     attachments::{stack::Stack, MainAxisAlignment},

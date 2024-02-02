@@ -83,27 +83,6 @@ impl WidgetLayoutLogic for ContainerLogic {
     }
 }
 
-#[derive(Debug, Bundle)]
-pub struct ContainerBundle<T: Bundle> {
-    attachments: T,
-    container: Container,
-    layout: WidgetLayout,
-}
-
-impl<T: Bundle> ContainerBundle<T> {
-    pub fn new(child: Option<Entity>, attachments: T) -> Self {
-        Self {
-            attachments,
-            container: Container { child },
-            layout: WidgetLayout::new::<ContainerLogic>(),
-        }
-    }
-
-    pub fn spawn(commands: &mut Commands, child: Option<Entity>, attachments: T) -> Entity {
-        commands.spawn(Self::new(child, attachments)).id()
-    }
-}
-
 impl Container {
     pub fn build<'a>(child: Option<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
