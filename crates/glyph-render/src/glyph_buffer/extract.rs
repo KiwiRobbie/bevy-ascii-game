@@ -175,13 +175,12 @@ pub fn prepare_glyph_buffers(
             }
 
             let src_min = (dst_min - position.position).as_uvec2();
-            let src_max = (dst_max - position.position).as_uvec2();
             let dst_min = dst_min.as_uvec2();
 
             for dy in 0..size.y as usize {
                 let src_y = src_min.y as usize + dy;
                 let src_start_x = src_min.x as usize;
-                let src_start = (src_y * source_size.x as usize + src_start_x);
+                let src_start = src_y * source_size.x as usize + src_start_x;
 
                 let dst_y = dst_min.y as usize + dy;
                 let dst_start_x = dst_min.x as usize;
@@ -226,122 +225,3 @@ pub fn prepare_glyph_buffers(
         });
     }
 }
-
-// fn extract_glyph_sprites(
-//     mut commands: Commands,
-//     atlas_cache: Extract<Res<FontAtlasCache>>,
-//     fonts: Extract<Res<Assets<CustomFontSource>>>,
-//     glyph_textures: Extract<Res<Assets<GlyphTexture>>>,
-//     q_glyph_sprite: Extract<
-//         Query<(Entity, &Position, &GlyphSprite, &TargetGlyphBuffer), Without<GlyphAnimation>>,
-//     >,
-//     q_glyph_buffer: Extract<Query<Entity, &GlobalTransform, &GlpyhB>>,
-
-//     default_font: Extract<Res<DefaultFont>>,
-// ) {
-//     for (entity, global_transform, sprite, font, font_size) in q_glyph_sprite.iter() {
-//         let transform: Transform = (*global_transform).into();
-//         let offset_transform: GlobalTransform = (transform
-//             * Transform::from_translation(Vec3::new(
-//                 (font_size.advance() as i32 * sprite.offset.x) as f32,
-//                 (font_size.line_spacing() as i32 * sprite.offset.y) as f32,
-//                 0.0,
-//             )))
-//         .into();
-
-//         let font = fonts
-//             .get(font.map(|f| f.id()).unwrap_or(default_font.id()))
-//             .unwrap();
-
-//         let atlas = atlas_cache
-//             .cached
-//             .get(&(font_size.clone(), font.key()))
-//             .unwrap();
-
-//         let extracted_glyph_texture = ExtractedGlyphTexture::extract(
-//             glyph_textures.get(sprite.texture.id()).unwrap(),
-//             atlas,
-//             font.as_ref(),
-//             font_size,
-//         );
-
-//         commands.insert_or_spawn_batch([(
-//             entity,
-//             (
-//                 offset_transform,
-//                 ExtractedAtlas(atlas.clone()),
-//                 font_size.clone(),
-//                 extracted_glyph_texture,
-//             ),
-//         )]);
-//     }
-// }
-
-// fn extract_glyph_animations(
-//     mut commands: Commands,
-//     atlas_cache: Extract<Res<FontAtlasCache>>,
-//     fonts: Extract<Res<Assets<CustomFontSource>>>,
-//     glyph_animations: Extract<Res<Assets<GlyphAnimationSource>>>,
-//     q_glyph_animations: Extract<
-//         Query<
-//             (
-//                 Entity,
-//                 &GlobalTransform,
-//                 &GlyphAnimation,
-//                 Option<&CustomFont>,
-//                 &FontSize,
-//                 Option<&GlyphSpriteMirrored>,
-//             ),
-//             Without<GlyphSprite>,
-//         >,
-//     >,
-//     default_font: Extract<Res<DefaultFont>>,
-// ) {
-//     for (entity, global_transform, animation, font, font_size, flipped) in q_glyph_animations.iter()
-//     {
-//         let Some(animation_source) = glyph_animations.get(animation.source.id()) else {
-//             continue;
-//         };
-
-//         let frame = animation.frame as usize;
-//         let GlyphAnimationFrame { data: text, offset } = &(if flipped.is_some() {
-//             (animation_source.frames[frame].1.as_ref()).unwrap_or(&animation_source.frames[frame].0)
-//         } else {
-//             &animation_source.frames[frame].0
-//         });
-
-//         let transform: Transform = (*global_transform).into();
-//         let offset_transform: GlobalTransform = (Transform::from_translation(
-//             offset.extend(0).as_vec3()
-//                 * Vec3::new(
-//                     font_size.advance() as f32,
-//                     font_size.line_spacing() as f32,
-//                     0.0,
-//                 ),
-//         ) * transform)
-//             .into();
-
-//         let font = fonts
-//             .get(font.map(|f| f.id()).unwrap_or(default_font.id()))
-//             .unwrap();
-
-//         let atlas = atlas_cache
-//             .cached
-//             .get(&(font_size.clone(), font.key()))
-//             .unwrap();
-
-//         let extracted_glyph_texture =
-//             ExtractedGlyphTexture::extract_animation(&text, atlas, font.as_ref(), font_size);
-
-//         commands.insert_or_spawn_batch([(
-//             entity,
-//             (
-//                 offset_transform,
-//                 animation.clone(),
-//                 ExtractedAtlas(atlas.clone()),
-//                 font_size.clone(),
-//                 extracted_glyph_texture,
-//             ),
-//         )]);
-//     }
-// }

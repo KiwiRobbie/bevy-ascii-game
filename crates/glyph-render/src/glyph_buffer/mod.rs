@@ -2,7 +2,7 @@ use bevy::{
     ecs::{bundle::Bundle, component::Component, entity::Entity, query::Without, system::Query},
     math::UVec2,
     prelude::{Deref, DerefMut},
-    utils::{EntityHashSet, HashSet},
+    utils::HashSet,
 };
 
 use crate::{
