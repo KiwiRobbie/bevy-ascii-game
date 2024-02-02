@@ -11,6 +11,7 @@ use bevy::{
     },
 };
 use bytemuck::{cast_slice, Pod, Zeroable};
+use grid_physics::position::GridSize;
 pub use node::GlyphGenerationNode;
 use swash::FontRef;
 
@@ -18,6 +19,10 @@ use crate::{
     atlas::{FontAtlasCache, FontAtlasSource},
     font::{CustomFont, CustomFontSource, DefaultFont, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationFrame, GlyphAnimationSource},
+    glyph_buffer::{
+        extract::{extract_glyph_buffers, prepare_glyph_buffers},
+        update_glyph_buffer_entities,
+    },
     glyph_render_plugin::render_resources::{
         GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
     },
@@ -38,20 +43,23 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<GlyphTexture>().init_resource::<FontSize>();
+        app.init_asset::<GlyphTextureSource>()
+            .add_systems(PostUpdate, update_glyph_buffer_entities)
+            .init_resource::<FontSize>();
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(
                 ExtractSchedule,
                 (
-                    extract_glyph_sprites,
-                    extract_glyph_animations,
-                    extract_solid_color,
+                    extract_glyph_buffers,
+                    // extract_glyph_sprites,
+                    // extract_glyph_animations,
+                    // extract_solid_color,
                 ),
             )
             .add_systems(
                 Render,
-                (prepare_atlas_buffers, prepare_glyph_textures).in_set(RenderSet::PrepareAssets),
+                (prepare_atlas_buffers, prepare_glyph_buffers).in_set(RenderSet::PrepareAssets),
             )
             .add_systems(Render, (prepare_buffers,).in_set(RenderSet::Prepare))
             .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
@@ -80,7 +88,7 @@ pub struct GlyphUniforms {
 }
 
 #[derive(Asset, TypePath, Clone)]
-pub struct GlyphTexture {
+pub struct GlyphTextureSource {
     pub data: Vec<String>,
 }
 
@@ -97,7 +105,7 @@ pub struct ExtractedGlyphTexture {
 
 impl ExtractedGlyphTexture {
     pub fn extract(
-        source: &GlyphTexture,
+        source: &GlyphTextureSource,
         atlas: &FontAtlasSource,
         font: FontRef,
         font_size: &FontSize,
@@ -127,7 +135,7 @@ impl ExtractedGlyphTexture {
         }
     }
 
-    pub fn extract_animation(
+    pub fn from_text_data(
         text: &Vec<String>,
         atlas: &FontAtlasSource,
         font: FontRef,
@@ -160,7 +168,7 @@ impl ExtractedGlyphTexture {
 
 #[derive(Component, Clone)]
 pub struct GlyphSprite {
-    pub texture: Handle<GlyphTexture>,
+    pub texture: Handle<GlyphTextureSource>,
     pub offset: IVec2,
 }
 
@@ -205,7 +213,7 @@ fn extract_glyph_sprites(
     mut commands: Commands,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,
-    glyph_textures: Extract<Res<Assets<GlyphTexture>>>,
+    glyph_textures: Extract<Res<Assets<GlyphTextureSource>>>,
     q_glyph_sprite: Extract<
         Query<
             (
@@ -312,7 +320,7 @@ fn extract_glyph_animations(
             .unwrap();
 
         let extracted_glyph_texture =
-            ExtractedGlyphTexture::extract_animation(&text, atlas, font.as_ref(), font_size);
+            ExtractedGlyphTexture::from_text_data(&text, atlas, font.as_ref(), font_size);
 
         commands.insert_or_spawn_batch([(
             entity,
@@ -343,9 +351,9 @@ fn prepare_atlas_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
-    q_glyph_sprite: Query<(Entity, &ExtractedAtlas)>,
+    q_atlases: Query<(Entity, &ExtractedAtlas)>,
 ) {
-    for (entity, atlas) in q_glyph_sprite.iter() {
+    for (entity, atlas) in q_atlases.iter() {
         let data = render_device.create_texture_with_data(
             &render_queue,
             &TextureDescriptor {
@@ -387,38 +395,38 @@ fn prepare_atlas_buffers(
     }
 }
 
-fn prepare_glyph_textures(
-    mut commands: Commands,
-    render_device: Res<RenderDevice>,
-    render_queue: Res<RenderQueue>,
-    q_extracted_glyph_texture: Query<(Entity, &ExtractedGlyphTexture)>,
-) {
-    for (entity, extracted_texture) in q_extracted_glyph_texture.iter() {
-        let storage_texture = render_device.create_texture_with_data(
-            &render_queue,
-            &TextureDescriptor {
-                label: Some("glyph texture"),
-                size: Extent3d {
-                    width: extracted_texture.width,
-                    height: extracted_texture.height,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: TextureDimension::D2,
-                format: TextureFormat::R16Uint,
-                usage: TextureUsages::COPY_SRC | TextureUsages::STORAGE_BINDING,
-                view_formats: &[TextureFormat::R16Uint],
-            },
-            &extracted_texture.data,
-        );
-        commands.entity(entity).insert(GpuGlyphTexture {
-            storage_texture,
-            width: extracted_texture.width,
-            height: extracted_texture.height,
-        });
-    }
-}
+// fn prepare_glyph_textures(
+//     mut commands: Commands,
+//     render_device: Res<RenderDevice>,
+//     render_queue: Res<RenderQueue>,
+//     q_extracted_glyph_texture: Query<(Entity, &ExtractedGlyphTexture)>,
+// ) {
+//     for (entity, extracted_texture) in q_extracted_glyph_texture.iter() {
+//         let storage_texture = render_device.create_texture_with_data(
+//             &render_queue,
+//             &TextureDescriptor {
+//                 label: Some("glyph texture"),
+//                 size: Extent3d {
+//                     width: extracted_texture.width,
+//                     height: extracted_texture.height,
+//                     depth_or_array_layers: 1,
+//                 },
+//                 mip_level_count: 1,
+//                 sample_count: 1,
+//                 dimension: TextureDimension::D2,
+//                 format: TextureFormat::R16Uint,
+//                 usage: TextureUsages::COPY_SRC | TextureUsages::STORAGE_BINDING,
+//                 view_formats: &[TextureFormat::R16Uint],
+//             },
+//             &extracted_texture.data,
+//         );
+//         commands.entity(entity).insert(GpuGlyphTexture {
+//             storage_texture,
+//             width: extracted_texture.width,
+//             height: extracted_texture.height,
+//         });
+//     }
+// }
 
 #[derive(ShaderType, Pod, Clone, Copy, Zeroable)]
 #[repr(C)]
@@ -441,22 +449,20 @@ fn prepare_buffers(
         Option<&GlyphSolidColor>,
         &GlobalTransform,
         &GpuGlyphTexture,
-        &ExtractedGlyphTexture,
+        &GridSize,
     )>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
-    for (entity, color, global_transform, gpu_glyph_texture, extracted_glyph_texture) in
-        query.iter()
-    {
+    for (entity, color, global_transform, gpu_glyph_texture, grid_size) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: color
                 .map(|color| color.color.into())
                 .unwrap_or(Color::WHITE.into()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
-            advance: extracted_glyph_texture.advance,
-            line_spacing: extracted_glyph_texture.line_spacing,
+            advance: grid_size.x,
+            line_spacing: grid_size.y,
         });
         uniform_buffer.write_buffer(&render_device, &render_queue);
 

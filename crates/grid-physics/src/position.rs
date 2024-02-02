@@ -10,7 +10,7 @@ use bevy::{
     transform::components::{GlobalTransform, Transform},
 };
 
-#[derive(Debug, Resource, DerefMut, Deref)]
+#[derive(Debug, Resource, DerefMut, Deref, Component, Clone)]
 pub struct GridSize(pub UVec2);
 impl Default for GridSize {
     fn default() -> Self {

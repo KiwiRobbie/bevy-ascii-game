@@ -73,6 +73,14 @@ name = "reflection"
 [profile.dev]
 opt-level = 0
 
+[profile.dev.package.glyph-render]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 16
+
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3

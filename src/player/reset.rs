@@ -76,7 +76,7 @@ pub fn create_player<'w, 's, 'a>(
             actor: ActorPhysicsBundle {
                 position: PositionBundle {
                     position: Position {
-                        position: IVec2 { x: -20, y: 0 },
+                        position: IVec2 { x: 0, y: 10 },
                         ..Default::default()
                     },
                     ..Default::default()
