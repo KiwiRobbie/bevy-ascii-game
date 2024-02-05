@@ -20,9 +20,15 @@ jobs:
         rust-version: nightly
         targets: wasm32-unknown-unknown
     - uses: actions/checkout@master
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-all-crates: true
+
     - name: Build WASM
       run: cargo build --release --target wasm32-unknown-unknown
+
     - name: Install Bindgen
+
       run:  cargo install wasm-bindgen-cli     
     - name: Generate WASM bindings
       run: wasm-bindgen --out-name bevy-ascii-game --out-dir web --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
