@@ -34,8 +34,11 @@ jobs:
 
     - name: Install Bindgen
       run:  cargo install wasm-bindgen-cli     
-   
-    - name: Copy assets
+    
+    - name: Clear Old Assets
+      run rm -r web/assets
+
+    - name: Copy New Assets
       run: cp -r assets web/assets 
 
     - name: Generate WASM bindings
