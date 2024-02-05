@@ -134,7 +134,7 @@ impl render_graph::Node for GlyphGenerationNode {
                     .command_encoder()
                     .begin_render_pass(&glyph_raster_render_pass_descriptor);
 
-                render_pass.set_bind_group(0, &bind_group, &[0]);
+                render_pass.set_bind_group(0, &bind_group, &[]);
                 render_pass.set_pipeline(raster_pipeline);
                 render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
 

@@ -27,7 +27,8 @@ struct AtlasItem {
 }
 
 struct AtlasUvStorage {
-    uvs: array<AtlasItem, 128>
+    uvs: array<AtlasItem>
+    // uvs: array<AtlasItem, 128>
 }
 
 struct InstanceInput {
@@ -45,8 +46,8 @@ struct InstanceInput {
 @group(0) @binding(1) var<uniform> view: View;
 @group(0) @binding(2) var<uniform> model: Model;
 @group(0) @binding(3) var atlas_texture: texture_2d<f32>;
-@group(0) @binding(4) var<uniform> atlas_uv: AtlasUvStorage;
-// @group(0) @binding(4) var<storage, read> atlas_uv: AtlasUvStorage;
+// @group(0) @binding(4) var<uniform> atlas_uv: AtlasUvStorage;
+@group(0) @binding(4) var<storage, read> atlas_uv: AtlasUvStorage;
 
 
 var<private> verticies: array<vec2<i32>,6> = array(
