@@ -34,7 +34,10 @@ jobs:
 
     - name: Install Bindgen
       run:  cargo install wasm-bindgen-cli     
-    
+   
+    - name: Copy assets
+      run: cp -r assets web/assets 
+
     - name: Generate WASM bindings
       run: wasm-bindgen --out-name bevy-ascii-game --out-dir web --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
 
