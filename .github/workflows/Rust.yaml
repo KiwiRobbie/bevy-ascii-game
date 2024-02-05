@@ -18,7 +18,6 @@ jobs:
     - uses: hecrj/setup-rust-action@v2
       with:
         rust-version: nightly
-        components: wasm-bindgen
         targets: wasm32-unknown-unknown
     - uses: actions/checkout@master
     - name: Run tests
