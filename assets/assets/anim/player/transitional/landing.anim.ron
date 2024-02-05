@@ -1,0 +1,14 @@
+(
+    name: "player_lunging",
+    size: (14, 8),
+    frames: [
+        (
+            (
+                asset: "art/player/player_jump.art",
+                start: Frame(0, 1),
+                frame_count: Single,
+            ),
+            Auto(-8,0),
+        ),
+    ],
+)
