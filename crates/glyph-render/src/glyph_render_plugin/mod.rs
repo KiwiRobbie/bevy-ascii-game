@@ -46,9 +46,12 @@ impl Plugin for GlyphRenderPlugin {
             .add_systems(ExtractSchedule, (extract_glyph_buffers,))
             .add_systems(
                 Render,
-                (prepare_atlas_buffers, prepare_glyph_buffers).in_set(RenderSet::PrepareAssets),
+                (prepare_glyph_buffers).in_set(RenderSet::PrepareAssets),
             )
-            .add_systems(Render, (prepare_buffers,).in_set(RenderSet::Prepare))
+            .add_systems(
+                Render,
+                (prepare_atlas_buffers, prepare_buffers).in_set(RenderSet::Prepare),
+            )
             .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
@@ -81,7 +84,7 @@ pub struct GlyphTextureSource {
 
 #[derive(Component, Clone)]
 pub struct ExtractedGlyphTexture {
-    pub data: Box<[u8]>,
+    pub data: Box<[u16]>,
 
     pub width: u32,
     pub height: u32,
@@ -100,15 +103,15 @@ impl ExtractedGlyphTexture {
         let height = text.len();
         let width = text[0].len();
 
-        let mut data: Box<[u8]> = vec![0; 2 * width * height].into();
+        let mut data: Box<[u16]> = vec![0; width * height].into();
         let charmap = font.charmap();
 
         for (y, chars) in text.iter().enumerate() {
             assert_eq!(text[y].len(), width);
             for (x, c) in chars.chars().enumerate() {
-                let index = 2 * (x + (height - y - 1) * width);
+                let index = (x + (height - y - 1) * width);
                 let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
-                data[index..index + 2].copy_from_slice(&glyph_id.to_le_bytes());
+                data[index] = *glyph_id;
             }
         }
 
@@ -194,17 +197,17 @@ fn prepare_atlas_buffers(
             &atlas.data,
         );
 
-        let mut gpu_array_buffer = GpuArrayBuffer::<GpuAtlasItem>::new(&render_device);
-        for item in atlas.items.iter().map(|x| GpuAtlasItem {
-            offset: x.offset,
-            size: x.size,
-            start: x.start,
-            padding: Vec2::ZERO,
-        }) {
-            gpu_array_buffer.push(item);
-        }
+        // let mut gpu_array_buffer = GpuArrayBuffer::<GpuAtlasItem>::new(&render_device);
+        // for item in atlas.items.iter().map(|x| GpuAtlasItem {
+        //     offset: x.offset,
+        //     size: x.size,
+        //     start: x.start,
+        //     padding: Vec2::ZERO,
+        // }) {
+        //     gpu_array_buffer.push(item);
+        // }
 
-        gpu_array_buffer.write_buffer(&render_device, &render_queue);
+        // gpu_array_buffer.write_buffer(&render_device, &render_queue);
         // let uvs = render_device.create_buffer_with_data(&BufferInitDescriptor {
         //     label: Some("gpu font atlas uv buffer"),
         //     usage: BufferUsages::COPY_SRC | BufferUsages::STORAGE,
@@ -223,7 +226,7 @@ fn prepare_atlas_buffers(
 
         commands.entity(entity).insert(AtlasGpuBuffers {
             data,
-            uvs: gpu_array_buffer,
+            // uvs: gpu_array_buffer,
         });
     }
 }
@@ -232,16 +235,16 @@ fn prepare_atlas_buffers(
 #[repr(C)]
 
 pub struct GpuAtlasItem {
-    start: UVec2,
-    size: UVec2,
-    offset: IVec2,
-    padding: Vec2,
+    pub start: UVec2,
+    pub size: UVec2,
+    pub offset: IVec2,
+    pub padding: Vec2,
 }
 
 #[derive(Component)]
 pub struct AtlasGpuBuffers {
     pub data: Texture,
-    pub uvs: GpuArrayBuffer<GpuAtlasItem>,
+    // pub uvs: GpuArrayBuffer<GpuAtlasItem>,
 }
 
 fn prepare_buffers(
@@ -315,18 +318,28 @@ impl FromWorld for GlyphPipelineData {
                     shader_defs: Vec::new(),
                     entry_point: "vertex".into(),
                     buffers: vec![VertexBufferLayout {
-                        array_stride: 4 * 4,
+                        array_stride: 32,
                         step_mode: VertexStepMode::Instance,
                         attributes: vec![
                             VertexAttribute {
-                                format: VertexFormat::Uint32,
+                                format: VertexFormat::Uint32x2,
                                 offset: 0,
                                 shader_location: 0,
                             },
                             VertexAttribute {
-                                format: VertexFormat::Float32x3,
-                                offset: 4,
+                                format: VertexFormat::Uint32x2,
+                                offset: 8,
                                 shader_location: 1,
+                            },
+                            VertexAttribute {
+                                format: VertexFormat::Sint32x2,
+                                offset: 16,
+                                shader_location: 2,
+                            },
+                            VertexAttribute {
+                                format: VertexFormat::Float32x2,
+                                offset: 24,
+                                shader_location: 3,
                             },
                         ],
                     }],

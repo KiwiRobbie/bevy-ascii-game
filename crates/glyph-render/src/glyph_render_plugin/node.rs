@@ -126,7 +126,6 @@ impl render_graph::Node for GlyphGenerationNode {
                         &atlas_buffers
                             .data
                             .create_view(&wgpu::TextureViewDescriptor::default()),
-                        atlas_buffers.uvs.binding().unwrap(),
                     )),
                 );
 

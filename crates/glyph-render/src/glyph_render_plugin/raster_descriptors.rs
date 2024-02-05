@@ -13,7 +13,7 @@ use wgpu::{
 
 use super::{GlyphModelUniform, GlyphUniforms, GpuAtlasItem};
 
-pub fn raster_bind_group_layout(render_device: &RenderDevice) -> [BindGroupLayoutEntry; 5] {
+pub fn raster_bind_group_layout(render_device: &RenderDevice) -> [BindGroupLayoutEntry; 4] {
     [
         // UNIFORMS
         BindGroupLayoutEntry {
@@ -59,20 +59,5 @@ pub fn raster_bind_group_layout(render_device: &RenderDevice) -> [BindGroupLayou
             },
             count: None,
         },
-        // Atlas UV's
-        GpuArrayBuffer::<GpuAtlasItem>::binding_layout(
-            4,
-            ShaderStages::VERTEX_FRAGMENT,
-            render_device,
-        ), // BindGroupLayoutEntry {
-           //     binding: 4,
-           //     visibility: ShaderStages::VERTEX_FRAGMENT,
-           //     ty: BindingType::Buffer {
-           //         ty: BufferBindingType::Storage { read_only: true },
-           //         has_dynamic_offset: false,
-           //         min_binding_size: None,
-           //     },
-           //     count: None,
-           // },
     ]
 }
