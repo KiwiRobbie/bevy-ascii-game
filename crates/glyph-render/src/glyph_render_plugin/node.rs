@@ -6,7 +6,7 @@ use bevy::{
     },
     render::{
         render_graph,
-        render_resource::{BindGroupEntries, BindingResource, PipelineCache},
+        render_resource::{BindGroupEntries, PipelineCache},
         view::{ViewTarget, ViewUniforms},
     },
 };

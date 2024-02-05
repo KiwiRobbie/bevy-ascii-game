@@ -6,14 +6,11 @@ use bevy::{
         system::{Commands, Query, Res},
     },
     math::{IVec2, UVec2, Vec2},
-    render::renderer::{RenderDevice, RenderQueue},
+    render::renderer::RenderDevice,
 };
 use bytemuck::{cast_slice, Zeroable};
 use spatial_grid::position::Position;
-use wgpu::{
-    util::BufferInitDescriptor, BufferDescriptor, BufferUsages, Extent3d, TextureDescriptor,
-    TextureDimension, TextureFormat, TextureUsages,
-};
+use wgpu::{util::BufferInitDescriptor, BufferUsages};
 
 use crate::glyph_render_plugin::{
     ExtractedAtlas, ExtractedGlyphTexture, GpuAtlasItem, GpuGlyphTexture,
@@ -23,7 +20,6 @@ use super::GlyphBuffer;
 pub fn prepare_glyph_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
-    render_queue: Res<RenderQueue>,
     q_glyph_buffer: Query<(Entity, &GlyphBuffer, &ExtractedAtlas)>,
 
     q_textures: Query<(&Position, &ExtractedGlyphTexture)>,

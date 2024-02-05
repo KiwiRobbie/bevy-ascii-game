@@ -1,19 +1,12 @@
-use bevy::{
-    ecs::world::World,
-    render::{
-        render_resource::{GpuArrayBuffer, ShaderSize},
-        renderer::RenderDevice,
-        view::ViewUniform,
-    },
-};
+use bevy::render::{render_resource::ShaderSize, view::ViewUniform};
 use wgpu::{
     BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, ShaderStages,
     TextureViewDimension,
 };
 
-use super::{GlyphModelUniform, GlyphUniforms, GpuAtlasItem};
+use super::{GlyphModelUniform, GlyphUniforms};
 
-pub fn raster_bind_group_layout(render_device: &RenderDevice) -> [BindGroupLayoutEntry; 4] {
+pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 4] {
     [
         // UNIFORMS
         BindGroupLayoutEntry {

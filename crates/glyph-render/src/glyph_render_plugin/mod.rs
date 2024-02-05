@@ -11,7 +11,7 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
-use bytemuck::{cast_slice, Pod, Zeroable};
+use bytemuck::{Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
@@ -23,9 +23,7 @@ use crate::{
         extract::extract_glyph_buffers, prepare::prepare_glyph_buffers,
         update_glyph_buffer_entities,
     },
-    glyph_render_plugin::render_resources::{
-        GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer,
-    },
+    glyph_render_plugin::render_resources::{GlyphUniformBuffer, GlyphVertexBuffer},
 };
 
 use self::raster_descriptors::raster_bind_group_layout;
@@ -109,7 +107,7 @@ impl ExtractedGlyphTexture {
         for (y, chars) in text.iter().enumerate() {
             assert_eq!(text[y].len(), width);
             for (x, c) in chars.chars().enumerate() {
-                let index = (x + (height - y - 1) * width);
+                let index = x + (height - y - 1) * width;
                 let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
                 data[index] = *glyph_id;
             }
@@ -197,37 +195,7 @@ fn prepare_atlas_buffers(
             &atlas.data,
         );
 
-        // let mut gpu_array_buffer = GpuArrayBuffer::<GpuAtlasItem>::new(&render_device);
-        // for item in atlas.items.iter().map(|x| GpuAtlasItem {
-        //     offset: x.offset,
-        //     size: x.size,
-        //     start: x.start,
-        //     padding: Vec2::ZERO,
-        // }) {
-        //     gpu_array_buffer.push(item);
-        // }
-
-        // gpu_array_buffer.write_buffer(&render_device, &render_queue);
-        // let uvs = render_device.create_buffer_with_data(&BufferInitDescriptor {
-        //     label: Some("gpu font atlas uv buffer"),
-        //     usage: BufferUsages::COPY_SRC | BufferUsages::STORAGE,
-        //     contents: cast_slice(
-        //         &atlas
-        //             .items
-        //             .iter()
-        //             .map(|x| GpuAtlasItem {
-        //                 offset: x.offset,
-        //                 size: x.size,
-        //                 start: x.start,
-        //             })
-        //             .collect::<Box<[_]>>(),
-        //     ),
-        // });
-
-        commands.entity(entity).insert(AtlasGpuBuffers {
-            data,
-            // uvs: gpu_array_buffer,
-        });
+        commands.entity(entity).insert(AtlasGpuBuffers { data });
     }
 }
 
@@ -304,7 +272,7 @@ impl FromWorld for GlyphPipelineData {
             let glyph_raster_bind_group_layout =
                 render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: Some("glyph raster bind group layout"),
-                    entries: &raster_bind_group_layout(&render_device),
+                    entries: &raster_bind_group_layout(),
                 });
             let asset_server = render_world.get_resource::<AssetServer>().unwrap();
             let glyph_raster_shader = asset_server.load("shaders/glyph_raster.wgsl");
