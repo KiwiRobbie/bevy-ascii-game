@@ -71,8 +71,6 @@ pub fn mouse_interaction(
                 / grid.size.as_vec2();
             let position = position.as_ivec2() + IVec2::Y;
 
-            dbg!(position);
-
             let cursor_position = IVec2::new(1, -1) * position;
             if positioned.contains(cursor_position) {
                 commands

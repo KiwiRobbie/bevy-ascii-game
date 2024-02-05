@@ -15,7 +15,11 @@
 - Set physics grid sizes / ui root sizes in system
 - Game/UI layout + render independently
 
-# Glyph Colours
+# Rendering
+
+- Use instanced drawing instead of compute shader
+
+# # Glyph Colours
 
 - Option of solid colour or texture per character or shader
 - Learn how to enable/disable sections of shaders with features

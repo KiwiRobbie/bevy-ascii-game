@@ -9,7 +9,10 @@ use bevy::{
     render::renderer::{RenderDevice, RenderQueue},
 };
 use spatial_grid::position::Position;
-use wgpu::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages};
+use wgpu::{
+    util::BufferInitDescriptor, BufferDescriptor, BufferUsages, Extent3d, TextureDescriptor,
+    TextureDimension, TextureFormat, TextureUsages,
+};
 
 use crate::glyph_render_plugin::{ExtractedGlyphTexture, GpuGlyphTexture};
 
@@ -25,7 +28,7 @@ pub fn prepare_glyph_buffers(
     for (buffer_entity, buffer) in q_glyph_buffer.iter() {
         let buffer_width = buffer.size.x as usize;
         let buffer_height = buffer.size.y as usize;
-        let mut buffer_data: Box<[u8]> = vec![u8::MAX; 2 * buffer_height * buffer_width].into();
+        let mut buffer_data: Box<[u8]> = vec![u8::MAX; 4 * 4 * buffer_height * buffer_width].into();
 
         for (position, texture) in buffer.textures.iter().flat_map(|t| q_textures.get(*t)) {
             let source_size = UVec2::new(texture.width as u32, texture.height as u32);
@@ -62,33 +65,26 @@ pub fn prepare_glyph_buffers(
                         [texture.data[2 * src_index], texture.data[2 * src_index + 1]];
 
                     if data != [u8::MAX, u8::MAX] {
-                        buffer_data[2 * dst_index] = data[0];
-                        buffer_data[2 * dst_index + 1] = data[1];
+                        buffer_data[4 * 4 * dst_index] = data[0];
+                        buffer_data[4 * 4 * dst_index + 1] = data[1];
+                        buffer_data[4 * 4 * dst_index + 2] = 0;
+                        buffer_data[4 * 4 * dst_index + 3] = 0;
                     }
                 }
             }
         }
 
-        let storage_texture = render_device.create_texture_with_data(
-            &render_queue,
-            &TextureDescriptor {
-                label: Some("glyph buffer texture"),
-                size: Extent3d {
-                    width: buffer_width as u32,
-                    height: buffer_height as u32,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: TextureDimension::D2,
-                format: TextureFormat::R16Uint,
-                usage: TextureUsages::COPY_SRC | TextureUsages::STORAGE_BINDING,
-                view_formats: &[TextureFormat::R16Uint],
-            },
-            &buffer_data,
-        );
+        let vertex_buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
+            label: Some("glyph vertex buffer"),
+            usage: BufferUsages::STORAGE
+                | BufferUsages::COPY_SRC
+                | BufferUsages::COPY_DST
+                | BufferUsages::VERTEX,
+            contents: &buffer_data,
+        });
+
         commands.entity(buffer_entity).insert(GpuGlyphTexture {
-            storage_texture,
+            vertex_buffer,
             width: buffer_width as u32,
             height: buffer_height as u32,
         });

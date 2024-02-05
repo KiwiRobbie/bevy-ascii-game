@@ -15,11 +15,11 @@ use super::{
     GlyphModelUniformBuffer, GlyphPipelineData, GlyphUniforms,
 };
 
-pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 4] = [
+pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 5] = [
     // UNIFORMS
     BindGroupLayoutEntry {
         binding: 0,
-        visibility: ShaderStages::FRAGMENT,
+        visibility: ShaderStages::VERTEX_FRAGMENT,
         ty: BindingType::Buffer {
             ty: BufferBindingType::Uniform,
             has_dynamic_offset: false,
@@ -27,6 +27,7 @@ pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 4] = [
         },
         count: None,
     },
+    // VIEW
     BindGroupLayoutEntry {
         binding: 1,
         visibility: ShaderStages::VERTEX_FRAGMENT,
@@ -37,6 +38,7 @@ pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 4] = [
         },
         count: None,
     },
+    // MODEL
     BindGroupLayoutEntry {
         binding: 2,
         visibility: ShaderStages::VERTEX_FRAGMENT,
@@ -47,6 +49,7 @@ pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 4] = [
         },
         count: None,
     },
+    // Atlas Texture
     BindGroupLayoutEntry {
         binding: 3,
         visibility: ShaderStages::VERTEX_FRAGMENT,
@@ -54,6 +57,17 @@ pub const RASTER_BINDGROUP_LAYOUT: [BindGroupLayoutEntry; 4] = [
             access: StorageTextureAccess::ReadOnly,
             format: TextureFormat::Rgba8Unorm,
             view_dimension: TextureViewDimension::D2,
+        },
+        count: None,
+    },
+    // Atlas UV's
+    BindGroupLayoutEntry {
+        binding: 4,
+        visibility: ShaderStages::VERTEX_FRAGMENT,
+        ty: BindingType::Buffer {
+            ty: BufferBindingType::Storage { read_only: true },
+            has_dynamic_offset: false,
+            min_binding_size: None,
         },
         count: None,
     },
