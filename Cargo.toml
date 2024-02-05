@@ -19,6 +19,7 @@ bevy_common_assets = { version = "0.9.0", features = ["ron"] }
 serde = "1.0.195"
 futures = "0.3.30"
 ron = "0.8.1"
+wasm-bindgen = "0.2.90"
 
 [dependencies.bevy]
 version = "0.12.1"
@@ -46,7 +47,7 @@ features = [
     # "tonemapping_luts",
     # "default_font",
     # "webgl2", 
-    "dynamic_linking",
+    "webgl2",
 ]
 
 [dependencies.ascii-ui]
