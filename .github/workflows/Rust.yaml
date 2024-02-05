@@ -16,11 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Deploy to pages
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        folder: .
-        branch: github-pages
+
 
 
     - uses: hecrj/setup-rust-action@v2
@@ -41,3 +37,8 @@ jobs:
     - name: Generate WASM bindings
       run: wasm-bindgen --out-name bevy-ascii-game --out-dir web --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
 
+    - name: Deploy to pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: web
+        branch: github-pages
