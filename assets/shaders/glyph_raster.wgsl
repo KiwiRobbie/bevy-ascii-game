@@ -73,10 +73,7 @@ fn vertex(input: InstanceInput) -> VertexOutput {
 fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     let coords = vec2<u32>(vec2<f32>(0.375) + vec2<f32>(textureDimensions(atlas_texture).xy) * input.uv);
     let sample_color = textureLoad(atlas_texture, coords, 0);
-    
     let max_component = max(max(sample_color.r, sample_color.g), sample_color.b);
-    let color: vec3<f32> = clamp(sample_color.rgb / max_component, vec3<f32>(0.0), vec3<f32>(1.0));
-    let alpha: f32 = clamp(max_component * sample_color.a, 0.0, 1.0);
-
-    return vec4<f32>(color, alpha) * uniform_buffer.color ;
+    return vec4<f32>(sample_color.rgb / max_component, max_component * sample_color.a) * uniform_buffer.color ;
+    // return vec4<f32>(input.uv, 1.0, 1.0);
 }
