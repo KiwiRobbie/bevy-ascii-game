@@ -20,5 +20,14 @@ jobs:
         rust-version: nightly
         targets: wasm32-unknown-unknown
     - uses: actions/checkout@master
-    - name: Run tests
+    - name: Build WASM
       run: cargo build --release --target wasm32-unknown-unknown
+    - name: Install Bindgen
+      run:  cargo install wasm-bindgen-cli     
+    - name: Generate WASM bindings
+      run: wasm-bindgen --out-name bevy-ascii-game --out-dir web --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
+    - name: Deploy to pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: web 
+        branch: github-pages
