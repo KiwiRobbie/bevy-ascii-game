@@ -51,7 +51,9 @@ pub fn extract_glyph_buffers(
     glyph_animations: Extract<Res<Assets<GlyphAnimationSource>>>,
 ) {
     for (buffer_entity, transform, buffer, font, font_size, grid) in q_glyph_buffer.iter() {
-        let font = fonts.get(font.id()).unwrap();
+        let Some(font) = fonts.get(font.id()) else {
+            continue;
+        };
 
         let atlas = atlas_cache
             .cached

@@ -62,7 +62,9 @@ pub fn animation_graph_player(
             }
         }
 
-        let graph_source = glyph_animation_graphs.get(graph.source.clone()).unwrap();
+        let Some(graph_source) = glyph_animation_graphs.get(graph.source.clone()) else {
+            continue;
+        };
         let new_animation_component =
             if let Some(transition_animation) = current.transitional_states.pop() {
                 GlyphAnimation {
@@ -93,7 +95,9 @@ pub fn animation_graph_traverse(
     glyph_animation_graphs: Res<Assets<GlyphAnimationGraphSource>>,
 ) {
     for (graph, mut current, target) in q_players.iter_mut() {
-        let graph_source = glyph_animation_graphs.get(graph.source.clone()).unwrap();
+        let Some(graph_source) = glyph_animation_graphs.get(graph.source.clone()) else {
+            continue;
+        };
         let target = *graph_source.state_names.get(&**target).unwrap();
 
         if current.current_state != target {

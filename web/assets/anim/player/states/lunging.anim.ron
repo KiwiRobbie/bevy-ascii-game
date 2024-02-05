@@ -1,0 +1,14 @@
+(
+    name: "player_lunging",
+    size: (14, 8),
+    frames: [
+        (
+            (
+                asset: "art/player/player_attacks.art",
+                start: Frame(0, 4),
+                frame_count: Single,
+            ),
+            Auto(-8,0),
+        ),
+    ],
+)

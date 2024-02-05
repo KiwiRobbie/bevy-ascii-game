@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use bevy::{
+    ecs::system::SystemState,
     prelude::*,
     render::{
         extract_component::ExtractComponent,
@@ -27,7 +28,7 @@ use crate::{
     },
 };
 
-use self::raster_descriptors::RASTER_BINDGROUP_LAYOUT;
+use self::raster_descriptors::raster_bind_group_layout;
 
 mod node;
 mod raster_descriptors;
@@ -187,46 +188,60 @@ fn prepare_atlas_buffers(
                 sample_count: 1,
                 dimension: bevy::render::render_resource::TextureDimension::D2,
                 format: TextureFormat::Rgba8Unorm,
-                usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_SRC,
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
                 view_formats: &[TextureFormat::Rgba8Unorm],
             },
             &atlas.data,
         );
 
-        let uvs = render_device.create_buffer_with_data(&BufferInitDescriptor {
-            label: Some("gpu font atlas uv buffer"),
-            usage: BufferUsages::COPY_SRC | BufferUsages::STORAGE,
-            contents: cast_slice(
-                &atlas
-                    .items
-                    .iter()
-                    .map(|x| GpuAtlasItem {
-                        offset: x.offset,
-                        size: x.size,
-                        start: x.start,
-                    })
-                    .collect::<Box<[_]>>(),
-            ),
-        });
+        let mut gpu_array_buffer = GpuArrayBuffer::<GpuAtlasItem>::new(&render_device);
+        for item in atlas.items.iter().map(|x| GpuAtlasItem {
+            offset: x.offset,
+            size: x.size,
+            start: x.start,
+            padding: Vec2::ZERO,
+        }) {
+            gpu_array_buffer.push(item);
+        }
 
-        commands
-            .entity(entity)
-            .insert(AtlasGpuBuffers { data, uvs });
+        gpu_array_buffer.write_buffer(&render_device, &render_queue);
+        // let uvs = render_device.create_buffer_with_data(&BufferInitDescriptor {
+        //     label: Some("gpu font atlas uv buffer"),
+        //     usage: BufferUsages::COPY_SRC | BufferUsages::STORAGE,
+        //     contents: cast_slice(
+        //         &atlas
+        //             .items
+        //             .iter()
+        //             .map(|x| GpuAtlasItem {
+        //                 offset: x.offset,
+        //                 size: x.size,
+        //                 start: x.start,
+        //             })
+        //             .collect::<Box<[_]>>(),
+        //     ),
+        // });
+
+        commands.entity(entity).insert(AtlasGpuBuffers {
+            data,
+            uvs: gpu_array_buffer,
+        });
     }
 }
 
 #[derive(ShaderType, Pod, Clone, Copy, Zeroable)]
 #[repr(C)]
-struct GpuAtlasItem {
+
+pub struct GpuAtlasItem {
     start: UVec2,
     size: UVec2,
     offset: IVec2,
+    padding: Vec2,
 }
 
-#[derive(Component, Clone)]
+#[derive(Component)]
 pub struct AtlasGpuBuffers {
     pub data: Texture,
-    pub uvs: Buffer,
+    pub uvs: GpuArrayBuffer<GpuAtlasItem>,
 }
 
 fn prepare_buffers(
@@ -279,16 +294,16 @@ struct GlyphPipelineData {
 
 impl FromWorld for GlyphPipelineData {
     fn from_world(render_world: &mut World) -> Self {
-        let asset_server = render_world.get_resource::<AssetServer>().unwrap();
+        let mut system_state: SystemState<Res<RenderDevice>> = SystemState::new(render_world);
+        let render_device = system_state.get_mut(render_world);
 
         let (glyph_raster_pipeline_id, glyph_raster_bind_group_layout) = {
-            let glyph_raster_bind_group_layout = render_world
-                .resource::<RenderDevice>()
-                .create_bind_group_layout(&BindGroupLayoutDescriptor {
+            let glyph_raster_bind_group_layout =
+                render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: Some("glyph raster bind group layout"),
-                    entries: &RASTER_BINDGROUP_LAYOUT,
+                    entries: &raster_bind_group_layout(&render_device),
                 });
-
+            let asset_server = render_world.get_resource::<AssetServer>().unwrap();
             let glyph_raster_shader = asset_server.load("shaders/glyph_raster.wgsl");
 
             let raster_pipeline_descriptor = RenderPipelineDescriptor {

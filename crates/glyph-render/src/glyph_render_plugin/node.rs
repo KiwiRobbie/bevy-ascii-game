@@ -83,9 +83,12 @@ impl render_graph::Node for GlyphGenerationNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let glyph_pipeline_data = world.get_resource::<GlyphPipelineData>().unwrap();
 
-        let raster_pipeline = pipeline_cache
-            .get_render_pipeline(glyph_pipeline_data.glyph_raster_pipeline_id)
-            .unwrap();
+        let Some(raster_pipeline) =
+            pipeline_cache.get_render_pipeline(glyph_pipeline_data.glyph_raster_pipeline_id)
+        else {
+            dbg!("Early return!");
+            return Ok(());
+        };
 
         let glyph_raster_render_pass_descriptor = RenderPassDescriptor {
             label: Some("glyph raster pass"),
@@ -123,7 +126,7 @@ impl render_graph::Node for GlyphGenerationNode {
                         &atlas_buffers
                             .data
                             .create_view(&wgpu::TextureViewDescriptor::default()),
-                        BindingResource::Buffer(atlas_buffers.uvs.as_entire_buffer_binding()),
+                        atlas_buffers.uvs.binding().unwrap(),
                     )),
                 );
 
@@ -131,7 +134,7 @@ impl render_graph::Node for GlyphGenerationNode {
                     .command_encoder()
                     .begin_render_pass(&glyph_raster_render_pass_descriptor);
 
-                render_pass.set_bind_group(0, &bind_group, &[]);
+                render_pass.set_bind_group(0, &bind_group, &[0]);
                 render_pass.set_pipeline(raster_pipeline);
                 render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
 
