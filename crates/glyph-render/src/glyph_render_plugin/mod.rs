@@ -7,12 +7,12 @@ use bevy::{
         render_graph::RenderGraphApp,
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
-        Extract, Render, RenderApp, RenderSet,
+        Render, RenderApp, RenderSet,
     },
 };
 use bytemuck::{cast_slice, Pod, Zeroable};
-use grid_physics::grid::PhysicsGrid;
 pub use node::GlyphGenerationNode;
+use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
 
 use crate::{
@@ -46,15 +46,7 @@ impl Plugin for GlyphRenderPlugin {
             .add_systems(PostUpdate, update_glyph_buffer_entities);
         app.get_sub_app_mut(RenderApp)
             .unwrap()
-            .add_systems(
-                ExtractSchedule,
-                (
-                    extract_glyph_buffers,
-                    // extract_glyph_sprites,
-                    // extract_glyph_animations,
-                    // extract_solid_color,
-                ),
-            )
+            .add_systems(ExtractSchedule, (extract_glyph_buffers,))
             .add_systems(
                 Render,
                 (prepare_atlas_buffers, prepare_glyph_buffers).in_set(RenderSet::PrepareAssets),
@@ -179,15 +171,6 @@ pub struct GlyphModelUniformBuffer(pub UniformBuffer<GlyphModelUniform>);
 #[derive(Debug, Component, Clone)]
 pub struct GlyphSpriteMirrored;
 
-fn extract_solid_color(
-    mut commands: Commands,
-    q_glyph_animations: Extract<Query<(Entity, &GlyphSolidColor)>>,
-) {
-    for (entity, color) in q_glyph_animations.iter() {
-        commands.insert_or_spawn_batch([(entity, color.clone())]);
-    }
-}
-
 fn prepare_atlas_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
@@ -257,7 +240,7 @@ fn prepare_buffers(
         Option<&GlyphSolidColor>,
         &GlobalTransform,
         &GpuGlyphTexture,
-        &PhysicsGrid,
+        &SpatialGrid,
     )>,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,

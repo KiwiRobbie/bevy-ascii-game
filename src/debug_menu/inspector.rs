@@ -16,7 +16,8 @@ use bevy::{
     math::{IVec2, UVec2, Vec2},
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
-use grid_physics::{position::Position, velocity::Velocity};
+use grid_physics::velocity::Velocity;
+use spatial_grid::position::Position;
 
 use crate::player::{
     input::keyboard::PlayerInputKeyboardMarker, movement::jump::PlayerJumpVelocity,

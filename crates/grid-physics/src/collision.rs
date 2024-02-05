@@ -2,8 +2,9 @@ use bevy::{
     ecs::{component::Component, entity::Entity},
     math::{IVec2, UVec2},
 };
+use spatial_grid::direction::Direction;
 
-use super::{direction::Direction, solid::SolidCollisionCache};
+use super::solid::SolidCollisionCache;
 
 #[derive(Component, Default, Clone)]
 pub struct Collider {

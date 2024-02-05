@@ -51,8 +51,9 @@ features = [
 [dependencies.text-util]
 path = "../text-util"
 
-[dependencies.grid-physics]
-path = "../grid-physics"
+
+[dependencies.spatial-grid]
+path = "../spatial-grid"
 
 [lib]
 

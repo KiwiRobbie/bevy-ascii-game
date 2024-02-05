@@ -7,7 +7,7 @@ use bevy::{
     math::{IVec2, Vec2},
 };
 use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTextureSource};
-use grid_physics::position::Position;
+use spatial_grid::position::Position;
 
 use crate::{layout::positioned::Positioned, widgets::text::Text};
 

@@ -10,7 +10,7 @@ use bevy::{
         component::Component,
         entity::Entity,
         event::EventReader,
-        query::{Added, With},
+        query::With,
         schedule::IntoSystemConfigs,
         system::{Commands, Local, Query, Res, ResMut},
     },
@@ -37,7 +37,7 @@ use bevy_ascii_game::{
 };
 use glyph_render::{
     atlas::FontAtlasPlugin,
-    font::{font_load_system, FontSize},
+    font::font_load_system,
     glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{
@@ -51,11 +51,11 @@ use grid_physics::{
     gravity::Gravity,
     movement::Movement,
     plugin::PhysicsPlugin,
-    position::{Position, PositionBundle},
     sets::physics_systems_enabled,
     solid::{FilterSolids, SolidPhysicsBundle},
     velocity::Velocity,
 };
+use spatial_grid::position::{Position, PositionBundle};
 
 fn main() {
     let mut app = App::new();

@@ -8,11 +8,11 @@ use bevy::{
     },
     math::{IVec2, Vec2},
 };
+use spatial_grid::position::{Position, PositionBundle};
 
 use super::{
     collision::Collider,
     movement::{Movement, MovementObstructed},
-    position::{Position, PositionBundle},
     solid::{Solid, SolidCollisionCache},
 };
 

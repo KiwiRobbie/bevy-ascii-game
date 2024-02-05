@@ -2,13 +2,15 @@ use bevy::{
     prelude::*,
     utils::{EntityHashMap, EntityHashSet},
 };
+use spatial_grid::{
+    direction::Direction,
+    position::{Position, PositionBundle},
+};
 
 use super::{
     actor::{Actor, FilterActors},
     collision::{Aabb, Collider},
-    direction::Direction,
     movement::Movement,
-    position::{Position, PositionBundle},
 };
 
 #[derive(Component, Default)]

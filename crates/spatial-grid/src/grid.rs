@@ -9,6 +9,6 @@ pub struct PhysicsGridMember {
 }
 
 #[derive(Component, Clone)]
-pub struct PhysicsGrid {
+pub struct SpatialGrid {
     pub size: UVec2,
 }

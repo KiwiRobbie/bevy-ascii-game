@@ -15,19 +15,17 @@ use bevy::{
         keyboard::KeyCode,
         Input,
     },
-    math::IVec2,
-    render::camera::Camera,
     time::Time,
-    transform::components::GlobalTransform,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
 use grid_physics::{
     actor::Actor,
     debug::{DebugCollisions, DebugPositions},
-    grid::PhysicsGrid,
     sets::EnablePhysicsSystems,
     solid::Solid,
 };
+
+use spatial_grid::grid::SpatialGrid;
 
 use crate::{physics_grids::UiPhysicsGrid, player::PlayerMarker};
 
@@ -61,12 +59,12 @@ pub fn toggle_menu(
 pub fn update_position(
     mut q_root: Query<&mut Root, With<DebugMenuMarker>>,
     ui_grid: Res<UiPhysicsGrid>,
-    q_ui_grid: Query<(&PhysicsGrid, &GlyphBuffer)>,
+    q_ui_grid: Query<(&SpatialGrid, &GlyphBuffer)>,
 ) {
     let Some(grid) = **ui_grid else {
         return;
     };
-    let Ok((grid, buffer)) = q_ui_grid.get(grid) else {
+    let Ok((_grid, buffer)) = q_ui_grid.get(grid) else {
         return;
     };
 

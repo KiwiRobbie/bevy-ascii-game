@@ -6,11 +6,11 @@ use bevy::{
         entity::Entity,
         system::{Commands, Query, Res},
     },
-    math::{IVec2, UVec2},
+    math::IVec2,
     render::Extract,
     transform::components::GlobalTransform,
 };
-use grid_physics::{grid::PhysicsGrid, position::Position};
+use spatial_grid::{grid::SpatialGrid, position::Position};
 
 use crate::{
     atlas::FontAtlasCache,
@@ -34,7 +34,7 @@ pub fn extract_glyph_buffers(
             &GlyphBuffer,
             &CustomFont,
             &FontSize,
-            &PhysicsGrid,
+            &SpatialGrid,
         )>,
     >,
     q_textures: Extract<

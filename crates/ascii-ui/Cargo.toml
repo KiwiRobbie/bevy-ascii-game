@@ -48,8 +48,8 @@ features = [
 
     "dynamic_linking",
 ]
-[dependencies.grid-physics]
-path = "../grid-physics"
+[dependencies.spatial-grid]
+path = "../spatial-grid"
 [dependencies.glyph-render]
 path = "../glyph-render"
 

@@ -8,7 +8,7 @@ use bevy::{
     math::{IVec2, UVec2},
     render::renderer::{RenderDevice, RenderQueue},
 };
-use grid_physics::position::Position;
+use spatial_grid::position::Position;
 use wgpu::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages};
 
 use crate::glyph_render_plugin::{ExtractedGlyphTexture, GpuGlyphTexture};

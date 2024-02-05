@@ -1,15 +1,14 @@
 use bevy::{
     ecs::{
         event::EventReader,
-        query::With,
-        system::{Query, Res, ResMut},
+        system::{Query, Res},
     },
     math::{UVec2, Vec2},
     transform::components::Transform,
     window::WindowResized,
 };
 use glyph_render::{font::FontSize, glyph_buffer::GlyphBuffer};
-use grid_physics::grid::PhysicsGrid;
+use spatial_grid::grid::SpatialGrid;
 
 use super::{GamePhysicsGrid, UiPhysicsGrid};
 
@@ -17,7 +16,7 @@ pub fn grid_resize_update(
     mut resize_reader: EventReader<WindowResized>,
     mut q_glyph_buffer: Query<(
         &mut Transform,
-        &mut PhysicsGrid,
+        &mut SpatialGrid,
         &mut FontSize,
         &mut GlyphBuffer,
     )>,

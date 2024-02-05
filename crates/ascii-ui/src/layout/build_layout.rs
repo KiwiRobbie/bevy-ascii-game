@@ -9,7 +9,7 @@ use bevy::{
     math::IVec2,
 };
 use glyph_render::glyph_buffer::TargetGlyphBuffer;
-use grid_physics::grid::PhysicsGridMember;
+use spatial_grid::grid::PhysicsGridMember;
 
 use crate::{
     attachments::Root,

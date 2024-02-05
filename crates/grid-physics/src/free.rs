@@ -7,13 +7,13 @@ use bevy::{
     },
     time::Time,
 };
+use spatial_grid::position::Position;
 
 use super::{
     actor::Actor,
     collision::Collider,
     gravity::{Gravity, GravityResource},
     movement::{Movement, MovementObstructed},
-    position::Position,
     solid::{FilterSolids, RidingEntities, SolidCollisionCache},
     velocity::Velocity,
 };

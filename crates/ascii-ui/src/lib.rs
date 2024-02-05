@@ -1,16 +1,13 @@
 use bevy::{
-    ecs::{
-        query::With,
-        system::{Query, Res},
-    },
+    ecs::{query::With, system::Query},
     gizmos::gizmos::Gizmos,
     math::Vec2,
     render::color::Color,
     transform::components::Transform,
 };
-use grid_physics::grid::{PhysicsGrid, PhysicsGridMember};
 use layout::positioned::Positioned;
 use mouse::ActiveMarker;
+use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
 pub mod attachments;
 pub mod layout;
@@ -23,7 +20,7 @@ pub mod widgets;
 pub fn debug_positions(
     mut gizmos: Gizmos,
     q_positioned: Query<(&Positioned, &PhysicsGridMember), With<ActiveMarker>>,
-    q_physics_grid: Query<(&PhysicsGrid, &Transform)>,
+    q_physics_grid: Query<(&SpatialGrid, &Transform)>,
 ) {
     for (positioned, grid_member) in q_positioned.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {

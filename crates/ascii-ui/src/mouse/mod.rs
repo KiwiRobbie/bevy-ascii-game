@@ -9,11 +9,11 @@ use bevy::{
     input::{mouse::MouseButton, Input},
     math::{IVec2, Vec4Swizzles},
     render::{camera::Camera, color::Color},
-    transform::components::{GlobalTransform, Transform},
+    transform::components::GlobalTransform,
     window::{PrimaryWindow, Window},
 };
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
-use grid_physics::grid::{PhysicsGrid, PhysicsGridMember};
+use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
 use crate::layout::positioned::Positioned;
 
@@ -42,7 +42,7 @@ pub fn mouse_interaction(
     q_triggered: Query<Entity, With<TriggeredMarker>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     q_mouse_buttons: Res<Input<MouseButton>>,
-    q_physics_grid: Query<(&PhysicsGrid, &GlobalTransform)>,
+    q_physics_grid: Query<(&SpatialGrid, &GlobalTransform)>,
 ) {
     let (camera, camera_transform) = q_camera.single();
 

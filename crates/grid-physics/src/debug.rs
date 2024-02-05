@@ -6,14 +6,12 @@ use bevy::{
     render::color::Color,
     transform::components::Transform,
 };
-
-use crate::{
-    actor::Actor,
-    collision::Collider,
-    grid::{PhysicsGrid, PhysicsGridMember},
+use spatial_grid::{
+    grid::{PhysicsGridMember, SpatialGrid},
     position::Position,
-    solid::Solid,
 };
+
+use crate::{actor::Actor, collision::Collider, solid::Solid};
 
 #[derive(Debug, Resource, Default, DerefMut, Deref)]
 pub struct DebugCollisions(pub bool);
@@ -27,7 +25,7 @@ pub fn debug_collision_system(
         Option<&Solid>,
         Option<&Actor>,
     )>,
-    q_physics_grid: Query<(&PhysicsGrid, &Transform)>,
+    q_physics_grid: Query<(&SpatialGrid, &Transform)>,
     enabled: Res<DebugCollisions>,
 ) {
     if !**enabled {
@@ -60,7 +58,7 @@ pub struct DebugPositions(pub bool);
 pub fn debug_position_system(
     mut gizmos: Gizmos,
     q_position: Query<(&Position, &PhysicsGridMember)>,
-    q_physics_grid: Query<(&PhysicsGrid, &Transform)>,
+    q_physics_grid: Query<(&SpatialGrid, &Transform)>,
     enabled: Res<DebugPositions>,
 ) {
     if !**enabled {

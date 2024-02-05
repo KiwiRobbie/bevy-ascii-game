@@ -11,20 +11,17 @@ use bevy::{
 };
 
 use glyph_render::{
-    atlas::{CharacterSet, FontAtlasUser},
-    font::{CustomFont, FontSize},
-    glyph_animation_graph::bundle::GlyphAnimationGraphBundle,
-    glyph_buffer::TargetGlyphBuffer,
-    glyph_render_plugin::{GlyphSolidColor, GlyphSpriteMirrored},
+    glyph_animation_graph::bundle::GlyphAnimationGraphBundle, glyph_buffer::TargetGlyphBuffer,
+    glyph_render_plugin::GlyphSolidColor,
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
     collision::{Aabb, Collider, CollisionShape},
     free::FreeMarker,
     gravity::Gravity,
-    position::{Position, PositionBundle},
     velocity::Velocity,
 };
+use spatial_grid::position::{Position, PositionBundle};
 
 use super::{
     input::{controller::PlayerInputController, PlayerInputReset},
@@ -77,7 +74,6 @@ pub fn create_player<'w, 's, 'a>(
                         position: IVec2 { x: 10, y: 10 },
                         ..Default::default()
                     },
-                    ..Default::default()
                 },
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {
