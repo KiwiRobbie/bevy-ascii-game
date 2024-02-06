@@ -15,6 +15,7 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
+    log,
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
@@ -64,6 +65,7 @@ fn main() {
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
                 primary_window: Some(Window {
+                    fit_canvas_to_parent: true,
                     resolution: WindowResolution::default().with_scale_factor_override(1.0),
                     ..Default::default()
                 }),
@@ -343,7 +345,7 @@ fn keyboard_input_system(
     }
 
     for character in ev_character.read() {
-        dbg!(character.char);
+        log::info!("{:?}", character);
         if character.char == '\u{8}' {
             *position = (*position + width * height - 1).rem_euclid(width * height);
             let (x, y) = get_pos(*position, width, height);

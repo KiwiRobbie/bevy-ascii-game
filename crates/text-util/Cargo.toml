@@ -45,7 +45,7 @@ features = [
     # "tonemapping_luts",
     # "default_font",
     # "webgl2", 
-    "dynamic_linking",
+    "webgl2",
 ]
 
 

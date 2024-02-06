@@ -6,16 +6,14 @@ use bevy::{
     },
     render::{
         render_graph,
-        render_resource::{ComputePassDescriptor, PipelineCache},
-        view::ViewTarget,
+        render_resource::{BindGroupEntries, PipelineCache},
+        view::{ViewTarget, ViewUniforms},
     },
 };
 use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
 
 use super::{
-    generation_descriptors::{self},
-    raster_descriptors,
-    render_resources::{GlyphStorageTexture, GlyphUniformBuffer, GlyphVertexBuffer},
+    render_resources::{GlyphUniformBuffer, GlyphVertexBuffer},
     AtlasGpuBuffers, GlyphModelUniformBuffer, GlyphPipelineData, GlyphTextureInfo,
 };
 
@@ -23,9 +21,8 @@ type RenderResourceQuery = (
     &'static GlyphModelUniformBuffer,
     &'static GlyphUniformBuffer,
     &'static GlyphTextureInfo,
-    &'static GlyphStorageTexture,
-    &'static AtlasGpuBuffers,
     &'static GlyphVertexBuffer,
+    &'static AtlasGpuBuffers,
 );
 
 // type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
@@ -86,18 +83,13 @@ impl render_graph::Node for GlyphGenerationNode {
         let pipeline_cache = world.resource::<PipelineCache>();
         let glyph_pipeline_data = world.get_resource::<GlyphPipelineData>().unwrap();
 
-        let (generation_pipeline, raster_pipeline) = (
-            pipeline_cache
-                .get_compute_pipeline(glyph_pipeline_data.glyph_generation_pipeline_id)
-                .unwrap(),
-            pipeline_cache
-                .get_render_pipeline(glyph_pipeline_data.glyph_raster_pipeline_id)
-                .unwrap(),
-        );
-
-        let glyph_generation_compute_pass_descriptor = ComputePassDescriptor {
-            label: Some("glyph generation pass"),
+        let Some(raster_pipeline) =
+            pipeline_cache.get_render_pipeline(glyph_pipeline_data.glyph_raster_pipeline_id)
+        else {
+            dbg!("Early return!");
+            return Ok(());
         };
+
         let glyph_raster_render_pass_descriptor = RenderPassDescriptor {
             label: Some("glyph raster pass"),
             color_attachments: &[Some(RenderPassColorAttachment {
@@ -115,9 +107,8 @@ impl render_graph::Node for GlyphGenerationNode {
             glyph_model_uniforms,
             glyph_uniform_buffer,
             glyph_texture_info,
-            glyph_storage_texture,
-            atlas_buffers,
             vertex_buffer,
+            atlas_buffers,
         ) in self
             .entities
             .iter()
@@ -125,37 +116,17 @@ impl render_graph::Node for GlyphGenerationNode {
         {
             {
                 let render_device = render_context.render_device();
-                let glyph_generation_bind_group = generation_descriptors::create_bind_group(
-                    render_device,
-                    glyph_pipeline_data,
-                    glyph_uniform_buffer,
-                    glyph_storage_texture,
-                    atlas_buffers,
-                    vertex_buffer,
-                );
-                let mut glyph_generation_compute_pass = render_context
-                    .command_encoder()
-                    .begin_compute_pass(&glyph_generation_compute_pass_descriptor);
-
-                glyph_generation_compute_pass.set_bind_group(0, &glyph_generation_bind_group, &[]);
-                glyph_generation_compute_pass.set_pipeline(generation_pipeline);
-
-                glyph_generation_compute_pass.dispatch_workgroups(
-                    glyph_texture_info.width,
-                    glyph_texture_info.height,
-                    1,
-                );
-            }
-
-            {
-                let render_device = render_context.render_device();
-                let bind_group = raster_descriptors::create_bind_group(
-                    render_device,
-                    glyph_pipeline_data,
-                    world,
-                    glyph_uniform_buffer,
-                    glyph_model_uniforms,
-                    atlas_buffers,
+                let bind_group = render_device.create_bind_group(
+                    Some("raster bind group".into()),
+                    &glyph_pipeline_data.glyph_raster_bind_group_layout,
+                    &BindGroupEntries::sequential((
+                        glyph_uniform_buffer.binding().unwrap(),
+                        world.resource::<ViewUniforms>().uniforms.binding().unwrap(),
+                        glyph_model_uniforms.binding().unwrap(),
+                        &atlas_buffers
+                            .data
+                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                    )),
                 );
 
                 let mut render_pass = render_context
@@ -167,11 +138,9 @@ impl render_graph::Node for GlyphGenerationNode {
                 render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
 
                 render_pass.draw(
-                    0..6 * glyph_texture_info.width * glyph_texture_info.height,
-                    0..1,
+                    0..6,
+                    0..glyph_texture_info.width * glyph_texture_info.height,
                 );
-
-                vertex_buffer.unmap();
             }
         }
         Ok(())

@@ -3,6 +3,7 @@ use bevy::{
         event::EventReader,
         system::{Query, Res},
     },
+    log,
     math::{UVec2, Vec2},
     transform::components::Transform,
     window::WindowResized,
@@ -28,6 +29,8 @@ pub fn grid_resize_update(
     };
 
     if let Some(e) = resize_reader.read().last() {
+        log::info!("{:?}", e);
+
         if let Ok((mut transform, mut grid, mut font_size, mut buffer)) =
             q_glyph_buffer.get_mut(game_grid)
         {
