@@ -1,6 +1,6 @@
 pub mod meta;
 
-use std::{fs::DirEntry, path::PathBuf};
+use std::path::PathBuf;
 
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
@@ -10,7 +10,7 @@ use bevy::{
 
 use crate::tileset::asset::TilesetSource;
 
-use self::meta::{ChunkDataLocation, ChunkMeta, TilemapMeta};
+use self::meta::{ChunkMeta, TilemapMeta};
 
 use super::{asset::TilemapSource, chunk::TilemapChunk};
 
@@ -55,18 +55,12 @@ impl AssetLoader for TilemapLoader {
 
             let mut chunk_data: HashMap<IVec2, TilemapChunk> = HashMap::new();
 
-            let directory = match &meta.chunks {
-                ChunkDataLocation::Dir(path) => PathBuf::from(path),
-                ChunkDataLocation::Relative(path) => {
-                    load_context.path().parent().unwrap().join(path)
-                }
-            };
-            for entry in PathBuf::from("assets").join(&directory).read_dir().unwrap() {
-                let Ok(entry) = entry else {
-                    continue;
-                };
-                let Some((pos, meta)) = load_chunk(directory.clone(), entry, load_context).await
-                else {
+            for pos in meta.chunks.iter() {
+                let pos: IVec2 = (*pos).into();
+                let path =
+                    PathBuf::from(&meta.chunk_dir).join(format!("{}_{}.chunk.ron", pos.x, pos.y));
+                let data = load_context.read_asset_bytes(path).await.unwrap();
+                let Some(meta) = ron::de::from_bytes::<ChunkMeta>(&data).ok() else {
                     continue;
                 };
                 let mut data = vec![];
@@ -74,7 +68,10 @@ impl AssetLoader for TilemapLoader {
                 for row in meta.iter() {
                     for (tileset, tile) in row.iter() {
                         let tileset = *tileset_names.get(tileset).unwrap();
-                        let tile = *tilesets[tileset].tile_names.get(tile).unwrap();
+                        let tile = *tilesets[tileset]
+                            .tile_names
+                            .get(tile)
+                            .expect(format!("Tile map missing {}", tile).as_str());
                         data.push((tileset as u32, tile as u32));
                     }
                 }
@@ -101,32 +98,4 @@ impl AssetLoader for TilemapLoader {
             }))
         })
     }
-}
-fn load_chunk<'a>(
-    directory: PathBuf,
-    chunk_entry: DirEntry,
-    load_context: &'a mut bevy::asset::LoadContext,
-) -> bevy::utils::BoxedFuture<'a, Option<(IVec2, ChunkMeta)>> {
-    Box::pin(async move {
-        dbg!(&chunk_entry);
-
-        let file_name = chunk_entry.file_name();
-        let name = file_name.to_str().unwrap();
-        let (coords, suffix) = name.split_once('.')?;
-        if suffix != "chunk.ron" {
-            return None;
-        }
-        let (x, y) = coords.split_once('_')?;
-
-        let x = x.parse::<i32>().ok()?;
-        let y = y.parse::<i32>().ok()?;
-        let pos = IVec2 { x, y };
-
-        let data = load_context
-            .read_asset_bytes(directory.join(file_name))
-            .await
-            .unwrap();
-        let meta = ron::de::from_bytes::<ChunkMeta>(&data).ok()?;
-        Some((pos, meta))
-    })
 }
