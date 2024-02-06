@@ -103,7 +103,7 @@ pub fn extract_tilemaps(
                             let tile_offset = UVec2::new(
                                 (index as u32).rem_euclid(tilemap.chunk_size.x),
                                 (index as u32).div_euclid(tilemap.chunk_size.x),
-                            ) * 4;
+                            ) * tileset.tile_size;
 
                             let data = &tileset.tiles[tile.1 as usize];
 

@@ -44,7 +44,8 @@ impl Plugin for GlyphRenderPlugin {
             .add_systems(ExtractSchedule, (extract_glyph_buffers,))
             .add_systems(
                 Render,
-                (prepare_glyph_buffers).in_set(RenderSet::PrepareAssets),
+                (update_glyph_buffer_entities, prepare_glyph_buffers)
+                    .in_set(RenderSet::PrepareAssets),
             )
             .add_systems(
                 Render,
