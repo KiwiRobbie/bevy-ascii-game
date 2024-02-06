@@ -5,7 +5,7 @@ use bevy::{
         entity::Entity,
         system::{Commands, Query, Res},
     },
-    math::{IVec2, UVec2, Vec2, Vec4},
+    math::{IVec2, UVec2, Vec2},
     render::{color::Color, renderer::RenderDevice},
 };
 use bytemuck::{cast_slice, Zeroable};
@@ -21,7 +21,6 @@ pub fn prepare_glyph_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
     q_glyph_buffer: Query<(Entity, &GlyphBuffer, &ExtractedAtlas)>,
-
     q_textures: Query<(&Position, &ExtractedGlyphTexture, Option<&GlyphSolidColor>)>,
 ) {
     for (buffer_entity, buffer, atlas) in q_glyph_buffer.iter() {

@@ -1,3 +1,7 @@
 {
-    "rust-analyzer.rename.allowExternalItems": true,
+  "rust-analyzer.rename.allowExternalItems": true,
+  "cSpell.words": [
+    "Tilemap",
+    "tilesets"
+  ]
 }
