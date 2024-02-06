@@ -1,0 +1,7 @@
+(
+    chunk_size: (4,4),
+    tilesets: [
+        "tilesets/cave.tileset.ron",
+    ],
+    chunks: Dir("tilemaps/cave_map")
+)
