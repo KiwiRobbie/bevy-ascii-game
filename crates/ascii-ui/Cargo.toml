@@ -47,6 +47,8 @@ features = [
     # "webgl2", 
 
     "webgl2",
+    "dynamic_linking",
+
 ]
 [dependencies.spatial-grid]
 path = "../spatial-grid"
