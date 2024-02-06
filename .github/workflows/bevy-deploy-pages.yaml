@@ -1,5 +1,5 @@
-name: Rust
-
+name: bevy-deploy-pages
+  
 on:
   push:
     branches: [ "web" ]
