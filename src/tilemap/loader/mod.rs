@@ -4,8 +4,7 @@ use std::{fs::DirEntry, path::PathBuf};
 
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
-    ecs::system::adapter::dbg,
-    math::{IVec2, UVec2},
+    math::IVec2,
     utils::hashbrown::HashMap,
 };
 
@@ -113,11 +112,11 @@ fn load_chunk<'a>(
 
         let file_name = chunk_entry.file_name();
         let name = file_name.to_str().unwrap();
-        let (coords, suffix) = name.split_once(".")?;
+        let (coords, suffix) = name.split_once('.')?;
         if suffix != "chunk.ron" {
             return None;
         }
-        let (x, y) = coords.split_once("_")?;
+        let (x, y) = coords.split_once('_')?;
 
         let x = x.parse::<i32>().ok()?;
         let y = y.parse::<i32>().ok()?;

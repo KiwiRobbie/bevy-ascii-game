@@ -1,7 +1,7 @@
 #![feature(future_join)]
 use bevy::{
-    app::{App, PluginGroup, PostUpdate, Startup, Update},
-    asset::{AssetServer, Assets, Handle},
+    app::{App, PluginGroup, Startup, Update},
+    asset::{AssetServer, Assets},
     core_pipeline::{
         bloom::BloomSettings,
         core_2d::{Camera2d, Camera2dBundle},
@@ -35,8 +35,8 @@ use bevy_ascii_game::{
         reset::{create_player, create_player_with_gamepad},
         PlayerPlugin,
     },
-    tilemap::{asset::TilemapSource, component::Tilemap, plugin::TilemapPlugin},
-    tileset::{asset::TilesetSource, plugin::TilesetPlugin},
+    tilemap::{component::Tilemap, plugin::TilemapPlugin},
+    tileset::plugin::TilesetPlugin,
 };
 use glyph_render::{
     atlas::FontAtlasPlugin,

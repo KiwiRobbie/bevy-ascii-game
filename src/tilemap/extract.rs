@@ -8,7 +8,6 @@ use bevy::{
     },
     math::{IVec2, UVec2},
     render::Extract,
-    transform::components::GlobalTransform,
 };
 use glyph_render::{
     atlas::FontAtlasCache,
@@ -16,7 +15,7 @@ use glyph_render::{
     glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
     glyph_render_plugin::{ExtractedGlyphTexture, GlyphSolidColor},
 };
-use spatial_grid::{grid::SpatialGrid, position::Position};
+use spatial_grid::position::Position;
 
 use crate::tileset::asset::TilesetSource;
 
@@ -26,15 +25,7 @@ pub fn extract_tilemaps(
     mut commands: Commands,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,
-    q_glyph_buffer: Extract<
-        Query<(
-            &Position,
-            &GlyphBuffer,
-            &CustomFont,
-            &FontSize,
-            &SpatialGrid,
-        )>,
-    >,
+    q_glyph_buffer: Extract<Query<(&Position, &GlyphBuffer, &CustomFont, &FontSize)>>,
     q_tilemaps: Extract<
         Query<(
             Entity,
@@ -47,7 +38,7 @@ pub fn extract_tilemaps(
     tilemaps: Extract<Res<Assets<TilemapSource>>>,
     tilesets: Extract<Res<Assets<TilesetSource>>>,
 ) {
-    for (buffer_position, buffer, font, font_size, grid) in q_glyph_buffer.iter() {
+    for (buffer_position, buffer, font, font_size) in q_glyph_buffer.iter() {
         let Some(font) = fonts.get(font.id()) else {
             continue;
         };
