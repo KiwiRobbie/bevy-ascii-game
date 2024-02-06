@@ -5,15 +5,15 @@ use bevy::{
         entity::Entity,
         system::{Commands, Query, Res},
     },
-    math::{IVec2, UVec2, Vec2},
-    render::renderer::RenderDevice,
+    math::{IVec2, UVec2, Vec2, Vec4},
+    render::{color::Color, renderer::RenderDevice},
 };
 use bytemuck::{cast_slice, Zeroable};
 use spatial_grid::position::Position;
 use wgpu::{util::BufferInitDescriptor, BufferUsages};
 
 use crate::glyph_render_plugin::{
-    ExtractedAtlas, ExtractedGlyphTexture, GpuAtlasItem, GpuGlyphTexture,
+    ExtractedAtlas, ExtractedGlyphTexture, GlyphSolidColor, GpuGlyphItem, GpuGlyphTexture,
 };
 
 use super::GlyphBuffer;
@@ -22,17 +22,19 @@ pub fn prepare_glyph_buffers(
     render_device: Res<RenderDevice>,
     q_glyph_buffer: Query<(Entity, &GlyphBuffer, &ExtractedAtlas)>,
 
-    q_textures: Query<(&Position, &ExtractedGlyphTexture)>,
+    q_textures: Query<(&Position, &ExtractedGlyphTexture, Option<&GlyphSolidColor>)>,
 ) {
     for (buffer_entity, buffer, atlas) in q_glyph_buffer.iter() {
         let atlas_uvs = &atlas.items;
 
         let buffer_width = buffer.size.x as usize;
         let buffer_height = buffer.size.y as usize;
-        let mut buffer_data: Box<[GpuAtlasItem]> =
-            vec![GpuAtlasItem::zeroed(); buffer_height * buffer_width].into();
+        let mut buffer_data: Box<[GpuGlyphItem]> =
+            vec![GpuGlyphItem::zeroed(); buffer_height * buffer_width].into();
 
-        for (position, texture) in buffer.textures.iter().flat_map(|t| q_textures.get(*t)) {
+        for (position, texture, solid_color) in
+            buffer.textures.iter().flat_map(|t| q_textures.get(*t))
+        {
             let source_size = UVec2::new(texture.width as u32, texture.height as u32);
 
             let buffer_start = IVec2::ZERO;
@@ -67,10 +69,11 @@ pub fn prepare_glyph_buffers(
 
                     if glyph != u16::MAX {
                         let uv = &atlas_uvs[glyph as usize];
-                        buffer_data[dst_index] = GpuAtlasItem {
+                        buffer_data[dst_index] = GpuGlyphItem {
                             start: uv.start,
                             size: uv.size,
                             offset: uv.offset,
+                            color: solid_color.map(|c| c.color).unwrap_or(Color::WHITE).into(),
                             padding: Vec2::ZERO,
                         };
                     }
