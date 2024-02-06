@@ -35,6 +35,8 @@ use bevy_ascii_game::{
         reset::{create_player, create_player_with_gamepad},
         PlayerPlugin,
     },
+    tilemap::{component::Tilemap, plugin::TilemapPlugin},
+    tileset::plugin::TilesetPlugin,
 };
 use glyph_render::{
     atlas::FontAtlasPlugin,
@@ -75,6 +77,8 @@ fn main() {
         GlyphAnimationPlugin,
         GlyphAnimationGraphPlugin,
         FontAtlasPlugin,
+        TilesetPlugin,
+        TilemapPlugin,
         PhysicsPlugin,
         GlyphRenderPlugin,
         DebugMenuPlugin,
@@ -148,6 +152,16 @@ fn setup_system(
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
 ) {
+    commands
+        .spawn((
+            Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
+            SolidPhysicsBundle {
+                position: PositionBundle::from(IVec2::new(20, 10)),
+                ..Default::default()
+            },
+        ))
+        .insert(GamePhysicsGridMarker);
+
     create_player(&mut commands, &server)
         .insert(PlayerInputKeyboardMarker)
         .insert(GlyphSolidColor {

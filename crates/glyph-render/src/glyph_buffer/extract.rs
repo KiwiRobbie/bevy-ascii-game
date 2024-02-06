@@ -17,7 +17,8 @@ use crate::{
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationSource},
     glyph_render_plugin::{
-        ExtractedAtlas, ExtractedGlyphTexture, GlyphSprite, GlyphSpriteMirrored, GlyphTextureSource,
+        ExtractedAtlas, ExtractedGlyphTexture, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored,
+        GlyphTextureSource,
     },
 };
 
@@ -45,6 +46,7 @@ pub fn extract_glyph_buffers(
             Option<&GlyphSprite>,
             Option<&GlyphAnimation>,
             Option<&GlyphSpriteMirrored>,
+            Option<&GlyphSolidColor>,
         )>,
     >,
     glyph_textures: Extract<Res<Assets<GlyphTextureSource>>>,
@@ -61,9 +63,12 @@ pub fn extract_glyph_buffers(
             .unwrap();
 
         for entity in buffer.textures.iter() {
-            if let Ok((entity, position, target, sprite, animation, mirrored)) =
+            if let Ok((entity, position, target, sprite, animation, mirrored, solid_color)) =
                 q_textures.get(*entity)
             {
+                if let Some(solid_color) = solid_color {
+                    commands.insert_or_spawn_batch([(entity, (solid_color.clone(),))]);
+                }
                 if let Some(glyph_animation) = animation {
                     let Some((data, offset)) = extract_animation_frame(
                         &*glyph_animations,
@@ -99,7 +104,6 @@ pub fn extract_glyph_buffers(
                         font.as_ref(),
                         font_size,
                     );
-
                     commands.insert_or_spawn_batch([(
                         entity,
                         (position.clone(), target.clone(), extracted_glyph_texture),

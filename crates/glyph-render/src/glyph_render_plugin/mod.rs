@@ -44,7 +44,8 @@ impl Plugin for GlyphRenderPlugin {
             .add_systems(ExtractSchedule, (extract_glyph_buffers,))
             .add_systems(
                 Render,
-                (prepare_glyph_buffers).in_set(RenderSet::PrepareAssets),
+                (update_glyph_buffer_entities, prepare_glyph_buffers)
+                    .in_set(RenderSet::PrepareAssets),
             )
             .add_systems(
                 Render,
@@ -202,17 +203,17 @@ fn prepare_atlas_buffers(
 #[derive(ShaderType, Pod, Clone, Copy, Zeroable)]
 #[repr(C)]
 
-pub struct GpuAtlasItem {
+pub struct GpuGlyphItem {
     pub start: UVec2,
     pub size: UVec2,
     pub offset: IVec2,
     pub padding: Vec2,
+    pub color: Vec4,
 }
 
 #[derive(Component)]
 pub struct AtlasGpuBuffers {
     pub data: Texture,
-    // pub uvs: GpuArrayBuffer<GpuAtlasItem>,
 }
 
 fn prepare_buffers(
@@ -286,7 +287,7 @@ impl FromWorld for GlyphPipelineData {
                     shader_defs: Vec::new(),
                     entry_point: "vertex".into(),
                     buffers: vec![VertexBufferLayout {
-                        array_stride: 32,
+                        array_stride: 48,
                         step_mode: VertexStepMode::Instance,
                         attributes: vec![
                             VertexAttribute {
@@ -308,6 +309,11 @@ impl FromWorld for GlyphPipelineData {
                                 format: VertexFormat::Float32x2,
                                 offset: 24,
                                 shader_location: 3,
+                            },
+                            VertexAttribute {
+                                format: VertexFormat::Float32x4,
+                                offset: 32,
+                                shader_location: 4,
                             },
                         ],
                     }],
