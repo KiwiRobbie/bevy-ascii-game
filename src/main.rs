@@ -1,6 +1,6 @@
 #![feature(future_join)]
 use bevy::{
-    app::{App, PluginGroup, Startup, Update},
+    app::{App, PluginGroup, PostUpdate, Startup, Update},
     asset::{AssetServer, Assets, Handle},
     core_pipeline::{
         bloom::BloomSettings,
@@ -35,7 +35,7 @@ use bevy_ascii_game::{
         reset::{create_player, create_player_with_gamepad},
         PlayerPlugin,
     },
-    tilemap::{asset::TilemapSource, plugin::TilemapPlugin},
+    tilemap::{asset::TilemapSource, component::Tilemap, plugin::TilemapPlugin},
     tileset::{asset::TilesetSource, plugin::TilesetPlugin},
 };
 use glyph_render::{
@@ -152,9 +152,15 @@ fn setup_system(
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
 ) {
-    let tileset: Handle<TilesetSource> = server.load("tilesets/cave.tileset.ron");
-    let tileset: Handle<TilemapSource> = server.load("tilemaps/cave_map.tilemap.ron");
-    dbg!(tileset);
+    commands
+        .spawn((
+            Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
+            SolidPhysicsBundle {
+                position: PositionBundle::from(IVec2::new(20, 10)),
+                ..Default::default()
+            },
+        ))
+        .insert(GamePhysicsGridMarker);
 
     create_player(&mut commands, &server)
         .insert(PlayerInputKeyboardMarker)

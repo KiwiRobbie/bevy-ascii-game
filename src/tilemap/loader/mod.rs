@@ -5,7 +5,7 @@ use std::{fs::DirEntry, path::PathBuf};
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
     ecs::system::adapter::dbg,
-    math::UVec2,
+    math::{IVec2, UVec2},
     utils::hashbrown::HashMap,
 };
 
@@ -54,7 +54,7 @@ impl AssetLoader for TilemapLoader {
                 tileset_names.insert(tileset.id.clone(), i);
             }
 
-            let mut chunk_data = HashMap::new();
+            let mut chunk_data: HashMap<IVec2, TilemapChunk> = HashMap::new();
 
             let directory = match &meta.chunks {
                 ChunkDataLocation::Dir(path) => PathBuf::from(path),
@@ -107,7 +107,7 @@ fn load_chunk<'a>(
     directory: PathBuf,
     chunk_entry: DirEntry,
     load_context: &'a mut bevy::asset::LoadContext,
-) -> bevy::utils::BoxedFuture<'a, Option<(UVec2, ChunkMeta)>> {
+) -> bevy::utils::BoxedFuture<'a, Option<(IVec2, ChunkMeta)>> {
     Box::pin(async move {
         dbg!(&chunk_entry);
 
@@ -119,9 +119,9 @@ fn load_chunk<'a>(
         }
         let (x, y) = coords.split_once("_")?;
 
-        let x = x.parse::<u32>().ok()?;
-        let y = y.parse::<u32>().ok()?;
-        let pos = UVec2 { x, y };
+        let x = x.parse::<i32>().ok()?;
+        let y = y.parse::<i32>().ok()?;
+        let pos = IVec2 { x, y };
 
         let data = load_context
             .read_asset_bytes(directory.join(file_name))
