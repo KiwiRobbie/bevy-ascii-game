@@ -9,6 +9,7 @@ pub mod row;
 pub mod scrolling_view;
 pub mod tab_view;
 pub mod text;
+pub mod texture;
 
 pub use button::Button;
 pub use checkbox::Checkbox;
@@ -20,3 +21,4 @@ pub use row::Row;
 pub use scrolling_view::ScrollingView;
 pub use tab_view::TabView;
 pub use text::Text;
+pub use texture::Texture;

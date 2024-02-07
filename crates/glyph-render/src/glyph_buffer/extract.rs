@@ -106,7 +106,11 @@ pub fn extract_glyph_buffers(
                     );
                     commands.insert_or_spawn_batch([(
                         entity,
-                        (position.clone(), target.clone(), extracted_glyph_texture),
+                        (
+                            Position::from(position.position + glyph_sprite.offset),
+                            target.clone(),
+                            extracted_glyph_texture,
+                        ),
                     )]);
                 }
             }

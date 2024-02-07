@@ -16,7 +16,7 @@ use crate::layout::render_clip::ClipRegion;
 use super::{
     attachments::border::border_render,
     clear::clear_sprites,
-    widgets::{divider::divider_render, text::text_render},
+    widgets::{divider::divider_render, text::text_render, texture::texture_render},
 };
 
 pub struct RenderPlugin;
@@ -27,7 +27,7 @@ impl Plugin for RenderPlugin {
             (
                 clear_sprites,
                 apply_deferred,
-                (text_render, divider_render, border_render),
+                (text_render, divider_render, border_render, texture_render),
                 apply_deferred,
                 apply_clipping,
             )
@@ -60,12 +60,12 @@ fn apply_clipping(
             {
                 let mut data = Vec::new();
 
-                for src_y in clipping_start.y as usize..clipping_end.y as usize {
+                let t = texture.data.len() as usize;
+                for src_y in (t - clipping_end.y as usize)..(t - clipping_start.y as usize) {
                     let src_start_x = clipping_start.x as usize;
                     let src_end_x = clipping_end.x as usize;
                     data.push(texture.data[src_y][src_start_x..src_end_x].to_string());
                 }
-
                 commands.entity(entity).insert(GlyphSprite {
                     offset: sprite.offset + clipping_start,
                     texture: textures.add(GlyphTextureSource { data }),
