@@ -15,7 +15,7 @@ use bevy::{
 
 use bevy_ascii_game::{physics_grids::UiPhysicsGridMarker, tileset::asset::TilesetSource};
 
-use crate::{list_builder_widget::ListBuilderWidget, tileset_widget::widget::TilesetItemWidget};
+use crate::list_builder_widget::ListBuilderWidget;
 
 use super::state::TilesetPanelState;
 
@@ -109,7 +109,7 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
 pub struct DebugMenuMarker;
 
 fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
-    let tile_size = source.tile_size.clone();
+    let tile_size = source.tile_size;
     widgets::Column::build(vec![
         widgets::Text::build(source.display_name.clone()),
         widgets::Text::build(format!(
