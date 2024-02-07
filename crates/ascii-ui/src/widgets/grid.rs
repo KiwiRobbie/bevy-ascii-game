@@ -3,7 +3,7 @@ use bevy::{
         component::Component, entity::Entity, reflect::ReflectComponent, system::Commands,
         world::World,
     },
-    math::{IVec2, UVec2},
+    math::UVec2,
     reflect::Reflect,
 };
 

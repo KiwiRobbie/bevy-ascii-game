@@ -12,9 +12,9 @@ use bevy::{
 };
 
 use crate::{
-    attachments::{self, padding::Padding, SizedBox},
+    attachments::{padding::Padding, SizedBox},
     layout::{
-        constraint::{self, Constraint},
+        constraint::Constraint,
         positioned::Positioned,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },

@@ -151,17 +151,14 @@ pub fn update_tilesets(
 ) {
     for ev in ev_tilesets.read() {
         dbg!(ev);
-        match ev {
-            AssetEvent::LoadedWithDependencies { id } => {
-                for (mut builder, mut column) in q_list_builder.iter_mut() {
-                    builder.push::<widgets::Column>(
-                        &mut column,
-                        tilesets.get(*id).unwrap().clone(),
-                        &mut commands,
-                    )
-                }
+        if let AssetEvent::LoadedWithDependencies { id } = ev {
+            for (mut builder, mut column) in q_list_builder.iter_mut() {
+                builder.push::<widgets::Column>(
+                    &mut column,
+                    tilesets.get(*id).unwrap().clone(),
+                    &mut commands,
+                )
             }
-            _ => {}
         };
     }
 

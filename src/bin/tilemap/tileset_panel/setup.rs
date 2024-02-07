@@ -50,8 +50,8 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
         let mut rows = vec![];
         let mut list_builder = Entity::PLACEHOLDER;
         rows.push(
-            ListBuilderWidget::build::<(), widgets::Column>(
-                Box::new(|i: &usize| widgets::Text::build(format!("{}", i).into())),
+            ListBuilderWidget::build::<widgets::Column>(
+                Box::new(|i: &usize| widgets::Text::build(format!("{}", i))),
                 vec![0, 2, 5],
                 (),
             )
@@ -79,7 +79,7 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
     }(&mut commands);
 
     let tileset_tab = {
-        ListBuilderWidget::<TilesetSource>::build::<(), widgets::Column>(
+        ListBuilderWidget::<TilesetSource>::build::<widgets::Column>(
             Box::new(|source| build_tileset_ui(source)),
             vec![],
             (),
@@ -109,18 +109,17 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
 pub struct DebugMenuMarker;
 
 fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
-    let tile_size = source.tile_size.clone();
     widgets::Column::build(vec![
         widgets::Text::build(source.display_name.clone()),
         widgets::Text::build(format!(
             "id: '{}', size: {}x{}",
             source.id.clone(),
-            tile_size.x,
-            tile_size.y
+            source.tile_size.x,
+            source.tile_size.y
         )),
         widgets::Divider::build('-'),
         widgets::Container::build(Some(
-            widgets::ScrollingView::build(vec![ListBuilderWidget::build::<UVec2, widgets::Grid>(
+            widgets::ScrollingView::build(vec![ListBuilderWidget::build::<widgets::Grid>(
                 Box::new(move |item: &Vec<String>| {
                     widgets::Column::build(
                         item.iter()
@@ -130,7 +129,7 @@ fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
                     .with(IntractableMarker)
                 }),
                 source.tiles.clone(),
-                tile_size,
+                source.tile_size,
             )])
             .with(attachments::SizedBox::vertical(26)),
         )),

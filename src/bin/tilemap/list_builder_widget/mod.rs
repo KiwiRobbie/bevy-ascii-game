@@ -16,7 +16,7 @@ impl<T> ListBuilderWidget<T>
 where
     T: Send + Sync + 'static,
 {
-    pub fn build<'b, A, W: ListWidget>(
+    pub fn build<'b, W: ListWidget>(
         builder: Box<dyn Fn(&T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
         items: Vec<T>,
         args: W::Args,
@@ -54,7 +54,7 @@ where
         self_column.children = self
             .items
             .iter()
-            .map(|item| (&self.builder)(item)(commands))
+            .map(|item| (self.builder)(item)(commands))
             .collect();
     }
 }

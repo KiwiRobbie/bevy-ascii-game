@@ -19,10 +19,7 @@ use bevy::{
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
 use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
-use crate::layout::{
-    positioned::{self, Positioned},
-    render_clip::ClipRegion,
-};
+use crate::layout::{positioned::Positioned, render_clip::ClipRegion};
 
 #[derive(Debug, Component)]
 pub struct IntractableMarker;

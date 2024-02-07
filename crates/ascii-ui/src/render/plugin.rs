@@ -11,7 +11,7 @@ use bevy::{
 use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTextureSource};
 use spatial_grid::position::Position;
 
-use crate::layout::{positioned::Positioned, render_clip::ClipRegion};
+use crate::layout::render_clip::ClipRegion;
 
 use super::{
     attachments::border::border_render,
