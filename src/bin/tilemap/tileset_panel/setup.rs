@@ -136,7 +136,7 @@ fn build_tileset_ui<'a>(
                     widgets::Texture::build(item.clone(), tile_size).with((
                         IntractableMarker,
                         TilesetTileId {
-                            tile: index,
+                            tile: index as u32,
                             tileset: handle.clone(),
                         },
                     ))
@@ -151,5 +151,5 @@ fn build_tileset_ui<'a>(
 #[derive(Debug, Component, Clone)]
 pub struct TilesetTileId {
     pub tileset: Handle<TilesetSource>,
-    pub tile: usize,
+    pub tile: u32,
 }

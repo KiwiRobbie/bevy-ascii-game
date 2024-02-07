@@ -49,6 +49,7 @@ pub fn extract_glyph_buffers(
             Option<&GlyphSolidColor>,
         )>,
     >,
+
     glyph_textures: Extract<Res<Assets<GlyphTextureSource>>>,
     glyph_animations: Extract<Res<Assets<GlyphAnimationSource>>>,
 ) {

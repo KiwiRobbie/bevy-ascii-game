@@ -1,4 +1,6 @@
 /target
-render-graph.*
+*.dot
+*-schedule.png
+*-graph.png
 *.tracy
 graph.png

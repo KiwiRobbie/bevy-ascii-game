@@ -7,7 +7,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        query::With,
+        query::{With, Without},
         system::{Commands, Query, Res, ResMut},
     },
     input::{mouse::MouseButton, Input},
@@ -18,7 +18,8 @@ use bevy::{
     window::{PrimaryWindow, Window},
 };
 use bevy_ascii_game::{
-    physics_grids::GamePhysicsGridMarker, tilemap::component::Tilemap,
+    physics_grids::GamePhysicsGridMarker,
+    tilemap::{asset::TilemapSource, component::Tilemap},
     tileset::asset::TilesetSource,
 };
 use glyph_render::glyph_render_plugin::{GlyphSolidColor, GlyphSprite, GlyphTextureSource};
@@ -60,15 +61,16 @@ pub fn set_brush(
     let Ok(entity) = q_brush.get_single() else {
         return;
     };
-    for tile in q_select.iter() {
-        let tileset = tilesets.get(tile.tileset.id()).unwrap();
-        let tile = &tileset.tiles[tile.tile];
+    for tile_id in q_select.iter() {
+        let tileset = tilesets.get(tile_id.tileset.id()).unwrap();
+        let tile = &tileset.tiles[tile_id.tile as usize];
         commands.entity(entity).insert((
             GlyphSprite {
                 offset: IVec2::ZERO,
                 texture: glyph_textures.add(GlyphTextureSource { data: tile.clone() }),
             },
             BrushTileSize(tileset.tile_size),
+            tile_id.clone(),
         ));
     }
 }
@@ -76,34 +78,88 @@ pub fn set_brush(
 pub fn update_brush(
     q_windows: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    q_mouse_buttons: Res<Input<MouseButton>>,
+    input_mouse_buttons: Res<Input<MouseButton>>,
     q_physics_grid: Query<(&SpatialGrid, &GlobalTransform)>,
-    mut q_brush: Query<(&mut Position, &PhysicsGridMember, Option<&BrushTileSize>), With<Brush>>,
-    q_tilemap: Query<(&Tilemap, &GlobalTransform)>,
+    mut q_brush: Query<
+        (
+            &mut Position,
+            &PhysicsGridMember,
+            Option<&BrushTileSize>,
+            Option<&TilesetTileId>,
+        ),
+        With<Brush>,
+    >,
+    q_tilemap: Query<(&Tilemap, &Position), Without<Brush>>,
+    mut tilemaps: ResMut<Assets<TilemapSource>>,
+    tilesets: Res<Assets<TilesetSource>>,
 ) {
     let (camera, camera_transform) = q_camera.single();
-    if let Some(cursor_position) = q_windows
+    if let Some(world_cursor_position) = q_windows
         .single()
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin)
     {
-        let Ok((mut brush_position, grid_member, tile_size)) = q_brush.get_single_mut() else {
+        let Ok((mut brush_position, grid_member, tile_size, brush_tile)) = q_brush.get_single_mut()
+        else {
             return;
         };
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             return;
         };
 
-        let cursor_position = (transform.compute_matrix().inverse() * cursor_position.extend(1.0))
-            .xy()
-            / grid.size.as_vec2();
-        let cursor_position = (cursor_position + 0.5).as_ivec2();
-        **brush_position = cursor_position
-            - tile_size
-                .map(|s| s.div(2))
-                .unwrap_or(UVec2::ZERO)
+        let grid_cursor_position =
+            ((transform.compute_matrix().inverse() * world_cursor_position.extend(1.0)).xy()
+                / grid.size.as_vec2()
+                + 0.5)
                 .as_ivec2();
+
+        **brush_position = if let Some((target_tilemap, tilemap_local, cursor_position)) = q_tilemap
+            .iter()
+            .filter_map(|(tilemap, tilemap_position)| {
+                if let Some(tilemap_source) = tilemaps.get(tilemap.id()) {
+                    let tile_size = tilemap_source.tile_size.as_ivec2();
+
+                    let local = (grid_cursor_position - **tilemap_position).div_euclid(tile_size);
+                    Some((
+                        (*tilemap).clone(),
+                        local,
+                        local * tile_size + **tilemap_position,
+                    ))
+                } else {
+                    None
+                }
+            })
+            .next()
+        {
+            if input_mouse_buttons.pressed(MouseButton::Left) {
+                if let Some(tile) = brush_tile {
+                    if let (Some(tilemap), Some(tileset)) = (
+                        tilemaps.get_mut(target_tilemap.id()),
+                        tilesets.get(tile.tileset.id()),
+                    ) {
+                        tilemap.insert_tile(
+                            tilemap_local,
+                            tileset.id.clone(),
+                            tile.tile,
+                            tile.tileset.clone(),
+                        );
+                    }
+                }
+            } else if input_mouse_buttons.pressed(MouseButton::Right) {
+                if let Some(tilemap) = tilemaps.get_mut(target_tilemap.id()) {
+                    tilemap.clear_tile(tilemap_local);
+                }
+            }
+
+            cursor_position
+        } else {
+            grid_cursor_position
+                - tile_size
+                    .map(|s| s.div(2))
+                    .unwrap_or(UVec2::ZERO)
+                    .as_ivec2()
+        };
     }
 }
 

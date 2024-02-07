@@ -163,8 +163,6 @@ pub fn update_tilesets(
         if let AssetEvent::LoadedWithDependencies { id } = ev {
             let tileset = tilesets.get(*id).unwrap().clone();
             for (mut builder, mut column, TilesetHandles { handles }) in q_list_builder.iter_mut() {
-                dbg!(handles.iter().map(|h| h.id()).collect::<Vec<_>>(), id);
-
                 if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
                     builder.push::<widgets::Column>(
                         &mut column,

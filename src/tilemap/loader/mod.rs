@@ -72,10 +72,14 @@ impl AssetLoader for TilemapLoader {
                 let mut data = vec![];
 
                 for row in meta.iter() {
-                    for (tileset, tile) in row.iter() {
-                        let tileset = *tileset_names.get(tileset).unwrap();
-                        let tile = *tilesets[tileset].tile_names.get(tile).unwrap();
-                        data.push((tileset as u32, tile as u32));
+                    for tile in row.iter() {
+                        if let Some((tileset, tile)) = tile {
+                            let tileset = *tileset_names.get(tileset).unwrap();
+                            let tile = *tilesets[tileset].tile_names.get(tile).unwrap();
+                            data.push(Some((tileset as u32, tile as u32)));
+                        } else {
+                            data.push(None)
+                        }
                     }
                 }
 
@@ -93,12 +97,13 @@ impl AssetLoader for TilemapLoader {
                 tileset_handles.push(load_context.add_labeled_asset(tileset.id.clone(), tileset));
             }
 
-            Ok(dbg!(TilemapSource {
+            Ok(TilemapSource {
                 chunk_size: meta.chunk_size.into(),
+                tile_size: meta.tile_size.into(),
                 tileset_names,
                 tilesets: tileset_handles,
                 chunk_data,
-            }))
+            })
         })
     }
 }
@@ -108,8 +113,6 @@ fn load_chunk<'a>(
     load_context: &'a mut bevy::asset::LoadContext,
 ) -> bevy::utils::BoxedFuture<'a, Option<(IVec2, ChunkMeta)>> {
     Box::pin(async move {
-        dbg!(&chunk_entry);
-
         let file_name = chunk_entry.file_name();
         let name = file_name.to_str().unwrap();
         let (coords, suffix) = name.split_once('.')?;

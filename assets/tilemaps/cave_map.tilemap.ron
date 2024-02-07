@@ -1,4 +1,5 @@
 (
+    tile_size: (8,5),
     chunk_size: (4,4),
     tilesets: [
         "tilesets/cave.tileset.ron",
