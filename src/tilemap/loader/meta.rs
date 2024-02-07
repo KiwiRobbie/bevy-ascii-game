@@ -5,7 +5,8 @@ pub struct TilemapMeta {
     pub chunk_size: (u32, u32),
     pub tile_size: (u32, u32),
     pub tilesets: Vec<String>,
-    pub chunks: ChunkDataLocation,
+    pub chunk_dir: String,
+    pub chunks: Vec<(i32, i32)>,
 }
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone)]

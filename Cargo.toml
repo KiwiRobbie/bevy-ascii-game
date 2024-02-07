@@ -22,8 +22,6 @@ ron = "0.8.1"
 wasm-bindgen = "0.2.90"
 
 [dependencies.bevy]
-version = "0.12.1"
-default-features = false
 features = [
     # "animation",
     "bevy_asset",
@@ -48,8 +46,9 @@ features = [
     # "default_font",
     # "webgl2", 
     "webgl2",
-    "dynamic_linking",
-]
+    "dynamic_linking",,
+]version = "0.12.1"
+default-features = false
 
 [dependencies.ascii-ui]
 path = "crates/ascii-ui"

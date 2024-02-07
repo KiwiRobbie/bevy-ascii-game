@@ -22,7 +22,6 @@ ron = "0.8.1"
 [dependencies.bevy]
 version = "0.12.1"
 
-default-features = false
 features = [
     # "animation",
     "bevy_asset",
@@ -47,9 +46,9 @@ features = [
     # "default_font",
     # "webgl2", 
     "webgl2",
-    "dynamic_linking",
+    "dynamic_linking",,
 
-]
+]default-features = false
 
 [dependencies.spatial-grid]
 path = "../spatial-grid"
