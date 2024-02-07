@@ -1,5 +1,6 @@
 use ascii_ui::{
     attachments::Root,
+    list_widget::ListWidget,
     widgets::{
         self,
         button::ButtonJustPressedMarker,
@@ -7,10 +8,11 @@ use ascii_ui::{
     },
 };
 use bevy::{
-    asset::Handle,
+    asset::{AssetEvent, AssetServer, Assets},
     ecs::{
+        event::EventReader,
         query::With,
-        system::{Commands, Local, Query, Res, ResMut},
+        system::{Commands, Query, Res, ResMut},
     },
     input::{
         gamepad::{GamepadButton, GamepadButtonType, Gamepads},
@@ -141,4 +143,38 @@ pub fn update_list_builder(
             }
         }
     }
+}
+pub fn update_tilesets(
+    mut commands: Commands,
+    mut q_list_builder: Query<(&mut ListBuilderWidget<TilesetSource>, &mut widgets::Column)>,
+    mut ev_tilesets: EventReader<AssetEvent<TilesetSource>>,
+    tilesets: Res<Assets<TilesetSource>>,
+) {
+    for ev in ev_tilesets.read() {
+        dbg!(ev);
+        match ev {
+            AssetEvent::LoadedWithDependencies { id } => {
+                for (mut builder, mut column) in q_list_builder.iter_mut() {
+                    builder.push::<widgets::Column>(
+                        &mut column,
+                        tilesets.get(*id).unwrap().clone(),
+                        &mut commands,
+                    )
+                }
+            }
+            _ => {}
+        };
+    }
+
+    // for item in q_buttons.iter() {
+    //     let (mut builder, mut column) = q_list_builder.get_mut(item.target).unwrap();
+    //     match item.mode {
+    //         super::setup::MutateMode::Add => {
+    //             builder.push(&mut *column, 0, &mut commands);
+    //         }
+    //         super::setup::MutateMode::Remove => {
+    //             builder.pop(&mut *column, &mut commands);
+    //         }
+    //     }
+    // }
 }

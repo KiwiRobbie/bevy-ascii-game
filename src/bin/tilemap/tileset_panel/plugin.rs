@@ -4,7 +4,7 @@ use bevy::app::{Plugin, Startup, Update};
 use super::{
     setup::setup_ui,
     state::TilesetPanelState,
-    update::{toggle_menu, update_list_builder, update_position, update_values},
+    update::{toggle_menu, update_list_builder, update_position, update_tilesets, update_values},
 };
 
 pub struct TilesetPanelPlugin;
@@ -19,6 +19,7 @@ impl Plugin for TilesetPanelPlugin {
                     update_position,
                     toggle_menu,
                     update_list_builder,
+                    update_tilesets,
                 ),
             )
             .init_resource::<TilesetPanelState>();

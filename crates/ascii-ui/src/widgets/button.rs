@@ -6,7 +6,7 @@ use bevy::ecs::{
 
 use crate::{
     mouse::{IntractableMarker, TriggeredMarker},
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widget_builder::{WidgetBuilder, WidgetBuilderFn},
 };
 
 use super::super::attachments;

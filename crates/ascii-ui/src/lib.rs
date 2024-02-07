@@ -11,6 +11,7 @@ use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
 pub mod attachments;
 pub mod layout;
+pub mod list_widget;
 pub mod mouse;
 pub mod plugin;
 pub mod render;

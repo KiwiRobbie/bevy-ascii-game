@@ -2,5 +2,5 @@ use bevy::app::Plugin;
 
 pub struct TilesetUiWidgetPlugin;
 impl Plugin for TilesetUiWidgetPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {}
+    fn build(&self, _app: &mut bevy::prelude::App) {}
 }

@@ -22,7 +22,6 @@ use bevy::{
 };
 
 use bevy_ascii_game::{
-    debug_menu::plugin::DebugMenuPlugin,
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin},
     player::PlayerPlugin,
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
