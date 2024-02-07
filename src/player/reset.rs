@@ -21,7 +21,10 @@ use grid_physics::{
     gravity::Gravity,
     velocity::Velocity,
 };
-use spatial_grid::position::{Position, PositionBundle};
+use spatial_grid::{
+    position::{Position, PositionBundle},
+    remainder::Remainder,
+};
 
 use super::{
     input::{controller::PlayerInputController, PlayerInputReset},
@@ -35,10 +38,8 @@ pub fn player_reset_system(
 ) {
     for player in q_player.iter() {
         commands.entity(player).insert((
-            Position {
-                position: IVec2::new(10, 10),
-                remainder: Vec2::ZERO,
-            },
+            Position(IVec2::new(10, 10)),
+            Remainder(Vec2::ZERO),
             Velocity {
                 ..Default::default()
             },
@@ -70,10 +71,8 @@ pub fn create_player<'w, 's, 'a>(
         PlayerBundle {
             actor: ActorPhysicsBundle {
                 position: PositionBundle {
-                    position: Position {
-                        position: IVec2 { x: 10, y: 10 },
-                        ..Default::default()
-                    },
+                    position: Position(IVec2::new(10, 10)),
+                    ..Default::default()
                 },
                 collider: Collider {
                     shape: CollisionShape::Aabb(Aabb {

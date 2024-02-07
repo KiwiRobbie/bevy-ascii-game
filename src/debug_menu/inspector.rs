@@ -5,14 +5,15 @@ use ascii_ui::{
     widgets,
 };
 use bevy::{
-    app::{Plugin, Update},
+    app::{Plugin, PreUpdate},
     ecs::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
         query::{Changed, With},
-        system::{Commands, Query, Res, Resource},
+        system::{Commands, Local, Query, Res, Resource},
         world::World,
     },
+    hierarchy::DespawnRecursiveExt,
     math::{IVec2, UVec2, Vec2},
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
@@ -116,14 +117,21 @@ pub fn inspector_fetch_system(
     mut q_inspector: Query<(Entity, &InspectorTab), Changed<InspectorTab>>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
+    mut inspector_widgets: Local<Vec<Entity>>,
 ) {
     let type_registry = &type_registry.0;
 
+    for entity in inspector_widgets.drain(..) {
+        if let Some(e) = commands.get_entity(entity) {
+            e.despawn_recursive()
+        }
+    }
+
     for (entity, inspector) in q_inspector.iter_mut() {
         if let Some(target) = inspector.target {
-            let mut children = vec![widgets::Text::build(format!("Entity: {:?}", target))(
+            inspector_widgets.push(widgets::Text::build(format!("Entity: {:?}", target))(
                 &mut commands,
-            )];
+            ));
 
             if let Some(component_ids) = get_components_ids(world, target)
             // .map(|ids| ids.map(|id| get_component_info(&world, id)))
@@ -150,41 +158,55 @@ pub fn inspector_fetch_system(
                     };
                     // SAFE: `value` is of type `Reflected`, which the `ReflectFromPtr` was created for
                     let value = unsafe { reflect_from_ptr.as_reflect(ptr) };
-                    children.push(widgets::text::TextBundle::spawn(
+                    inspector_widgets.push(widgets::text::TextBundle::spawn(
                         &mut commands,
                         value.reflect_short_type_path().into(),
                         (),
                     ));
 
-                    let ReflectRef::Struct(reflected) = value.reflect_ref() else {
-                        unreachable!()
-                    };
+                    match value.reflect_ref() {
+                        ReflectRef::Struct(reflected) => {
+                            for index in 0..reflected.field_len() {
+                                let name = reflected.name_at(index).unwrap();
+                                let field = reflected.field_at(index).unwrap();
 
-                    for index in 0..reflected.field_len() {
-                        let name = reflected.name_at(index).unwrap();
-                        let field = reflected.field_at(index).unwrap();
+                                let mut field_widgets = Vec::new();
 
-                        let mut field_widgets = Vec::new();
+                                field_widgets
+                                    .push(widgets::text::Text::build(format!("+-{} = ", name)));
 
-                        field_widgets.push(widgets::text::Text::build(format!("+-{} = ", name)));
+                                if let Some(ui_for) =
+                                    type_registry.get_type_data::<EcsUiFor>(field.type_id())
+                                {
+                                    field_widgets.push(WidgetBuilderFn::entity((ui_for
+                                        .fn_readonly)(
+                                        field.as_any(),
+                                        &mut commands,
+                                    )));
+                                }
 
-                        if let Some(ui_for) =
-                            type_registry.get_type_data::<EcsUiFor>(field.type_id())
-                        {
-                            field_widgets.push(WidgetBuilderFn::entity((ui_for.fn_readonly)(
-                                field.as_any(),
-                                &mut commands,
-                            )));
+                                inspector_widgets
+                                    .push(widgets::Row::build(field_widgets)(&mut commands));
+                            }
                         }
-
-                        children.push(widgets::Row::build(field_widgets)(&mut commands));
+                        ReflectRef::TupleStruct(reflected) => {
+                            for field in reflected.iter_fields() {
+                                if let Some(ui_for) =
+                                    type_registry.get_type_data::<EcsUiFor>(field.type_id())
+                                {
+                                    inspector_widgets
+                                        .push((ui_for.fn_readonly)(field.as_any(), &mut commands));
+                                }
+                            }
+                        }
+                        _ => (),
                     }
                 }
             }
 
-            commands
-                .entity(entity)
-                .insert(widgets::column::Column { children });
+            commands.entity(entity).insert(widgets::column::Column {
+                children: inspector_widgets.clone(),
+            });
         } else {
             commands
                 .entity(entity)
@@ -196,7 +218,7 @@ pub fn inspector_fetch_system(
 pub struct InspectorPlugin;
 impl Plugin for InspectorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, (inspector_fetch_system, inspector_init_system))
+        app.add_systems(PreUpdate, (inspector_fetch_system, inspector_init_system))
             .init_resource::<TypeRegistryResource>();
     }
 }

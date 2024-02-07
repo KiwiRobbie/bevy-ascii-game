@@ -46,6 +46,8 @@ features = [
     # "default_font",
     # "webgl2", 
     "webgl2",
+    "dynamic_linking",
+
 ]
 
 [dependencies.text-util]

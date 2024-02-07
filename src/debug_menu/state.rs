@@ -9,6 +9,7 @@ pub struct DebugMenuState {
     pub player_count_text: Option<Entity>,
     pub actor_count_text: Option<Entity>,
     pub solid_count_text: Option<Entity>,
+    pub entity_count: Option<Entity>,
     pub position_checkbox: Option<Entity>,
     pub colliders_checkbox: Option<Entity>,
     pub ui_checkbox: Option<Entity>,
@@ -25,6 +26,7 @@ impl Default for DebugMenuState {
             player_count_text: None,
             actor_count_text: None,
             solid_count_text: None,
+            entity_count: None,
 
             colliders_checkbox: None,
             position_checkbox: None,

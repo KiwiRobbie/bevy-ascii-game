@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 use bevy::math::UVec2;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Constraint {
     pub width: Option<RangeInclusive<u32>>,
     pub height: Option<RangeInclusive<u32>>,
@@ -46,5 +46,11 @@ impl Constraint {
         };
 
         UVec2 { x, y }
+    }
+    pub fn from_max(size: UVec2) -> Self {
+        Self {
+            width: Some(0..=size.x),
+            height: Some(0..=size.y),
+        }
     }
 }

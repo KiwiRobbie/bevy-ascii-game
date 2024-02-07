@@ -16,12 +16,17 @@ use crate::glyph_render_plugin::{
     ExtractedAtlas, ExtractedGlyphTexture, GlyphSolidColor, GpuGlyphItem, GpuGlyphTexture,
 };
 
-use super::GlyphBuffer;
+use super::{GlyphBuffer, TargetGlyphBuffer};
 pub fn prepare_glyph_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
     q_glyph_buffer: Query<(Entity, &GlyphBuffer, &ExtractedAtlas)>,
-    q_textures: Query<(&Position, &ExtractedGlyphTexture, Option<&GlyphSolidColor>)>,
+    q_textures: Query<(
+        &TargetGlyphBuffer,
+        &Position,
+        &ExtractedGlyphTexture,
+        Option<&GlyphSolidColor>,
+    )>,
 ) {
     for (buffer_entity, buffer, atlas) in q_glyph_buffer.iter() {
         let atlas_uvs = &atlas.items;
@@ -31,17 +36,17 @@ pub fn prepare_glyph_buffers(
         let mut buffer_data: Box<[GpuGlyphItem]> =
             vec![GpuGlyphItem::zeroed(); buffer_height * buffer_width].into();
 
-        for (position, texture, solid_color) in
-            buffer.textures.iter().flat_map(|t| q_textures.get(*t))
+        for (_, position, texture, solid_color) in q_textures
+            .iter()
+            .filter(|(target, _, _, _)| target.0 == buffer_entity)
         {
             let source_size = UVec2::new(texture.width as u32, texture.height as u32);
 
             let buffer_start = IVec2::ZERO;
             let buffer_end = buffer.size.as_ivec2();
 
-            let dst_min = position.position.clamp(buffer_start, buffer_end);
-            let dst_max =
-                (position.position + source_size.as_ivec2()).clamp(buffer_start, buffer_end);
+            let dst_min = position.clamp(buffer_start, buffer_end);
+            let dst_max = (**position + source_size.as_ivec2()).clamp(buffer_start, buffer_end);
 
             let size = (dst_max - dst_min).as_uvec2();
 
@@ -49,7 +54,7 @@ pub fn prepare_glyph_buffers(
                 continue;
             }
 
-            let src_min = (dst_min - position.position).as_uvec2();
+            let src_min = (dst_min - **position).as_uvec2();
             let dst_min = dst_min.as_uvec2();
 
             for dy in 0..size.y as usize {

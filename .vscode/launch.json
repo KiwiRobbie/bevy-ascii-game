@@ -25,7 +25,30 @@
                 "CARGO_MANIFEST_DIR":"${workspaceFolder}"
             }
         },
-       
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'tilemap'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin",
+                    "tilemap",
+                    "--features",
+                    "bevy/file_watcher,bevy/dynamic_linking",
+                ],
+                "filter": {
+                    "name": "tilemap",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "LD_LIBRARY_PATH": "${workspaceFolder}/target/debug/deps:/home/kiwi/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH",
+                "CARGO_MANIFEST_DIR":"${workspaceFolder}"
+            }
+        },
         
     ]
 }

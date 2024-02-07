@@ -15,21 +15,21 @@
 - Set physics grid sizes / ui root sizes in system
 - Game/UI layout + render independently
 
-# Rendering
-
-- Use instanced drawing instead of compute shader
-
 # # Glyph Colours
 
-- Option of solid colour or texture per character or shader
-- Learn how to enable/disable sections of shaders with features
+- [ ] Option of solid colour or texture per character or shader
+- [ ] Learn how to enable/disable sections of shaders with features
 
 # Separating Position from Physics
 
-- Make remainder a separate component
-- Spatial crate: Integer positions, grids, remainders, ...
-- Physics crate: Depends on spatial crate, adds velocity, gravity, actors + solids, ...
-- Move Solid Cache to be per World
+- [x] Make remainder a separate component
+- [x] Spatial crate: Integer positions, grids, remainders, ...
+- [x] Physics crate: Depends on spatial crate, adds velocity, gravity, actors + solids, ...
+- [ ] Move Solid Cache to be per World
+
+# Rendering: Done
+
+- Use instanced drawing instead of compute shader
 
 # Glyph Rendering: Done
 

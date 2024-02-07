@@ -17,3 +17,25 @@ impl Plugin for DebugMenuPlugin {
             .init_resource::<DebugMenuState>();
     }
 }
+
+// fn catch_leak(archetypes: &Archetypes, world: &World, q_text: Query<&widgets::Text>) {
+//     println!("\n\n\n");
+//     for archetype in archetypes.iter() {
+//         if &archetype.entities().len() > &1000 {
+//             println!("\n");
+//             for component_id in archetype.components() {
+//                 // let entity = archetype.entities().first().unwrap();
+//                 let components = world.components();
+//                 println!("{:?}", components.get_info(component_id).map(|c| c.name()));
+//             }
+//         }
+//     }
+
+//     let mut counts: HashMap<&str, usize> = HashMap::new();
+//     for text in q_text.iter().map(|t| t.text.as_str()) {
+//         *counts.entry(text).or_insert(0usize) += 1;
+//     }
+//     let mut counts = counts.iter().collect::<Vec<_>>();
+//     counts.sort_by(|a, b| a.1.cmp(b.1));
+//     dbg!(counts);
+// }

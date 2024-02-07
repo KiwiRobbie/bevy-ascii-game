@@ -1,17 +1,24 @@
+pub mod button;
 pub mod checkbox;
 pub mod column;
 pub mod container;
 pub mod divider;
+pub mod grid;
 pub mod plugin;
 pub mod row;
+pub mod scrolling_view;
 pub mod tab_view;
-
 pub mod text;
+pub mod texture;
 
+pub use button::Button;
 pub use checkbox::Checkbox;
 pub use column::Column;
 pub use container::Container;
 pub use divider::Divider;
+pub use grid::Grid;
 pub use row::Row;
+pub use scrolling_view::ScrollingView;
 pub use tab_view::TabView;
 pub use text::Text;
+pub use texture::Texture;

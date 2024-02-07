@@ -23,6 +23,7 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) 
         Text::build("".into()).save_id(&mut menu_state.player_count_text),
         Text::build("".into()).save_id(&mut menu_state.actor_count_text),
         Text::build("".into()).save_id(&mut menu_state.solid_count_text),
+        Text::build("".into()).save_id(&mut menu_state.entity_count),
         Divider::build('-'),
         Checkbox::build("Debug Position".into()).save_id(&mut menu_state.position_checkbox),
         Checkbox::build("Debug Colliders".into()).save_id(&mut menu_state.colliders_checkbox),

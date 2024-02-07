@@ -1,6 +1,6 @@
 use bevy::{asset::Asset, math::UVec2, reflect::TypePath, utils::HashMap};
 
-#[derive(Debug, Asset, TypePath)]
+#[derive(Debug, Asset, TypePath, Clone)]
 pub struct TilesetSource {
     pub display_name: String,
     pub id: String,

@@ -66,6 +66,7 @@ impl AssetLoader for TilemapLoader {
                 let mut data = vec![];
 
                 for row in meta.iter() {
+<<<<<<< HEAD
                     for (tileset, tile) in row.iter() {
                         let tileset = *tileset_names.get(tileset).unwrap();
                         let tile = *tilesets[tileset]
@@ -73,6 +74,16 @@ impl AssetLoader for TilemapLoader {
                             .get(tile)
                             .expect(format!("Tile map missing {}", tile).as_str());
                         data.push((tileset as u32, tile as u32));
+=======
+                    for tile in row.iter() {
+                        if let Some((tileset, tile)) = tile {
+                            let tileset = *tileset_names.get(tileset).unwrap();
+                            let tile = *tilesets[tileset].tile_names.get(tile).unwrap();
+                            data.push(Some((tileset as u32, tile as u32)));
+                        } else {
+                            data.push(None)
+                        }
+>>>>>>> main
                     }
                 }
 
@@ -90,12 +101,42 @@ impl AssetLoader for TilemapLoader {
                 tileset_handles.push(load_context.add_labeled_asset(tileset.id.clone(), tileset));
             }
 
-            Ok(dbg!(TilemapSource {
+            Ok(TilemapSource {
                 chunk_size: meta.chunk_size.into(),
+                tile_size: meta.tile_size.into(),
                 tileset_names,
                 tilesets: tileset_handles,
                 chunk_data,
-            }))
+            })
         })
     }
 }
+<<<<<<< HEAD
+=======
+fn load_chunk<'a>(
+    directory: PathBuf,
+    chunk_entry: DirEntry,
+    load_context: &'a mut bevy::asset::LoadContext,
+) -> bevy::utils::BoxedFuture<'a, Option<(IVec2, ChunkMeta)>> {
+    Box::pin(async move {
+        let file_name = chunk_entry.file_name();
+        let name = file_name.to_str().unwrap();
+        let (coords, suffix) = name.split_once('.')?;
+        if suffix != "chunk.ron" {
+            return None;
+        }
+        let (x, y) = coords.split_once('_')?;
+
+        let x = x.parse::<i32>().ok()?;
+        let y = y.parse::<i32>().ok()?;
+        let pos = IVec2 { x, y };
+
+        let data = load_context
+            .read_asset_bytes(directory.join(file_name))
+            .await
+            .unwrap();
+        let meta = ron::de::from_bytes::<ChunkMeta>(&data).ok()?;
+        Some((pos, meta))
+    })
+}
+>>>>>>> main
