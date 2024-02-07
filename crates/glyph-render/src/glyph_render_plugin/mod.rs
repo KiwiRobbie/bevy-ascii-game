@@ -81,6 +81,15 @@ pub struct GlyphTextureSource {
     pub data: Vec<String>,
 }
 
+impl GlyphTextureSource {
+    pub fn size(&self) -> UVec2 {
+        UVec2 {
+            x: self.data[0].len() as u32,
+            y: self.data.len() as u32,
+        }
+    }
+}
+
 #[derive(Component, Clone)]
 pub struct ExtractedGlyphTexture {
     pub data: Box<[u16]>,

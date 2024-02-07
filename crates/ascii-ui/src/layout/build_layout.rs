@@ -14,8 +14,10 @@ use spatial_grid::grid::PhysicsGridMember;
 use crate::{
     attachments::Root,
     layout::{constraint::Constraint, positioned::Positioned, widget_layout::WidgetLayout},
-    widgets::container::Container,
+    widgets::{container::Container, ScrollingView},
 };
+
+use super::render_clip::ClipRegion;
 
 pub fn clear_layout(mut commands: Commands, q_positioned: Query<Entity, With<Positioned>>) {
     for entity in q_positioned.iter() {
@@ -59,6 +61,7 @@ pub fn propagate_data_positions(
                 IVec2::ZERO,
                 world,
                 root_entity,
+                None,
                 &(target_buffer.clone(), grid_member.clone()),
             );
         }
@@ -70,6 +73,7 @@ pub fn recurse_apply_data<B: Bundle + Clone>(
     parent_offset: IVec2,
     world: &World,
     entity: Entity,
+    clip_region: Option<&ClipRegion>,
     bundle: &B,
 ) {
     let Some(widget) = world.get::<WidgetLayout>(entity) else {
@@ -80,9 +84,31 @@ pub fn recurse_apply_data<B: Bundle + Clone>(
         println!("no position");
         return;
     };
+
     let children = (widget.logic).children(entity, world);
 
     let new_offset = position.offset + parent_offset;
+
+    let clip_region = if let Some(existing_clip_region) =
+        world.get::<ScrollingView>(entity).and_then(|_| {
+            world.get::<Positioned>(entity).map(|p| ClipRegion {
+                start: new_offset,
+                size: p.size,
+            })
+        }) {
+        if let Some(clip_region) = clip_region {
+            Some(clip_region.intersection(&existing_clip_region))
+        } else {
+            Some(existing_clip_region.clone())
+        }
+    } else {
+        clip_region.map(|r| r.clone())
+    };
+
+    if let Some(clip_region) = &clip_region {
+        commands.entity(entity).insert(clip_region.clone());
+    }
+
     commands.entity(entity).insert((
         Positioned {
             offset: new_offset,
@@ -92,6 +118,13 @@ pub fn recurse_apply_data<B: Bundle + Clone>(
     ));
 
     for child in children.iter() {
-        recurse_apply_data(commands, new_offset, world, *child, bundle);
+        recurse_apply_data(
+            commands,
+            new_offset,
+            world,
+            *child,
+            clip_region.as_ref(),
+            bundle,
+        );
     }
 }

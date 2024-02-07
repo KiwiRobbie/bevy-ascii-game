@@ -5,7 +5,7 @@ use bevy::{
         entity::Entity,
         event::EventReader,
         query::With,
-        system::{adapter::dbg, Commands, Query, Res},
+        system::{Commands, Query, Res},
     },
     input::{
         mouse::{MouseButton, MouseWheel},
@@ -19,7 +19,10 @@ use bevy::{
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
 use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
-use crate::layout::positioned::{self, Positioned};
+use crate::layout::{
+    positioned::{self, Positioned},
+    render_clip::ClipRegion,
+};
 
 #[derive(Debug, Component)]
 pub struct IntractableMarker;
@@ -54,6 +57,7 @@ pub fn mouse_interaction(
             &Positioned,
             &PhysicsGridMember,
             Option<&ScrollableMarker>,
+            Option<&ClipRegion>,
         ),
         With<IntractableMarker>,
     >,
@@ -90,7 +94,7 @@ pub fn mouse_interaction(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin)
     {
-        for (entity, positioned, grid_member, scrollable) in q_intractable.iter() {
+        for (entity, positioned, grid_member, scrollable, clip) in q_intractable.iter() {
             let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
                 continue;
             };
@@ -100,7 +104,9 @@ pub fn mouse_interaction(
             let position = position.as_ivec2() + IVec2::Y;
 
             let cursor_position = IVec2::new(1, -1) * position;
-            if positioned.contains(cursor_position) {
+            if positioned.contains(cursor_position)
+                && clip.map(|r| r.contains(cursor_position)).unwrap_or(true)
+            {
                 commands
                     .entity(entity)
                     .insert(ActiveMarker)

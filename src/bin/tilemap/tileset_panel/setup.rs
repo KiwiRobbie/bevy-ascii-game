@@ -100,7 +100,7 @@ pub fn setup_ui(
         attachments::Root {
             enabled: true,
             position: IVec2 { x: 0, y: -16 },
-            size: UVec2 { x: 32, y: 24 },
+            size: UVec2 { x: 32, y: 32 },
         },
         UiPhysicsGridMarker,
         attachments::Border::symmetric(Some('|'), Some('-'), Some([',', '.', '`', '\''])).padded(),
@@ -123,6 +123,7 @@ fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
             tile_size.x,
             tile_size.y
         )),
+        widgets::Divider::build('-'),
         widgets::Container::build(Some(
             widgets::ScrollingView::build(vec![ListBuilderWidget::build::<UVec2, widgets::Grid>(
                 Box::new(move |item: &Vec<String>| {
@@ -136,7 +137,7 @@ fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
                 source.tiles.clone(),
                 tile_size,
             )])
-            .with(attachments::SizedBox::vertical(30)),
+            .with(attachments::SizedBox::vertical(26)),
         )),
     ])
 }
