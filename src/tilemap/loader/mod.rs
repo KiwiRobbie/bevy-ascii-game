@@ -66,15 +66,6 @@ impl AssetLoader for TilemapLoader {
                 let mut data = vec![];
 
                 for row in meta.iter() {
-<<<<<<< HEAD
-                    for (tileset, tile) in row.iter() {
-                        let tileset = *tileset_names.get(tileset).unwrap();
-                        let tile = *tilesets[tileset]
-                            .tile_names
-                            .get(tile)
-                            .expect(format!("Tile map missing {}", tile).as_str());
-                        data.push((tileset as u32, tile as u32));
-=======
                     for tile in row.iter() {
                         if let Some((tileset, tile)) = tile {
                             let tileset = *tileset_names.get(tileset).unwrap();
@@ -83,7 +74,6 @@ impl AssetLoader for TilemapLoader {
                         } else {
                             data.push(None)
                         }
->>>>>>> main
                     }
                 }
 
@@ -111,8 +101,6 @@ impl AssetLoader for TilemapLoader {
         })
     }
 }
-<<<<<<< HEAD
-=======
 fn load_chunk<'a>(
     directory: PathBuf,
     chunk_entry: DirEntry,
@@ -139,4 +127,3 @@ fn load_chunk<'a>(
         Some((pos, meta))
     })
 }
->>>>>>> main
