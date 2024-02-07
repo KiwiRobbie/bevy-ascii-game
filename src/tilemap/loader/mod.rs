@@ -1,6 +1,6 @@
 pub mod meta;
 
-use std::path::PathBuf;
+use std::{fs::DirEntry, path::PathBuf};
 
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
@@ -10,7 +10,7 @@ use bevy::{
 
 use crate::tileset::asset::TilesetSource;
 
-use self::meta::{ChunkMeta, TilemapMeta};
+use self::meta::{ChunkDataLocation, ChunkMeta, TilemapMeta};
 
 use super::{asset::TilemapSource, chunk::TilemapChunk};
 
@@ -55,12 +55,18 @@ impl AssetLoader for TilemapLoader {
 
             let mut chunk_data: HashMap<IVec2, TilemapChunk> = HashMap::new();
 
-            for pos in meta.chunks.iter() {
-                let pos: IVec2 = (*pos).into();
-                let path =
-                    PathBuf::from(&meta.chunk_dir).join(format!("{}_{}.chunk.ron", pos.x, pos.y));
-                let data = load_context.read_asset_bytes(path).await.unwrap();
-                let Some(meta) = ron::de::from_bytes::<ChunkMeta>(&data).ok() else {
+            let directory = match &meta.chunks {
+                ChunkDataLocation::Dir(path) => PathBuf::from(path),
+                ChunkDataLocation::Relative(path) => {
+                    load_context.path().parent().unwrap().join(path)
+                }
+            };
+            for entry in PathBuf::from("assets").join(&directory).read_dir().unwrap() {
+                let Ok(entry) = entry else {
+                    continue;
+                };
+                let Some((pos, meta)) = load_chunk(directory.clone(), entry, load_context).await
+                else {
                     continue;
                 };
                 let mut data = vec![];
