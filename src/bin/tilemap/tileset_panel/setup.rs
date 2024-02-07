@@ -5,10 +5,11 @@ use ascii_ui::{
     widgets::{self, Checkbox, Column, Container, Divider, Text},
 };
 use bevy::{
+    asset::{AssetServer, Handle},
     ecs::{
         component::Component,
         entity::Entity,
-        system::{Commands, ResMut},
+        system::{Commands, Res, ResMut},
     },
     math::{IVec2, UVec2},
 };
@@ -17,7 +18,7 @@ use bevy_ascii_game::{physics_grids::UiPhysicsGridMarker, tileset::asset::Tilese
 
 use crate::list_builder_widget::ListBuilderWidget;
 
-use super::state::TilesetPanelState;
+use super::{state::TilesetPanelState, update::TilesetHandles};
 
 #[derive(Debug, Component)]
 pub struct ItemMutateButton {
@@ -31,7 +32,11 @@ pub enum MutateMode {
     Remove,
 }
 
-pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState>) {
+pub fn setup_ui(
+    mut commands: Commands,
+    mut menu_state: ResMut<TilesetPanelState>,
+    server: Res<AssetServer>,
+) {
     let menu_state = &mut *menu_state;
 
     let settings_tab = Column::build(vec![
@@ -51,7 +56,7 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
         let mut list_builder = Entity::PLACEHOLDER;
         rows.push(
             ListBuilderWidget::build::<widgets::Column>(
-                Box::new(|i: &usize| widgets::Text::build(format!("{}", i))),
+                Box::new(|_, i: &usize| widgets::Text::build(format!("{}", i))),
                 vec![0, 2, 5],
                 (),
             )
@@ -79,11 +84,14 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
     }(&mut commands);
 
     let tileset_tab = {
-        ListBuilderWidget::<TilesetSource>::build::<widgets::Column>(
-            Box::new(|source| build_tileset_ui(source)),
+        ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
+            Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
             vec![],
             (),
         )
+        .with(TilesetHandles {
+            handles: vec![server.load("tilesets/cave.tileset.ron")],
+        })
     }(&mut commands);
 
     Container::build(Some(widgets::TabView::build(vec![
@@ -108,7 +116,10 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState
 #[derive(Debug, Component)]
 pub struct DebugMenuMarker;
 
-fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
+fn build_tileset_ui<'a>(
+    source: &TilesetSource,
+    handle: Handle<TilesetSource>,
+) -> WidgetBuilderFn<'a> {
     let tile_size = source.tile_size;
     widgets::Column::build(vec![
         widgets::Text::build(source.display_name.clone()),
@@ -121,8 +132,14 @@ fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
         widgets::Divider::build('-'),
         widgets::Container::build(Some(
             widgets::ScrollingView::build(vec![ListBuilderWidget::build::<widgets::Grid>(
-                Box::new(move |item: &Vec<String>| {
-                    widgets::Texture::build(item.clone(), tile_size).with(IntractableMarker)
+                Box::new(move |index, item: &Vec<String>| {
+                    widgets::Texture::build(item.clone(), tile_size).with((
+                        IntractableMarker,
+                        TilesetTileId {
+                            tile: index,
+                            tileset: handle.clone(),
+                        },
+                    ))
                 }),
                 source.tiles.clone(),
                 source.tile_size,
@@ -130,4 +147,9 @@ fn build_tileset_ui<'a>(source: &TilesetSource) -> WidgetBuilderFn<'a> {
             .with(attachments::SizedBox::vertical(26)),
         )),
     ])
+}
+#[derive(Debug, Component, Clone)]
+pub struct TilesetTileId {
+    pub tileset: Handle<TilesetSource>,
+    pub tile: usize,
 }

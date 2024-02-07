@@ -8,7 +8,7 @@ use bevy::{
     },
     ecs::{
         schedule::IntoSystemConfigs,
-        system::{Commands, Query, Res, ResMut},
+        system::{Commands, Query, Res},
     },
     math::IVec2,
     render::{
@@ -40,7 +40,7 @@ use grid_physics::{
     velocity::Velocity,
 };
 use spatial_grid::position::{Position, PositionBundle};
-use tileset_panel::{plugin::TilesetPanelPlugin, state::TilesetPanelState};
+use tileset_panel::plugin::TilesetPanelPlugin;
 
 mod list_builder_widget;
 mod tileset_panel;
@@ -102,11 +102,7 @@ fn moving_platform(
     }
 }
 
-fn setup_system(
-    mut commands: Commands,
-    server: Res<AssetServer>,
-    mut tileset_panel: ResMut<TilesetPanelState>,
-) {
+fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands
         .spawn((
             Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
@@ -116,8 +112,6 @@ fn setup_system(
             },
         ))
         .insert(GamePhysicsGridMarker);
-
-    tileset_panel.tilesets = vec![server.load("tilemaps/cave_map.tilemap.ron")];
 
     commands.spawn((
         Camera2dBundle {

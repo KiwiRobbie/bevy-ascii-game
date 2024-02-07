@@ -9,7 +9,7 @@ use ascii_ui::{
 #[derive(Component)]
 pub struct ListBuilderWidget<T: Send + Sync> {
     items: Vec<T>,
-    pub builder: Box<dyn Fn(&T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+    pub builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
 }
 
 impl<T> ListBuilderWidget<T>
@@ -17,7 +17,7 @@ where
     T: Send + Sync + 'static,
 {
     pub fn build<'b, W: ListWidget>(
-        builder: Box<dyn Fn(&T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+        builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
         items: Vec<T>,
         args: W::Args,
     ) -> WidgetBuilderFn<'b>
@@ -25,13 +25,20 @@ where
         <W as ListWidget>::Args: 'b,
     {
         Box::new(move |commands| {
-            W::build(items.iter().map(&builder).collect(), args)
-                .with(ListBuilderWidget { builder, items })(commands)
+            W::build(
+                items
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| builder(i, t))
+                    .collect(),
+                args,
+            )
+            .with(ListBuilderWidget { builder, items })(commands)
         })
     }
 
     pub fn push<W: ListWidget>(&mut self, list_widget: &mut W, item: T, commands: &mut Commands) {
-        list_widget.push((self.builder)(&item)(commands));
+        list_widget.push((self.builder)(self.items.len(), &item)(commands));
         self.items.push(item);
     }
     pub fn pop<W: ListWidget>(&mut self, self_column: &mut W, commands: &mut Commands) {
@@ -54,7 +61,8 @@ where
         self_column.children = self
             .items
             .iter()
-            .map(|item| (self.builder)(item)(commands))
+            .enumerate()
+            .map(|(index, item)| (self.builder)(index, item)(commands))
             .collect();
     }
 }

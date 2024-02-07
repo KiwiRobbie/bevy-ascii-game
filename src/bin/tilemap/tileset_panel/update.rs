@@ -1,5 +1,6 @@
 use ascii_ui::{
     attachments::Root,
+    mouse::TriggeredMarker,
     widgets::{
         self,
         button::ButtonJustPressedMarker,
@@ -7,11 +8,12 @@ use ascii_ui::{
     },
 };
 use bevy::{
-    asset::{AssetEvent, Assets},
+    asset::{AssetEvent, Assets, Handle},
     ecs::{
+        component::Component,
         event::EventReader,
         query::With,
-        system::{Commands, Query, Res, ResMut},
+        system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
         gamepad::{GamepadButton, GamepadButtonType, Gamepads},
@@ -37,7 +39,7 @@ use bevy_ascii_game::{
 use crate::list_builder_widget::ListBuilderWidget;
 
 use super::{
-    setup::{DebugMenuMarker, ItemMutateButton},
+    setup::{DebugMenuMarker, ItemMutateButton, TilesetTileId},
     state::TilesetPanelState,
 };
 
@@ -143,22 +145,41 @@ pub fn update_list_builder(
         }
     }
 }
+#[derive(Debug, Component)]
+pub struct TilesetHandles {
+    pub handles: Vec<Handle<TilesetSource>>,
+}
+
 pub fn update_tilesets(
     mut commands: Commands,
-    mut q_list_builder: Query<(&mut ListBuilderWidget<TilesetSource>, &mut widgets::Column)>,
+    mut q_list_builder: Query<(
+        &mut ListBuilderWidget<(TilesetSource, Handle<TilesetSource>)>,
+        &mut widgets::Column,
+        &TilesetHandles,
+    )>,
     mut ev_tilesets: EventReader<AssetEvent<TilesetSource>>,
     tilesets: Res<Assets<TilesetSource>>,
 ) {
     for ev in ev_tilesets.read() {
-        dbg!(ev);
-        if let AssetEvent::LoadedWithDependencies { id } = ev {
-            for (mut builder, mut column) in q_list_builder.iter_mut() {
-                builder.push::<widgets::Column>(
-                    &mut column,
-                    tilesets.get(*id).unwrap().clone(),
-                    &mut commands,
-                )
+        match ev {
+            AssetEvent::LoadedWithDependencies { id } => {
+                let tileset = tilesets.get(*id).unwrap().clone();
+
+                for (mut builder, mut column, TilesetHandles { handles }) in
+                    q_list_builder.iter_mut()
+                {
+                    dbg!(handles.iter().map(|h| h.id()).collect::<Vec<_>>(), id);
+
+                    if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
+                        builder.push::<widgets::Column>(
+                            &mut column,
+                            (tileset.clone(), handle.clone()),
+                            &mut commands,
+                        )
+                    }
+                }
             }
+            _ => (),
         };
     }
 
@@ -173,4 +194,15 @@ pub fn update_tilesets(
     //         }
     //     }
     // }
+}
+
+pub fn tilemap_painter(
+    q_select: Query<&TilesetTileId, With<TriggeredMarker>>,
+    mut active: Local<Option<TilesetTileId>>,
+) {
+    for tile in q_select.iter() {
+        active.replace(tile.clone());
+    }
+
+    if let Some(TilesetTileId { tileset, tile }) = &*active {}
 }
