@@ -39,9 +39,8 @@ pub fn prepare_glyph_buffers(
             let buffer_start = IVec2::ZERO;
             let buffer_end = buffer.size.as_ivec2();
 
-            let dst_min = position.position.clamp(buffer_start, buffer_end);
-            let dst_max =
-                (position.position + source_size.as_ivec2()).clamp(buffer_start, buffer_end);
+            let dst_min = position.clamp(buffer_start, buffer_end);
+            let dst_max = (**position + source_size.as_ivec2()).clamp(buffer_start, buffer_end);
 
             let size = (dst_max - dst_min).as_uvec2();
 
@@ -49,7 +48,7 @@ pub fn prepare_glyph_buffers(
                 continue;
             }
 
-            let src_min = (dst_min - position.position).as_uvec2();
+            let src_min = (dst_min - **position).as_uvec2();
             let dst_min = dst_min.as_uvec2();
 
             for dy in 0..size.y as usize {

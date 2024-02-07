@@ -18,11 +18,7 @@ pub fn divider_render(
 ) {
     for (entity, positioned, divider) in q_text.iter() {
         commands.entity(entity).insert((
-            Position {
-                position: positioned.offset * IVec2::new(1, -1)
-                    - IVec2::Y * positioned.size.y as i32,
-                remainder: Vec2::ZERO,
-            },
+            Position(positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32),
             GlyphSprite {
                 texture: glyph_textures.add(GlyphTextureSource {
                     data: vec![divider

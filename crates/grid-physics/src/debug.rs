@@ -9,6 +9,7 @@ use bevy::{
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::Position,
+    remainder::Remainder,
 };
 
 use crate::{actor::Actor, collision::Collider, solid::Solid};
@@ -37,7 +38,7 @@ pub fn debug_collision_system(
         };
 
         for shape in collider.shape.colliders() {
-            let min = (position.position + shape.min).as_vec2() * grid.size.as_vec2()
+            let min = (**position + shape.min).as_vec2() * grid.size.as_vec2()
                 + transform.translation.truncate();
             let size = shape.size.as_vec2() * grid.size.as_vec2();
 
@@ -57,7 +58,7 @@ pub struct DebugPositions(pub bool);
 
 pub fn debug_position_system(
     mut gizmos: Gizmos,
-    q_position: Query<(&Position, &PhysicsGridMember)>,
+    q_position: Query<(&Position, &Remainder, &PhysicsGridMember)>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
     enabled: Res<DebugPositions>,
 ) {
@@ -65,12 +66,12 @@ pub fn debug_position_system(
         return;
     }
 
-    for (position, grid_member) in q_position.iter() {
+    for (position, remainder, grid_member) in q_position.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
-        let remainder = position.remainder * grid.size.as_vec2();
-        let position = position.position * grid.size.as_ivec2();
+        let remainder = **remainder * grid.size.as_vec2();
+        let position = **position * grid.size.as_ivec2();
         let position = position.as_vec2() + transform.translation.truncate();
 
         gizmos.circle_2d(position, 5.0, Color::BLUE);

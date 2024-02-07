@@ -93,9 +93,9 @@ fn moving_platform(
     time: Res<Time>,
 ) {
     for (mut movement, mut velocity, position) in q_solid_movement.iter_mut() {
-        if position.position.x > 50 {
+        if position.x > 50 {
             velocity.velocity.x = -10.0;
-        } else if position.position.x < -50 {
+        } else if position.x < -50 {
             velocity.velocity.x = 10.0;
         }
         movement.add(velocity.velocity * time.delta_seconds());

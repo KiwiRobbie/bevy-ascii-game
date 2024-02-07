@@ -84,6 +84,7 @@ pub fn update_values(
     q_player: Query<(), With<PlayerMarker>>,
     q_solid: Query<(), With<Solid>>,
     q_actor: Query<(), With<Actor>>,
+    q_entity: Query<()>,
     time: Res<Time>,
 ) {
     if !state.enabled {
@@ -113,5 +114,8 @@ pub fn update_values(
     }
     if let Some(entity) = state.actor_count_text {
         q_text.get_mut(entity).unwrap().text = format!("Actor  Count: {}", q_actor.iter().count());
+    }
+    if let Some(entity) = state.entity_count {
+        q_text.get_mut(entity).unwrap().text = format!("Entity Count: {}", q_entity.iter().count());
     }
 }

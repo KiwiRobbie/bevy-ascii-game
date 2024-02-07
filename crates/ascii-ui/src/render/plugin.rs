@@ -45,7 +45,7 @@ fn apply_clipping(
         let clip = clip.to_world_coord();
         let texture = textures.get(sprite.texture.id()).unwrap();
 
-        let texture_start = pos.position + sprite.offset;
+        let texture_start = **pos + sprite.offset;
 
         let clip_end = clip.start + clip.size.as_ivec2();
 

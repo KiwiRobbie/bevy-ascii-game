@@ -48,7 +48,7 @@ pub fn extract_tilemaps(
             .get(&(font_size.clone(), font.key()))
             .unwrap();
 
-        let buffer_start = buffer_position.position;
+        let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
         for entity in buffer.textures.iter() {
@@ -63,7 +63,7 @@ pub fn extract_tilemaps(
                     continue;
                 };
 
-                let tilemap_offset = tilemap_position.position;
+                let tilemap_offset = **tilemap_position;
 
                 let chunk_start = (buffer_start - tilemap_offset)
                     .as_vec2()

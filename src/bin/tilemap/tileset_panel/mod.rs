@@ -1,3 +1,4 @@
+pub mod painter;
 pub mod plugin;
 pub mod setup;
 pub mod state;

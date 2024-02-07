@@ -7,7 +7,7 @@ use bevy::{
     },
     time::Time,
 };
-use spatial_grid::position::Position;
+use spatial_grid::{position::Position, remainder::Remainder};
 
 use super::{
     actor::Actor,
@@ -69,18 +69,18 @@ pub struct FreeAirborne;
 pub fn update_free_actor_state(
     mut commands: Commands,
     mut q_solids: Query<&mut RidingEntities, FilterSolids>,
-    q_free_actors: Query<(Entity, &Position, &Velocity, &Collider), With<FreeMarker>>,
+    q_free_actors: Query<(Entity, &Position, &Remainder, &Velocity, &Collider), With<FreeMarker>>,
     q_grounded_extra: Query<Entity, (Without<FreeMarker>, With<FreeGrounded>)>,
     solid_collision_cache: Res<SolidCollisionCache>,
 ) {
-    for (actor, position, velocity, collider) in q_free_actors.iter() {
+    for (actor, position, remainder, velocity, collider) in q_free_actors.iter() {
         for mut riding in q_solids.iter_mut() {
             riding.clear();
         }
 
         if velocity.velocity.y <= 0.0 {
             if let Some(solid) =
-                Actor::test_move_y(-1.0, position, collider, &solid_collision_cache)
+                Actor::test_move_y(-1.0, position, remainder, collider, &solid_collision_cache)
             {
                 commands
                     .entity(actor)

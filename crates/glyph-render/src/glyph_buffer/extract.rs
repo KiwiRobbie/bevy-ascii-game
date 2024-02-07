@@ -88,7 +88,7 @@ pub fn extract_glyph_buffers(
                     commands.insert_or_spawn_batch([(
                         entity,
                         (
-                            Position::from(position.position + offset),
+                            Position::from(**position + offset),
                             target.clone(),
                             extracted_glyph_texture,
                         ),
@@ -107,7 +107,7 @@ pub fn extract_glyph_buffers(
                     commands.insert_or_spawn_batch([(
                         entity,
                         (
-                            Position::from(position.position + glyph_sprite.offset),
+                            Position::from(**position + glyph_sprite.offset),
                             target.clone(),
                             extracted_glyph_texture,
                         ),

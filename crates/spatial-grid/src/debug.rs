@@ -2,6 +2,7 @@ use bevy::{
     app::{Plugin, PostUpdate},
     ecs::system::{Query, Res, Resource},
     gizmos::gizmos::Gizmos,
+    math::Vec2,
     prelude::{Deref, DerefMut},
     render::color::Color,
     transform::components::Transform,
@@ -10,6 +11,7 @@ use bevy::{
 use crate::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::Position,
+    remainder::Remainder,
 };
 
 #[derive(Debug, Resource, Default, DerefMut, Deref)]
@@ -20,7 +22,7 @@ pub struct DebugPositions(pub bool);
 
 pub fn debug_position_system(
     mut gizmos: Gizmos,
-    q_position: Query<(&Position, &PhysicsGridMember)>,
+    q_position: Query<(&Position, Option<&Remainder>, &PhysicsGridMember)>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
     enabled: Res<DebugPositions>,
 ) {
@@ -28,16 +30,17 @@ pub fn debug_position_system(
         return;
     }
 
-    for (position, grid_member) in q_position.iter() {
+    for (position, remainder, grid_member) in q_position.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
-        let remainder = position.remainder * grid.size.as_vec2();
-        let position = position.position * grid.size.as_ivec2();
+        let position = **position * grid.size.as_ivec2();
         let position = position.as_vec2() + transform.translation.truncate();
 
         gizmos.circle_2d(position, 5.0, Color::BLUE);
-        gizmos.circle_2d(position + remainder, 2.0, Color::RED);
+        if let Some(remainder) = remainder.map(|r| **r * grid.size.as_vec2()) {
+            gizmos.circle_2d(position + remainder, 2.0, Color::RED);
+        }
     }
 }
 

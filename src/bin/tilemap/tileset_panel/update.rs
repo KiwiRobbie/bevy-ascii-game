@@ -18,9 +18,13 @@ use bevy::{
     input::{
         gamepad::{GamepadButton, GamepadButtonType, Gamepads},
         keyboard::KeyCode,
+        mouse::MouseButton,
         Input,
     },
+    render::camera::Camera,
     time::Time,
+    transform::components::GlobalTransform,
+    window::{PrimaryWindow, Window},
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
 use grid_physics::{
@@ -194,15 +198,4 @@ pub fn update_tilesets(
     //         }
     //     }
     // }
-}
-
-pub fn tilemap_painter(
-    q_select: Query<&TilesetTileId, With<TriggeredMarker>>,
-    mut active: Local<Option<TilesetTileId>>,
-) {
-    for tile in q_select.iter() {
-        active.replace(tile.clone());
-    }
-
-    if let Some(TilesetTileId { tileset, tile }) = &*active {}
 }

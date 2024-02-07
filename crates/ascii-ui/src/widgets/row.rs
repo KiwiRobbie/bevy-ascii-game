@@ -3,6 +3,7 @@ use bevy::{
         component::Component, entity::Entity, reflect::ReflectComponent, system::Commands,
         world::World,
     },
+    hierarchy::BuildChildren,
     math::{IVec2, UVec2},
     reflect::Reflect,
 };
@@ -140,14 +141,18 @@ impl Row {
             for child in children.into_iter() {
                 children_entities.push((child)(commands));
             }
-            commands
-                .spawn((
-                    Self {
-                        children: children_entities,
-                    },
-                    WidgetLayout::new::<RowLogic>(),
-                ))
-                .id()
+
+            let mut row = commands.spawn(());
+            for entity in children_entities.iter() {
+                row.add_child(*entity);
+            }
+            row.insert((
+                Self {
+                    children: children_entities,
+                },
+                WidgetLayout::new::<RowLogic>(),
+            ))
+            .id()
         })
     }
 }

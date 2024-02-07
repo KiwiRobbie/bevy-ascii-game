@@ -121,6 +121,5 @@ pub fn mouse_interaction(
                 }
             }
         }
-    } else {
     }
 }
