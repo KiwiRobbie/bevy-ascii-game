@@ -5,18 +5,17 @@ use ascii_ui::{
     widgets::{self, Checkbox, Column, Container, Divider, Text},
 };
 use bevy::{
-    asset::Assets,
     ecs::{
         component::Component,
         entity::Entity,
-        system::{Commands, Res, ResMut},
+        system::{Commands, ResMut},
     },
     math::{IVec2, UVec2},
 };
 
 use bevy_ascii_game::{physics_grids::UiPhysicsGridMarker, tileset::asset::TilesetSource};
 
-use crate::{list_builder_widget::ListBuilderWidget, tileset_widget::widget::TilesetWidget};
+use crate::list_builder_widget::ListBuilderWidget;
 
 use super::state::TilesetPanelState;
 
@@ -32,11 +31,7 @@ pub enum MutateMode {
     Remove,
 }
 
-pub fn setup_ui(
-    mut commands: Commands,
-    mut menu_state: ResMut<TilesetPanelState>,
-    tileset_source: Res<Assets<TilesetSource>>,
-) {
+pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState>) {
     let menu_state = &mut *menu_state;
 
     let settings_tab = Column::build(vec![

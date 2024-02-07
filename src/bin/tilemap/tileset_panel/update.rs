@@ -1,6 +1,5 @@
 use ascii_ui::{
     attachments::Root,
-    list_widget::ListWidget,
     widgets::{
         self,
         button::ButtonJustPressedMarker,
@@ -8,7 +7,7 @@ use ascii_ui::{
     },
 };
 use bevy::{
-    asset::{AssetEvent, AssetServer, Assets},
+    asset::{AssetEvent, Assets},
     ecs::{
         event::EventReader,
         query::With,
