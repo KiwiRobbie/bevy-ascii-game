@@ -4,7 +4,7 @@ use bevy::{
         entity::Entity,
         system::{Commands, Query, ResMut},
     },
-    math::{IVec2, Vec2},
+    math::IVec2,
 };
 use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTextureSource};
 use spatial_grid::position::Position;

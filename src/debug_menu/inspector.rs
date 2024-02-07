@@ -5,7 +5,7 @@ use ascii_ui::{
     widgets,
 };
 use bevy::{
-    app::{Plugin, PreUpdate, Update},
+    app::{Plugin, PreUpdate},
     ecs::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
@@ -122,7 +122,9 @@ pub fn inspector_fetch_system(
     let type_registry = &type_registry.0;
 
     for entity in inspector_widgets.drain(..) {
-        commands.get_entity(entity).map(|e| e.despawn_recursive());
+        if let Some(e) = commands.get_entity(entity) {
+            e.despawn_recursive()
+        }
     }
 
     for (entity, inspector) in q_inspector.iter_mut() {

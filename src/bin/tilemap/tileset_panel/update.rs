@@ -1,6 +1,5 @@
 use ascii_ui::{
     attachments::Root,
-    mouse::TriggeredMarker,
     widgets::{
         self,
         button::ButtonJustPressedMarker,
@@ -13,18 +12,14 @@ use bevy::{
         component::Component,
         event::EventReader,
         query::With,
-        system::{Commands, Local, Query, Res, ResMut},
+        system::{Commands, Query, Res, ResMut},
     },
     input::{
         gamepad::{GamepadButton, GamepadButtonType, Gamepads},
         keyboard::KeyCode,
-        mouse::MouseButton,
         Input,
     },
-    render::camera::Camera,
     time::Time,
-    transform::components::GlobalTransform,
-    window::{PrimaryWindow, Window},
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
 use grid_physics::{
@@ -43,7 +38,7 @@ use bevy_ascii_game::{
 use crate::list_builder_widget::ListBuilderWidget;
 
 use super::{
-    setup::{DebugMenuMarker, ItemMutateButton, TilesetTileId},
+    setup::{DebugMenuMarker, ItemMutateButton},
     state::TilesetPanelState,
 };
 
@@ -165,25 +160,19 @@ pub fn update_tilesets(
     tilesets: Res<Assets<TilesetSource>>,
 ) {
     for ev in ev_tilesets.read() {
-        match ev {
-            AssetEvent::LoadedWithDependencies { id } => {
-                let tileset = tilesets.get(*id).unwrap().clone();
+        if let AssetEvent::LoadedWithDependencies { id } = ev {
+            let tileset = tilesets.get(*id).unwrap().clone();
+            for (mut builder, mut column, TilesetHandles { handles }) in q_list_builder.iter_mut() {
+                dbg!(handles.iter().map(|h| h.id()).collect::<Vec<_>>(), id);
 
-                for (mut builder, mut column, TilesetHandles { handles }) in
-                    q_list_builder.iter_mut()
-                {
-                    dbg!(handles.iter().map(|h| h.id()).collect::<Vec<_>>(), id);
-
-                    if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
-                        builder.push::<widgets::Column>(
-                            &mut column,
-                            (tileset.clone(), handle.clone()),
-                            &mut commands,
-                        )
-                    }
+                if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
+                    builder.push::<widgets::Column>(
+                        &mut column,
+                        (tileset.clone(), handle.clone()),
+                        &mut commands,
+                    )
                 }
             }
-            _ => (),
         };
     }
 

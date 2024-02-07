@@ -78,15 +78,7 @@ pub fn update_brush(
     q_camera: Query<(&Camera, &GlobalTransform)>,
     q_mouse_buttons: Res<Input<MouseButton>>,
     q_physics_grid: Query<(&SpatialGrid, &GlobalTransform)>,
-    mut q_brush: Query<
-        (
-            Entity,
-            &mut Position,
-            &PhysicsGridMember,
-            Option<&BrushTileSize>,
-        ),
-        With<Brush>,
-    >,
+    mut q_brush: Query<(&mut Position, &PhysicsGridMember, Option<&BrushTileSize>), With<Brush>>,
     q_tilemap: Query<(&Tilemap, &GlobalTransform)>,
 ) {
     let (camera, camera_transform) = q_camera.single();
@@ -96,8 +88,7 @@ pub fn update_brush(
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin)
     {
-        let Ok((entity, mut brush_position, grid_member, tile_size)) = q_brush.get_single_mut()
-        else {
+        let Ok((mut brush_position, grid_member, tile_size)) = q_brush.get_single_mut() else {
             return;
         };
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {

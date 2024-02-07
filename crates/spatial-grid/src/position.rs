@@ -1,6 +1,6 @@
 use bevy::{
     ecs::{bundle::Bundle, component::Component},
-    math::{IVec2, Vec2},
+    math::IVec2,
     prelude::{Deref, DerefMut},
     reflect::Reflect,
 };

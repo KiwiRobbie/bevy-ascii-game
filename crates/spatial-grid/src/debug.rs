@@ -2,7 +2,6 @@ use bevy::{
     app::{Plugin, PostUpdate},
     ecs::system::{Query, Res, Resource},
     gizmos::gizmos::Gizmos,
-    math::Vec2,
     prelude::{Deref, DerefMut},
     render::color::Color,
     transform::components::Transform,

@@ -1,9 +1,5 @@
-use ascii_ui::{plugin::UiPlugin, widgets};
-use bevy::{
-    app::{Plugin, Startup, Update},
-    ecs::{archetype::Archetypes, system::Query, world::World},
-    utils::hashbrown::HashMap,
-};
+use ascii_ui::plugin::UiPlugin;
+use bevy::app::{Plugin, Startup, Update};
 
 use super::{
     inspector::InspectorPlugin,
