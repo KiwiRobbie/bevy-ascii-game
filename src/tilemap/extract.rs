@@ -2,10 +2,7 @@ use std::ops::Div;
 
 use bevy::{
     asset::Assets,
-    ecs::{
-        entity::Entity,
-        system::{Commands, Query, Res},
-    },
+    ecs::system::{Commands, Query, Res},
     math::{IVec2, UVec2},
     render::Extract,
 };
@@ -50,7 +47,7 @@ pub fn extract_tilemaps(
         let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
-        for (tilemap_position, target, tilemap, solid_color) in buffer
+        for (tilemap_position, target, tilemap, _solid_color) in buffer
             .textures
             .iter()
             .flat_map(|entity| q_tilemaps.get(*entity))

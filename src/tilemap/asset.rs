@@ -40,10 +40,18 @@ impl TilemapSource {
             .entry(chunk_id)
             .or_insert(TilemapChunk::empty(self.chunk_size));
 
-        let new_index = self.tileset_names.len();
-        let tileset_index = self.tileset_names.entry(tileset_id).or_insert(new_index);
+        let tileset_index = {
+            let new_index = self.tileset_names.len();
+            if let Some(index) = self.tileset_names.get(&tileset_id) {
+                *index
+            } else {
+                self.tileset_names.insert(tileset_id, new_index);
+                self.tilesets.push(tileset);
+                new_index
+            }
+        };
 
-        chunk.data[chunk_tile_index as usize] = Some((*tileset_index as u32, tileset_tile_index));
+        chunk.data[chunk_tile_index as usize] = Some((tileset_index as u32, tileset_tile_index));
     }
     pub fn clear_tile(&mut self, pos: IVec2) -> Option<(u32, u32)> {
         let (chunk_id, chunk_tile_index) = self.chunk_id_index(pos);
