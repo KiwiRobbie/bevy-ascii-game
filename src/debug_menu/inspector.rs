@@ -9,11 +9,12 @@ use bevy::{
     ecs::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
-        query::{Changed, With},
-        schedule::IntoSystemConfigs,
+        query::With,
+        schedule::{apply_deferred, IntoSystemConfigs},
         system::{Commands, Query, Res, Resource},
         world::World,
     },
+    hierarchy::DespawnRecursiveExt,
     math::{IVec2, UVec2, Vec2},
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
@@ -114,13 +115,13 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
 
 pub fn inspector_fetch_system(
     mut commands: Commands,
-    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::Column), Changed<InspectorTab>>,
+    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::Column)>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
 ) {
     let type_registry = &type_registry.0;
 
-    for (entity, inspector, column) in q_inspector.iter_mut() {
+    for (inspector_entity, inspector, column) in q_inspector.iter_mut() {
         if let Some(target) = inspector.target {
             let mut inspector_widgets = vec![];
             inspector_widgets.push(widgets::Text::build(format!("Entity: {:?}", target))(
@@ -197,15 +198,17 @@ pub fn inspector_fetch_system(
             }
 
             for entity in column.children.iter() {
-                commands.entity(*entity).despawn();
+                commands.entity(*entity).despawn_recursive();
             }
 
-            commands.entity(entity).insert(widgets::column::Column {
-                children: inspector_widgets,
-            });
+            commands
+                .entity(inspector_entity)
+                .insert(widgets::column::Column {
+                    children: inspector_widgets,
+                });
         } else {
             commands
-                .entity(entity)
+                .entity(inspector_entity)
                 .insert(widgets::column::Column { children: vec![] });
         }
     }
@@ -216,7 +219,12 @@ impl Plugin for InspectorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
             Update,
-            (inspector_init_system, inspector_fetch_system).chain(),
+            (
+                inspector_init_system,
+                inspector_fetch_system,
+                apply_deferred,
+            )
+                .chain(),
         )
         .init_resource::<TypeRegistryResource>();
     }

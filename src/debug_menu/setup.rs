@@ -31,7 +31,7 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) 
         Checkbox::build("Pause Physics".into()).save_id(&mut menu_state.pause_checkbox),
     ])(&mut commands);
 
-    let inspector_tab = Column::build(vec![]).with(InspectorTab::default())(&mut commands);
+    let inspector_tab = Column::build(vec![]).with((InspectorTab::default(),))(&mut commands);
 
     Container::build(Some(Column::build(vec![
         Text::build("[F3 Debug Menu]".into()),

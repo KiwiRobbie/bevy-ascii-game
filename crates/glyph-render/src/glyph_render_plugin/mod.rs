@@ -38,7 +38,7 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<GlyphTextureSource>()
-            .add_systems(PostUpdate, update_glyph_buffer_entities);
+            .add_systems(Last, update_glyph_buffer_entities);
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(ExtractSchedule, (extract_glyph_buffers,))
