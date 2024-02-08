@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use ascii_ui::mouse::{self, input::MouseInput, TriggeredMarker};
+use ascii_ui::mouse::{input::MouseInput, TriggeredMarker};
 use bevy::{
     app::{Plugin, Startup, Update},
     asset::Assets,
@@ -10,12 +10,11 @@ use bevy::{
         query::{With, Without},
         system::{Commands, Query, Res, ResMut},
     },
-    input::{mouse::MouseButton, Input},
+    input::mouse::MouseButton,
     math::{IVec2, UVec2, Vec4Swizzles},
     prelude::Deref,
-    render::{camera::Camera, color::Color},
+    render::color::Color,
     transform::components::GlobalTransform,
-    window::{PrimaryWindow, Window},
 };
 use bevy_ascii_game::{
     physics_grids::GamePhysicsGridMarker,
@@ -108,25 +107,20 @@ pub fn update_brush(
                 .as_ivec2();
 
         let brush_position = if let Some((target_tilemap, tilemap_local, cursor_position)) =
-            q_tilemap
-                .iter()
-                .filter_map(|(tilemap, tilemap_position)| {
-                    if let Some(tilemap_source) = tilemaps.get(tilemap.id()) {
-                        let tile_size = tilemap_source.tile_size.as_ivec2();
+            q_tilemap.iter().find_map(|(tilemap, tilemap_position)| {
+                if let Some(tilemap_source) = tilemaps.get(tilemap.id()) {
+                    let tile_size = tilemap_source.tile_size.as_ivec2();
 
-                        let local =
-                            (grid_cursor_position - **tilemap_position).div_euclid(tile_size);
-                        Some((
-                            (*tilemap).clone(),
-                            local,
-                            local * tile_size + **tilemap_position,
-                        ))
-                    } else {
-                        None
-                    }
-                })
-                .next()
-        {
+                    let local = (grid_cursor_position - **tilemap_position).div_euclid(tile_size);
+                    Some((
+                        (*tilemap).clone(),
+                        local,
+                        local * tile_size + **tilemap_position,
+                    ))
+                } else {
+                    None
+                }
+            }) {
             if mouse_input.pressed(MouseButton::Left) {
                 if let Some(tile) = brush_tile {
                     if let (Some(tilemap), Some(tileset)) = (
@@ -157,10 +151,8 @@ pub fn update_brush(
         };
 
         commands.entity(entity).insert(Position(brush_position));
-    } else {
-        if let Ok(entity) = q_brush.get_single().map(|brush| brush.0) {
-            commands.entity(entity).remove::<Position>();
-        }
+    } else if let Ok(entity) = q_brush.get_single().map(|brush| brush.0) {
+        commands.entity(entity).remove::<Position>();
     }
 }
 

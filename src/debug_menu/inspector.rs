@@ -5,16 +5,15 @@ use ascii_ui::{
     widgets,
 };
 use bevy::{
-    app::{Plugin, PreUpdate, Update},
+    app::{Plugin, Update},
     ecs::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
         query::{Changed, With},
-        schedule::{apply_deferred, IntoSystemConfigs},
-        system::{Commands, Local, Query, Res, Resource},
+        schedule::IntoSystemConfigs,
+        system::{Commands, Query, Res, Resource},
         world::World,
     },
-    hierarchy::DespawnRecursiveExt,
     math::{IVec2, UVec2, Vec2},
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
