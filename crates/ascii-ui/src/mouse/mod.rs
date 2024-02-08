@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, Update},
+    app::{Plugin, PreUpdate, Update},
     ecs::{
         component::Component,
         entity::Entity,
@@ -41,7 +41,7 @@ pub struct ScrollInteraction {
 pub struct InteractionPlugin;
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, mouse_interaction);
+        app.add_systems(PreUpdate, mouse_interaction);
     }
 }
 

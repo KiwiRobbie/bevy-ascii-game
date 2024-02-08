@@ -5,11 +5,12 @@ use ascii_ui::{
     widgets,
 };
 use bevy::{
-    app::{Plugin, PreUpdate},
+    app::{Plugin, PreUpdate, Update},
     ecs::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
         query::{Changed, With},
+        schedule::{apply_deferred, IntoSystemConfigs},
         system::{Commands, Local, Query, Res, Resource},
         world::World,
     },
@@ -114,28 +115,20 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
 
 pub fn inspector_fetch_system(
     mut commands: Commands,
-    mut q_inspector: Query<(Entity, &InspectorTab), Changed<InspectorTab>>,
+    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::Column), Changed<InspectorTab>>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
-    mut inspector_widgets: Local<Vec<Entity>>,
 ) {
     let type_registry = &type_registry.0;
 
-    for entity in inspector_widgets.drain(..) {
-        if let Some(e) = commands.get_entity(entity) {
-            e.despawn_recursive()
-        }
-    }
-
-    for (entity, inspector) in q_inspector.iter_mut() {
+    for (entity, inspector, column) in q_inspector.iter_mut() {
         if let Some(target) = inspector.target {
+            let mut inspector_widgets = vec![];
             inspector_widgets.push(widgets::Text::build(format!("Entity: {:?}", target))(
                 &mut commands,
             ));
 
-            if let Some(component_ids) = get_components_ids(world, target)
-            // .map(|ids| ids.map(|id| get_component_info(&world, id)))
-            {
+            if let Some(component_ids) = get_components_ids(world, target) {
                 let component_ids: Vec<ComponentId> = component_ids.collect();
                 for component_id in component_ids.into_iter() {
                     let Some(ptr) = world.get_by_id(target, component_id) else {
@@ -204,8 +197,12 @@ pub fn inspector_fetch_system(
                 }
             }
 
+            for entity in column.children.iter() {
+                commands.entity(*entity).despawn();
+            }
+
             commands.entity(entity).insert(widgets::column::Column {
-                children: inspector_widgets.clone(),
+                children: inspector_widgets,
             });
         } else {
             commands
@@ -218,7 +215,10 @@ pub fn inspector_fetch_system(
 pub struct InspectorPlugin;
 impl Plugin for InspectorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(PreUpdate, (inspector_fetch_system, inspector_init_system))
-            .init_resource::<TypeRegistryResource>();
+        app.add_systems(
+            Update,
+            (inspector_init_system, inspector_fetch_system).chain(),
+        )
+        .init_resource::<TypeRegistryResource>();
     }
 }
