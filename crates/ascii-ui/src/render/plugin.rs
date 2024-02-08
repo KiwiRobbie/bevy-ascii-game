@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, PostUpdate, Update},
+    app::{Plugin, PostUpdate},
     asset::Assets,
     ecs::{
         entity::Entity,

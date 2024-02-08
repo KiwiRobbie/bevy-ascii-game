@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use ascii_ui::mouse::TriggeredMarker;
+use ascii_ui::mouse::{self, input::MouseInput, TriggeredMarker};
 use bevy::{
     app::{Plugin, Startup, Update},
     asset::Assets,
@@ -76,13 +76,11 @@ pub fn set_brush(
 }
 
 pub fn update_brush(
-    q_windows: Query<&Window, With<PrimaryWindow>>,
-    q_camera: Query<(&Camera, &GlobalTransform)>,
-    input_mouse_buttons: Res<Input<MouseButton>>,
+    mut commands: Commands,
     q_physics_grid: Query<(&SpatialGrid, &GlobalTransform)>,
     mut q_brush: Query<
         (
-            &mut Position,
+            Entity,
             &PhysicsGridMember,
             Option<&BrushTileSize>,
             Option<&TilesetTileId>,
@@ -92,18 +90,13 @@ pub fn update_brush(
     q_tilemap: Query<(&Tilemap, &Position), Without<Brush>>,
     mut tilemaps: ResMut<Assets<TilemapSource>>,
     tilesets: Res<Assets<TilesetSource>>,
+    mouse_input: Res<MouseInput>,
 ) {
-    let (camera, camera_transform) = q_camera.single();
-    if let Some(world_cursor_position) = q_windows
-        .single()
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin)
-    {
-        let Ok((mut brush_position, grid_member, tile_size, brush_tile)) = q_brush.get_single_mut()
-        else {
-            return;
-        };
+    let Ok((entity, grid_member, tile_size, brush_tile)) = q_brush.get_single_mut() else {
+        return;
+    };
+
+    if let Some(world_cursor_position) = mouse_input.world_position() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             return;
         };
@@ -114,25 +107,27 @@ pub fn update_brush(
                 + 0.5)
                 .as_ivec2();
 
-        **brush_position = if let Some((target_tilemap, tilemap_local, cursor_position)) = q_tilemap
-            .iter()
-            .filter_map(|(tilemap, tilemap_position)| {
-                if let Some(tilemap_source) = tilemaps.get(tilemap.id()) {
-                    let tile_size = tilemap_source.tile_size.as_ivec2();
+        let brush_position = if let Some((target_tilemap, tilemap_local, cursor_position)) =
+            q_tilemap
+                .iter()
+                .filter_map(|(tilemap, tilemap_position)| {
+                    if let Some(tilemap_source) = tilemaps.get(tilemap.id()) {
+                        let tile_size = tilemap_source.tile_size.as_ivec2();
 
-                    let local = (grid_cursor_position - **tilemap_position).div_euclid(tile_size);
-                    Some((
-                        (*tilemap).clone(),
-                        local,
-                        local * tile_size + **tilemap_position,
-                    ))
-                } else {
-                    None
-                }
-            })
-            .next()
+                        let local =
+                            (grid_cursor_position - **tilemap_position).div_euclid(tile_size);
+                        Some((
+                            (*tilemap).clone(),
+                            local,
+                            local * tile_size + **tilemap_position,
+                        ))
+                    } else {
+                        None
+                    }
+                })
+                .next()
         {
-            if input_mouse_buttons.pressed(MouseButton::Left) {
+            if mouse_input.pressed(MouseButton::Left) {
                 if let Some(tile) = brush_tile {
                     if let (Some(tilemap), Some(tileset)) = (
                         tilemaps.get_mut(target_tilemap.id()),
@@ -146,7 +141,7 @@ pub fn update_brush(
                         );
                     }
                 }
-            } else if input_mouse_buttons.pressed(MouseButton::Right) {
+            } else if mouse_input.pressed(MouseButton::Right) {
                 if let Some(tilemap) = tilemaps.get_mut(target_tilemap.id()) {
                     tilemap.clear_tile(tilemap_local);
                 }
@@ -160,6 +155,12 @@ pub fn update_brush(
                     .unwrap_or(UVec2::ZERO)
                     .as_ivec2()
         };
+
+        commands.entity(entity).insert(Position(brush_position));
+    } else {
+        if let Ok(entity) = q_brush.get_single().map(|brush| brush.0) {
+            commands.entity(entity).remove::<Position>();
+        }
     }
 }
 

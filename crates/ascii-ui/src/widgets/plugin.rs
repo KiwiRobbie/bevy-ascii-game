@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, PreUpdate, Update},
+    app::{Plugin, PreUpdate},
     ecs::schedule::IntoSystemConfigs,
 };
 

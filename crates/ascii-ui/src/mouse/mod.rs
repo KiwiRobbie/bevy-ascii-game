@@ -1,25 +1,28 @@
 use bevy::{
-    app::{Plugin, PreUpdate, Update},
+    app::{Plugin, PreUpdate},
     ecs::{
         component::Component,
         entity::Entity,
-        event::EventReader,
         query::With,
-        system::{Commands, Query, Res},
+        schedule::IntoSystemConfigs,
+        system::{Commands, Query, ResMut},
     },
     input::{
-        mouse::{MouseButton, MouseWheel},
-        Input,
+        mouse::{mouse_button_input_system, MouseButton},
+        InputSystem,
     },
     math::{IVec2, Vec2, Vec4Swizzles},
-    render::{camera::Camera, color::Color},
+    render::color::Color,
     transform::components::GlobalTransform,
-    window::{PrimaryWindow, Window},
 };
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
 use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
-use crate::layout::{positioned::Positioned, render_clip::ClipRegion};
+use crate::layout::{build_layout::LayoutDepth, positioned::Positioned, render_clip::ClipRegion};
+
+use self::input::{update_mouse_position, MouseInput};
+
+pub mod input;
 
 #[derive(Debug, Component)]
 pub struct IntractableMarker;
@@ -35,19 +38,27 @@ pub struct TriggeredMarker;
 
 #[derive(Debug, Component)]
 pub struct ScrollInteraction {
-    pub distance: f32,
+    pub distance: Vec2,
 }
 
 pub struct InteractionPlugin;
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(PreUpdate, mouse_interaction);
+        app.add_systems(
+            PreUpdate,
+            (
+                mouse_interaction.after(InputSystem),
+                update_mouse_position
+                    .in_set(InputSystem)
+                    .after(mouse_button_input_system),
+            ),
+        )
+        .init_resource::<MouseInput>();
     }
 }
 
 pub fn mouse_interaction(
     mut commands: Commands,
-    q_windows: Query<&Window, With<PrimaryWindow>>,
     q_intractable: Query<
         (
             Entity,
@@ -55,18 +66,17 @@ pub fn mouse_interaction(
             &PhysicsGridMember,
             Option<&ScrollableMarker>,
             Option<&ClipRegion>,
+            &LayoutDepth,
         ),
         With<IntractableMarker>,
     >,
     q_active: Query<Entity, With<ActiveMarker>>,
     q_triggered: Query<Entity, With<TriggeredMarker>>,
     q_scroll_interaction: Query<Entity, With<ScrollInteraction>>,
-    q_camera: Query<(&Camera, &GlobalTransform)>,
-    q_mouse_buttons: Res<Input<MouseButton>>,
-    mut ev_mouse_scroll: EventReader<MouseWheel>,
     q_physics_grid: Query<(&SpatialGrid, &GlobalTransform)>,
+    mut mouse_input: ResMut<MouseInput>,
 ) {
-    let (camera, camera_transform) = q_camera.single();
+    let mut mouse_capture = false;
 
     for entity in q_active.iter() {
         commands
@@ -80,46 +90,67 @@ pub fn mouse_interaction(
     for entity in q_scroll_interaction.iter() {
         commands.entity(entity).remove::<ScrollInteraction>();
     }
-    let mut scroll_distance = Vec2::ZERO;
-    for ev in ev_mouse_scroll.read() {
-        scroll_distance += Vec2::new(ev.x, ev.y);
-    }
-    // Games typically only have one window (the primary window)
-    if let Some(position) = q_windows
-        .single()
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin)
-    {
-        for (entity, positioned, grid_member, scrollable, clip) in q_intractable.iter() {
-            let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
-                continue;
-            };
 
-            let position = (transform.compute_matrix().inverse() * position.extend(1.0)).xy()
-                / grid.size.as_vec2();
-            let position = position.as_ivec2() + IVec2::Y;
+    if let Some(position) = mouse_input.world_position() {
+        let mut positions: Vec<_> = q_intractable
+            .iter()
+            .filter_map(
+                |(entity, positioned, grid_member, scrollable, clip, depth)| {
+                    cursor_in_widget(&q_physics_grid, grid_member, position, positioned, clip)
+                        .map(|_| (entity, scrollable, depth))
+                },
+            )
+            .collect();
 
-            let cursor_position = IVec2::new(1, -1) * position;
-            if positioned.contains(cursor_position)
-                && clip.map(|r| r.contains(cursor_position)).unwrap_or(true)
+        positions.sort_by(|a, b| (**a.2).cmp(&**b.2));
+
+        for (entity, scrollable, _) in positions.last().iter() {
+            mouse_capture = true;
+            commands
+                .entity(*entity)
+                .insert(ActiveMarker)
+                .insert(GlyphSolidColor {
+                    color: Color::ORANGE,
+                });
+            if mouse_input
+                .buttons()
+                .map(|buttons| buttons.just_pressed(MouseButton::Left))
+                .unwrap_or(false)
             {
-                commands
-                    .entity(entity)
-                    .insert(ActiveMarker)
-                    .insert(GlyphSolidColor {
-                        color: Color::ORANGE,
-                    });
-                if q_mouse_buttons.just_pressed(MouseButton::Left) {
-                    commands.entity(entity).insert(TriggeredMarker);
-                }
+                commands.entity(*entity).insert(TriggeredMarker);
+            }
 
-                if scrollable.is_some() {
-                    commands.entity(entity).insert(ScrollInteraction {
-                        distance: scroll_distance.y,
-                    });
-                }
+            if scrollable.is_some() {
+                commands.entity(*entity).insert(ScrollInteraction {
+                    distance: mouse_input.scroll().unwrap_or_default(),
+                });
             }
         }
+    }
+    if mouse_capture {
+        mouse_input.consume();
+    }
+}
+
+fn cursor_in_widget(
+    q_physics_grid: &Query<'_, '_, (&SpatialGrid, &GlobalTransform)>,
+    grid_member: &PhysicsGridMember,
+    position: bevy::prelude::Vec3,
+    positioned: &Positioned,
+    clip: Option<&ClipRegion>,
+) -> Option<IVec2> {
+    let (grid, transform) = q_physics_grid.get(grid_member.grid).ok()?;
+    let position =
+        (transform.compute_matrix().inverse() * position.extend(1.0)).xy() / grid.size.as_vec2();
+    let position = position.as_ivec2() + IVec2::Y;
+
+    let cursor_position = IVec2::new(1, -1) * position;
+
+    if positioned.contains(cursor_position)
+        && clip.map(|r| r.contains(cursor_position)).unwrap_or(true)
+    {
+        Some(cursor_position)
+    } else {
+        None
     }
 }

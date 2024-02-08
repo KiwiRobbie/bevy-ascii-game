@@ -109,6 +109,7 @@ pub fn setup_ui(
         attachments::Border::symmetric(Some('|'), Some('-'), Some([',', '.', '`', '\''])).padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
+        IntractableMarker,
     ))
     .save_id(&mut menu_state.root_widget)(&mut commands);
 }
