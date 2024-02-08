@@ -6,6 +6,7 @@ use bevy::{
     },
     input::{
         mouse::{MouseButton, MouseWheel},
+        touch::TouchInput,
         Input,
     },
     math::{Vec2, Vec3},
@@ -62,6 +63,7 @@ pub fn update_mouse_position(
     mouse_buttons: Res<Input<MouseButton>>,
     mut ev_mouse_scroll: EventReader<MouseWheel>,
     mut mouse_input: ResMut<MouseInput>,
+    mut touch: EventReader<TouchInput>,
 ) {
     let mut frame = MouseInputFrame::default();
     frame.buttons = Some(mouse_buttons.clone());
@@ -79,6 +81,7 @@ pub fn update_mouse_position(
             if let Some(position) = q_windows
                 .single()
                 .cursor_position()
+                .or_else(|| touch.read().map(|ev| ev.position).last())
                 .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
                 .map(|ray| ray.origin)
             {
