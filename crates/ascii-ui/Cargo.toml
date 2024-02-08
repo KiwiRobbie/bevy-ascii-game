@@ -51,6 +51,7 @@ features = [
 
 version = "0.12.1"
 default-features = false
+
 [dependencies.spatial-grid]
 path = "../spatial-grid"
 [dependencies.glyph-render]

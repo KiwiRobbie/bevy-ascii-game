@@ -123,7 +123,7 @@ pub fn scrolling_view_interaction_system(
     >,
 ) {
     for (mut view, interaction) in q_scrolling_view.iter_mut() {
-        view.remainder += interaction.distance;
+        view.remainder += interaction.distance.y;
         let delta = view.remainder as i32;
         view.remainder -= delta as f32;
 

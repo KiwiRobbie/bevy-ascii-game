@@ -1,12 +1,14 @@
 use bevy::{
     ecs::{
         bundle::Bundle,
+        component::Component,
         entity::Entity,
         query::With,
         system::{Commands, Query},
         world::World,
     },
     math::IVec2,
+    prelude::{Deref, DerefMut},
 };
 use glyph_render::glyph_buffer::TargetGlyphBuffer;
 use spatial_grid::grid::PhysicsGridMember;
@@ -19,9 +21,16 @@ use crate::{
 
 use super::render_clip::ClipRegion;
 
-pub fn clear_layout(mut commands: Commands, q_positioned: Query<Entity, With<Positioned>>) {
+pub fn clear_layout(
+    mut commands: Commands,
+    q_positioned: Query<Entity, With<Positioned>>,
+    q_depth: Query<Entity, With<LayoutDepth>>,
+) {
     for entity in q_positioned.iter() {
         commands.entity(entity).remove::<Positioned>();
+    }
+    for entity in q_depth.iter() {
+        commands.entity(entity).remove::<LayoutDepth>();
     }
 }
 
@@ -58,6 +67,7 @@ pub fn propagate_data_positions(
         if root.enabled {
             recurse_apply_data(
                 &mut commands,
+                0,
                 IVec2::ZERO,
                 world,
                 root_entity,
@@ -70,6 +80,7 @@ pub fn propagate_data_positions(
 
 pub fn recurse_apply_data<B: Bundle + Clone>(
     commands: &mut Commands,
+    depth: usize,
     parent_offset: IVec2,
     world: &World,
     entity: Entity,
@@ -115,11 +126,13 @@ pub fn recurse_apply_data<B: Bundle + Clone>(
             size: position.size,
         },
         bundle.clone(),
+        LayoutDepth(depth),
     ));
 
     for child in children.iter() {
         recurse_apply_data(
             commands,
+            depth + 1,
             new_offset,
             world,
             *child,
@@ -128,3 +141,6 @@ pub fn recurse_apply_data<B: Bundle + Clone>(
         );
     }
 }
+
+#[derive(Component, DerefMut, Deref)]
+pub struct LayoutDepth(pub usize);

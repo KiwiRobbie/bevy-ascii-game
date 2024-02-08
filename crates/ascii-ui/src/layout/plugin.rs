@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, PreUpdate},
+    app::{Plugin, PostUpdate},
     ecs::schedule::{apply_deferred, IntoSystemConfigs},
 };
 
@@ -9,7 +9,7 @@ pub struct LayoutPlugin;
 impl Plugin for LayoutPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
-            PreUpdate,
+            PostUpdate,
             (
                 clear_layout,
                 apply_deferred,

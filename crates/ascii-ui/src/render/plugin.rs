@@ -1,5 +1,5 @@
 use bevy::{
-    app::{Plugin, Update},
+    app::{Plugin, PostUpdate},
     asset::Assets,
     ecs::{
         entity::Entity,
@@ -11,7 +11,7 @@ use bevy::{
 use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTextureSource};
 use spatial_grid::position::Position;
 
-use crate::layout::render_clip::ClipRegion;
+use crate::layout::{build_layout::propagate_data_positions, render_clip::ClipRegion};
 
 use super::{
     attachments::border::border_render,
@@ -23,7 +23,7 @@ pub struct RenderPlugin;
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
-            Update,
+            PostUpdate,
             (
                 clear_sprites,
                 apply_deferred,
@@ -31,7 +31,8 @@ impl Plugin for RenderPlugin {
                 apply_deferred,
                 apply_clipping,
             )
-                .chain(),
+                .chain()
+                .after(propagate_data_positions),
         );
     }
 }
