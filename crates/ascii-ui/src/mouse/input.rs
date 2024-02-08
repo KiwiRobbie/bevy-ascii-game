@@ -2,11 +2,11 @@ use bevy::{
     ecs::{
         event::EventReader,
         query::With,
-        system::{Query, Res, ResMut, Resource},
+        system::{Local, Query, Res, ResMut, Resource},
     },
     input::{
         mouse::{MouseButton, MouseWheel},
-        touch::TouchInput,
+        touch::{TouchInput, TouchPhase},
         Input,
     },
     math::{Vec2, Vec3},
@@ -63,11 +63,25 @@ pub fn update_mouse_position(
     mouse_buttons: Res<Input<MouseButton>>,
     mut ev_mouse_scroll: EventReader<MouseWheel>,
     mut mouse_input: ResMut<MouseInput>,
-    mut touch: EventReader<TouchInput>,
+    mut ev_touch: EventReader<TouchInput>,
 ) {
+    let tap_pos = ev_touch
+        .read()
+        .filter_map(|ev| {
+            if ev.phase == TouchPhase::Started {
+                Some(ev.position)
+            } else {
+                None
+            }
+        })
+        .last();
+
     let mut frame = MouseInputFrame::default();
     frame.buttons = Some(mouse_buttons.clone());
-
+    if tap_pos.is_some() {
+        frame.buttons.as_mut().unwrap().press(MouseButton::Left);
+        frame.buttons.as_mut().unwrap().release(MouseButton::Left);
+    }
     {
         let mut scroll_distance = Vec2::ZERO;
         for ev in ev_mouse_scroll.read() {
@@ -88,7 +102,7 @@ pub fn update_mouse_position(
             if let Some(position) = q_windows
                 .single()
                 .cursor_position()
-                .or_else(|| touch.read().map(|ev| ev.position).last())
+                .or(tap_pos)
                 .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
                 .map(|ray| ray.origin)
             {
