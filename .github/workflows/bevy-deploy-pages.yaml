@@ -36,16 +36,23 @@ jobs:
       run:  cargo install wasm-bindgen-cli     
     
     - name: Clear Old Assets
-      run: rm -rf web/assets
+      run: rm -rf web/game/assets web/editor/assets
 
-    - name: Copy New Assets
-      run: cp -r assets web/assets 
+    - name: Copy Game Assets
+      run: cp -r assets web/game/assets 
+
+    - name: Copy Editor Assets
+      run: cp -r assets web/editor/assets 
 
     - name: Generate WASM bindings
-      run: wasm-bindgen --out-name bevy-ascii-game --out-dir web --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
+      run: wasm-bindgen --out-name bevy-ascii-game --out-dir web/game --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
+
+    - name: Generate WASM bindings
+      run: wasm-bindgen --out-name tilemap --out-dir web/editor --target web target/wasm32-unknown-unknown/release/tilemap.wasm
 
     - name: Deploy to pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: web
         branch: github-pages
+
