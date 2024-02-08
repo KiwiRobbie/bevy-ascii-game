@@ -20,6 +20,8 @@ futures = "0.3.30"
 ron = "0.8.1"
 
 [dependencies.bevy]
+version = "0.12.1"
+default-features = false
 features = [
     # "animation",
     "bevy_asset",
@@ -46,9 +48,6 @@ features = [
     "webgl2",
     # "dynamic_linking",
 ]
-
-version = "0.12.1"
-default-features = false
 
 [lib]
 
