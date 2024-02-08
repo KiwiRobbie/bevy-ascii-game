@@ -69,7 +69,14 @@ pub fn update_mouse_position(
     {
         let mut scroll_distance = Vec2::ZERO;
         for ev in ev_mouse_scroll.read() {
-            scroll_distance += Vec2::new(ev.x, ev.y);
+            match ev.unit {
+                bevy::input::mouse::MouseScrollUnit::Line => {
+                    scroll_distance += Vec2::new(ev.x, ev.y);
+                }
+                bevy::input::mouse::MouseScrollUnit::Pixel => {
+                    scroll_distance += Vec2::new(ev.x / 16.0, ev.y / 16.0);
+                }
+            };
         }
         frame.scroll = Some(scroll_distance);
     }
