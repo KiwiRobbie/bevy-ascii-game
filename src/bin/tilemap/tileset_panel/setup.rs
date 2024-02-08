@@ -106,7 +106,12 @@ pub fn setup_ui(
             size: UVec2 { x: 32, y: 32 },
         },
         UiPhysicsGridMarker,
-        attachments::Border::symmetric(Some('|'), Some('-'), Some([',', '.', '`', '\''])).padded(),
+        attachments::Border::symmetric(
+            Some('|'),
+            Some('-'),
+            [Some(','), Some('.'), Some('`'), Some('\'')],
+        )
+        .padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
         IntractableMarker,
@@ -145,7 +150,7 @@ fn build_tileset_ui<'a>(
                 source.tiles.clone(),
                 source.tile_size,
             )])
-            .with(attachments::SizedBox::vertical(26)),
+            .with((attachments::SizedBox::vertical(26),)),
         )),
     ])
 }

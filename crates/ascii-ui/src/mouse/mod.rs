@@ -104,7 +104,7 @@ pub fn mouse_interaction(
 
         positions.sort_by(|a, b| (**a.2).cmp(&**b.2));
 
-        for (entity, scrollable, _) in positions.last().iter() {
+        if let Some((entity, _, _)) = positions.last() {
             mouse_capture = true;
             commands
                 .entity(*entity)
@@ -119,11 +119,13 @@ pub fn mouse_interaction(
             {
                 commands.entity(*entity).insert(TriggeredMarker);
             }
-
+        }
+        for (entity, scrollable, _) in positions.iter() {
             if scrollable.is_some() {
                 commands.entity(*entity).insert(ScrollInteraction {
                     distance: mouse_input.scroll().unwrap_or_default(),
                 });
+                break;
             }
         }
     }
