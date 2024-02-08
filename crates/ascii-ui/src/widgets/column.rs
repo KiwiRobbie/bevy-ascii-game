@@ -33,7 +33,7 @@ impl WidgetLayoutLogic for ColumnLogic {
     ) -> UVec2 {
         let row = world
             .get::<Column>(entity)
-            .expect("Row Widget Logic missing Row Component!");
+            .expect("Column Widget Logic missing Column Component!");
 
         let child_constraint = constraint.remove_y_bounds();
 
