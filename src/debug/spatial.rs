@@ -1,6 +1,9 @@
 use bevy::{
     app::{Plugin, PostUpdate},
-    ecs::system::{Query, Res, Resource},
+    ecs::{
+        schedule::IntoSystemConfigs,
+        system::{Query, Res, Resource},
+    },
     gizmos::gizmos::Gizmos,
     prelude::{Deref, DerefMut},
     render::color::Color,
@@ -20,7 +23,10 @@ impl Plugin for SpatialDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
             PostUpdate,
-            (debug_position_system, debug_collision_system), // .before(position_update_transforms_system),
+            (
+                debug_position_system.run_if(|enabled: Res<DebugPositions>| **enabled),
+                debug_collision_system.run_if(|enabled: Res<DebugCollisions>| **enabled),
+            ), // .before(position_update_transforms_system),
         )
         .init_resource::<DebugCollisions>()
         .init_resource::<DebugPositions>();
@@ -43,11 +49,7 @@ fn debug_collision_system(
         Option<&Actor>,
     )>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
-    enabled: Res<DebugCollisions>,
 ) {
-    if !**enabled {
-        return;
-    }
     for (collider, position, grid_member, solid, actor) in q_colliders.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
@@ -78,12 +80,7 @@ fn debug_position_system(
         &PhysicsGridMember,
     )>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
-    enabled: Res<DebugPositions>,
 ) {
-    if !**enabled {
-        return;
-    }
-
     for (position, remainder, velocity, grid_member) in q_position.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;

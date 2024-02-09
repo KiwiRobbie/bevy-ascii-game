@@ -20,7 +20,7 @@ use super::{
 #[derive(Component, Clone)]
 pub struct FreeMarker;
 
-pub fn obstruct_velocity(
+pub(super) fn obstruct_velocity(
     mut q_free_actors: Query<(&mut Velocity, &MovementObstructed), With<FreeMarker>>,
 ) {
     for (mut velocity, obstructed) in q_free_actors.iter_mut() {
@@ -39,7 +39,7 @@ pub fn obstruct_velocity(
     }
 }
 
-pub fn apply_velocity_to_free(
+pub(super) fn apply_velocity_to_free(
     mut q_free_actors: Query<(&mut Movement, &Velocity), With<FreeMarker>>,
     time: Res<Time>,
 ) {
@@ -48,7 +48,7 @@ pub fn apply_velocity_to_free(
     }
 }
 
-pub fn apply_gravity_to_free(
+pub(super) fn apply_gravity_to_free(
     mut q_free_actors: Query<(&mut Velocity, &Gravity), With<FreeMarker>>,
     res_gravity: Res<GravityResource>,
     time: Res<Time>,
@@ -65,7 +65,7 @@ pub struct FreeGrounded;
 #[derive(Debug, Component, Default)]
 pub struct FreeAirborne;
 
-pub fn update_free_actor_state(
+pub(super) fn update_free_actor_state(
     mut commands: Commands,
     mut q_solids: Query<&mut RidingEntities, FilterSolids>,
     q_free_actors: Query<(Entity, &Position, &Remainder, &Velocity, &Collider), With<FreeMarker>>,

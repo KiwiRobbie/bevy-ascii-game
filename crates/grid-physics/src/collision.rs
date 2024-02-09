@@ -114,8 +114,3 @@ impl Collider {
         overlap
     }
 }
-
-pub struct OffsetCollision<'a> {
-    pub shape: &'a CollisionShape,
-    pub offset: IVec2,
-}

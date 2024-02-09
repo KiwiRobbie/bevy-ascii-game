@@ -113,7 +113,7 @@ pub struct ActorPhysicsBundle {
     pub movement: Movement,
 }
 
-pub fn actor_move_system(
+pub(super) fn actor_move_system(
     mut q_actors: Query<
         (
             Entity,

@@ -38,7 +38,7 @@ pub struct GamePhysicsGrid(pub Option<Entity>);
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct UiPhysicsGrid(pub Option<Entity>);
 
-pub fn apply_physics_grid_markers(
+fn apply_physics_grid_markers(
     mut commands: Commands,
     game_grid: Res<GamePhysicsGrid>,
     ui_grid: Res<UiPhysicsGrid>,
@@ -64,7 +64,7 @@ pub fn apply_physics_grid_markers(
     }
 }
 
-pub fn create_physics_grids(
+fn create_physics_grids(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut game_grid: ResMut<GamePhysicsGrid>,
