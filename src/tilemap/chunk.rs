@@ -1,6 +1,6 @@
 use bevy::math::UVec2;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TilemapChunk {
     pub data: Box<[Option<(u32, u32)>]>,
 }

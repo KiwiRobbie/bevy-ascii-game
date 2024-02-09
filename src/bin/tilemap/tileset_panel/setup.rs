@@ -36,7 +36,7 @@ pub enum MutateMode {
     Remove,
 }
 
-pub fn setup_ui(
+pub(super) fn setup_ui(
     mut commands: Commands,
     mut menu_state: ResMut<TilesetPanelState>,
     server: Res<AssetServer>,
@@ -82,14 +82,17 @@ pub fn setup_ui(
     }(&mut commands);
 
     let tileset_tab = {
-        ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
-            Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
-            vec![],
-            (),
-        )
-        .with(TilesetHandles {
-            handles: vec![server.load("tilesets/cave.tileset.ron")],
-        })
+        widgets::Column::build(vec![
+            widgets::Button::build("Save".into()).with(SaveTilemapButton),
+            ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
+                Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
+                vec![],
+                (),
+            )
+            .with(TilesetHandles {
+                handles: vec![server.load("tilesets/cave.tileset.ron")],
+            }),
+        ])
     }(&mut commands);
 
     Container::build(Some(widgets::TabView::build(vec![
@@ -116,6 +119,9 @@ pub fn setup_ui(
     ))
     .save_id(&mut menu_state.root_widget)(&mut commands);
 }
+
+#[derive(Debug, Component)]
+pub struct SaveTilemapButton;
 
 #[derive(Debug, Component)]
 pub struct DebugMenuMarker;

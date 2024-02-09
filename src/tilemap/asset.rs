@@ -9,7 +9,7 @@ use crate::tileset::asset::TilesetSource;
 
 use super::chunk::TilemapChunk;
 
-#[derive(Debug, Asset, TypePath)]
+#[derive(Debug, Asset, TypePath, Clone)]
 pub struct TilemapSource {
     pub chunk_size: UVec2,
     pub tile_size: UVec2,

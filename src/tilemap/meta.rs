@@ -1,6 +1,6 @@
 use bevy::{asset::Asset, prelude::Deref, reflect::TypePath};
 
-#[derive(serde::Deserialize, Asset, TypePath, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Asset, TypePath, Clone)]
 pub struct TilemapMeta {
     pub chunk_size: (u32, u32),
     pub tile_size: (u32, u32),

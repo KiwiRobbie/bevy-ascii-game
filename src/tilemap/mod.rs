@@ -3,4 +3,6 @@ pub mod chunk;
 pub mod component;
 pub mod extract;
 pub mod loader;
+mod meta;
 pub mod plugin;
+pub mod saver;

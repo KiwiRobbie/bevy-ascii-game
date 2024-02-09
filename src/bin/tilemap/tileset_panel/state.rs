@@ -1,15 +1,10 @@
-use bevy::{
-    asset::Handle,
-    ecs::{entity::Entity, system::Resource},
-};
-use bevy_ascii_game::tileset::asset::TilesetSource;
+use bevy::ecs::{entity::Entity, system::Resource};
 
 #[derive(Debug, Resource)]
-pub struct TilesetPanelState {
+pub(super) struct TilesetPanelState {
     pub enabled: bool,
     pub root_widget: Option<Entity>,
-
-    pub tilesets: Vec<Handle<TilesetSource>>,
+    pub save_button: Option<Entity>,
 }
 
 impl Default for TilesetPanelState {
@@ -17,7 +12,7 @@ impl Default for TilesetPanelState {
         TilesetPanelState {
             enabled: true,
             root_widget: None,
-            tilesets: vec![],
+            save_button: None,
         }
     }
 }

@@ -1,5 +1,3 @@
-pub mod meta;
-
 use std::path::PathBuf;
 
 use bevy::{
@@ -10,7 +8,7 @@ use bevy::{
 
 use crate::tileset::asset::TilesetSource;
 
-use self::meta::{ChunkMeta, TilemapMeta};
+use super::meta::{ChunkMeta, TilemapMeta};
 
 use super::{asset::TilemapSource, chunk::TilemapChunk};
 

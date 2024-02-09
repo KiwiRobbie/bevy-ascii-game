@@ -1,9 +1,15 @@
+use std::{fs::File, future::IntoFuture, path::Path};
+
 use ascii_ui::{
     attachments::Root,
     widgets::{self, button::ButtonJustPressedMarker},
 };
 use bevy::{
-    asset::{AssetEvent, Assets, Handle},
+    asset::{
+        io::AssetSourceId,
+        saver::{AssetSaver, SavedAsset},
+        AssetEvent, AssetServer, Assets, ErasedLoadedAsset, Handle, LoadedAsset,
+    },
     ecs::{
         component::Component,
         event::EventReader,
@@ -15,21 +21,26 @@ use bevy::{
         keyboard::KeyCode,
         Input,
     },
+    tasks::IoTaskPool,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
 
 use spatial_grid::grid::SpatialGrid;
 
-use bevy_ascii_game::{physics_grids::UiPhysicsGrid, tileset::asset::TilesetSource};
+use bevy_ascii_game::{
+    physics_grids::UiPhysicsGrid,
+    tilemap::{asset::TilemapSource, component::Tilemap, saver::TilemapSaver},
+    tileset::asset::TilesetSource,
+};
 
 use crate::list_builder_widget::ListBuilderWidget;
 
 use super::{
-    setup::{DebugMenuMarker, ItemMutateButton},
+    setup::{DebugMenuMarker, ItemMutateButton, SaveTilemapButton},
     state::TilesetPanelState,
 };
 
-pub fn toggle_menu(
+pub(super) fn toggle_menu(
     keyboard: Res<Input<KeyCode>>,
     mut state: ResMut<TilesetPanelState>,
     gamepad_button: Res<Input<GamepadButton>>,
@@ -54,7 +65,7 @@ pub fn toggle_menu(
     }
 }
 
-pub fn update_position(
+pub(super) fn update_position(
     mut q_root: Query<&mut Root, With<DebugMenuMarker>>,
     ui_grid: Res<UiPhysicsGrid>,
     q_ui_grid: Query<(&SpatialGrid, &GlyphBuffer)>,
@@ -72,7 +83,7 @@ pub fn update_position(
     }
 }
 
-pub fn update_list_builder(
+pub(super) fn update_list_builder(
     mut commands: Commands,
     mut q_list_builder: Query<(&mut ListBuilderWidget<usize>, &mut widgets::Column)>,
     q_buttons: Query<&ItemMutateButton, (With<ButtonJustPressedMarker>, With<widgets::Button>)>,
@@ -94,7 +105,7 @@ pub struct TilesetHandles {
     pub handles: Vec<Handle<TilesetSource>>,
 }
 
-pub fn update_tilesets(
+pub(super) fn update_tilesets_system(
     mut commands: Commands,
     mut q_list_builder: Query<(
         &mut ListBuilderWidget<(TilesetSource, Handle<TilesetSource>)>,
@@ -118,4 +129,55 @@ pub fn update_tilesets(
             }
         };
     }
+}
+
+pub(super) fn save_tilemap_system(
+    q_buttons: Query<
+        (),
+        (
+            With<SaveTilemapButton>,
+            With<ButtonJustPressedMarker>,
+            With<widgets::Button>,
+        ),
+    >,
+    q_tilemap: Query<&Tilemap>,
+    tilemaps: Res<Assets<TilemapSource>>,
+    server: Res<AssetServer>,
+) {
+    if q_buttons.iter().next().is_none() {
+        return;
+    }
+    let Some(tilemap) = q_tilemap
+        .get_single()
+        .ok()
+        .and_then(|h| tilemaps.get(h.id()).cloned())
+    else {
+        return;
+    };
+
+    let server = server.clone();
+
+    IoTaskPool::get()
+        .spawn(async move {
+            let output = server
+                .get_source(AssetSourceId::default())
+                .unwrap()
+                .writer()
+                .unwrap()
+                .write(Path::new("output.ron"));
+            let loaded: LoadedAsset<_> = tilemap.clone().into();
+            let erased: ErasedLoadedAsset = loaded.into();
+
+            let mut output = output.await.unwrap();
+
+            TilemapSaver
+                .save(
+                    &mut output,
+                    SavedAsset::from_loaded(&erased).unwrap(),
+                    &Default::default(),
+                )
+                .await
+                .unwrap();
+        })
+        .detach();
 }
