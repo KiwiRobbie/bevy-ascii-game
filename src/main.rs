@@ -10,7 +10,6 @@ use bevy::{
         entity::Entity,
         event::EventReader,
         query::With,
-        schedule::IntoSystemConfigs,
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
@@ -21,7 +20,6 @@ use bevy::{
         color::Color,
         texture::ImagePlugin,
     },
-    time::Time,
     window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
@@ -53,13 +51,11 @@ use grid_physics::{
     collision::{Aabb, Collider, CollisionShape},
     free::FreeMarker,
     gravity::Gravity,
-    movement::Movement,
     plugin::PhysicsPlugin,
-    sets::physics_systems_enabled,
-    solid::{FilterSolids, SolidPhysicsBundle},
+    solid::SolidPhysicsBundle,
     velocity::Velocity,
 };
-use spatial_grid::position::{Position, SpatialBundle};
+use spatial_grid::position::SpatialBundle;
 
 fn main() {
     let mut app = App::new();
@@ -90,12 +86,7 @@ fn main() {
     .add_systems(Startup, setup_system)
     .add_systems(
         Update,
-        (
-            keyboard_input_system,
-            font_load_system,
-            moving_platform.run_if(physics_systems_enabled),
-            handle_gamepads,
-        ),
+        (keyboard_input_system, font_load_system, handle_gamepads),
     );
 
     #[cfg(debug_assertions)]
@@ -106,20 +97,6 @@ fn main() {
     .unwrap();
 
     app.run();
-}
-
-fn moving_platform(
-    mut q_solid_movement: Query<(&mut Movement, &mut Velocity, &Position), FilterSolids>,
-    time: Res<Time>,
-) {
-    for (mut movement, mut velocity, position) in q_solid_movement.iter_mut() {
-        if position.x > 50 {
-            velocity.x = -10.0;
-        } else if position.x < -50 {
-            velocity.x = 10.0;
-        }
-        movement.add(**velocity * time.delta_seconds());
-    }
 }
 
 fn handle_gamepads(
@@ -155,115 +132,109 @@ fn setup_system(
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
 ) {
-    commands
-        .spawn((
-            Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
-            SolidPhysicsBundle {
-                position: SpatialBundle::from(IVec2::new(20, 10)),
-                ..Default::default()
-            },
-        ))
-        .insert(GamePhysicsGridMarker);
+    commands.spawn((
+        Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
+        SolidPhysicsBundle {
+            position: SpatialBundle::from(IVec2::new(20, 10)),
+            ..Default::default()
+        },
+        GamePhysicsGridMarker,
+    ));
 
-    create_player(&mut commands, &server)
-        .insert(PlayerInputKeyboardMarker)
-        .insert(GlyphSolidColor {
+    create_player(&mut commands, &server).insert((
+        PlayerInputKeyboardMarker,
+        GlyphSolidColor {
             color: Color::hsl(0.0, 1.0, 0.6).as_rgba_linear() * 10.0,
-        })
-        .insert(GamePhysicsGridMarker);
-
-    commands
-        .spawn((
-            GlyphAnimation {
-                source: server.load("anim/horse/states/gallop.anim.ron"),
-                frame: 0,
+        },
+        GamePhysicsGridMarker,
+    ));
+    commands.spawn((
+        GlyphAnimation {
+            source: server.load("anim/horse/states/gallop.anim.ron"),
+            frame: 0,
+        },
+        GlyphAnimationPlayer {
+            framerate: 10.0,
+            repeat: true,
+            frame_timer: 0.0,
+        },
+        ActorPhysicsBundle {
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::new(0, 0),
+                    size: UVec2 { x: 30, y: 10 },
+                }),
             },
-            GlyphAnimationPlayer {
-                framerate: 10.0,
-                repeat: true,
-                frame_timer: 0.0,
+            position: IVec2::new(10, 10).into(),
+            ..Default::default()
+        },
+        FreeMarker,
+        Gravity::default(),
+        Velocity::default(),
+        GamePhysicsGridMarker,
+    ));
+    commands.spawn((
+        GlyphAnimation {
+            source: server.load("anim/horse/states/gallop.anim.ron"),
+            frame: 0,
+        },
+        GlyphAnimationPlayer {
+            framerate: 10.0,
+            repeat: true,
+            frame_timer: 0.0,
+        },
+        ActorPhysicsBundle {
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::new(0, 0),
+                    size: UVec2 { x: 30, y: 10 },
+                }),
             },
-            ActorPhysicsBundle {
-                collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::new(0, 0),
-                        size: UVec2 { x: 30, y: 10 },
-                    }),
-                },
-                position: IVec2::new(10, 10).into(),
-                ..Default::default()
-            },
-            FreeMarker,
-            Gravity::default(),
-            Velocity::default(),
-        ))
-        .insert(GamePhysicsGridMarker);
-    commands
-        .spawn((
-            GlyphAnimation {
-                source: server.load("anim/horse/states/gallop.anim.ron"),
-                frame: 0,
-            },
-            GlyphAnimationPlayer {
-                framerate: 10.0,
-                repeat: true,
-                frame_timer: 0.0,
-            },
-            ActorPhysicsBundle {
-                collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::new(0, 0),
-                        size: UVec2 { x: 30, y: 10 },
-                    }),
-                },
-                position: IVec2::new(-30, 0).into(),
-                ..Default::default()
-            },
-            FreeMarker,
-            Gravity::default(),
-            Velocity::default(),
-            GlyphSpriteMirrored,
-        ))
-        .insert(GamePhysicsGridMarker);
+            position: IVec2::new(-30, 0).into(),
+            ..Default::default()
+        },
+        FreeMarker,
+        Gravity::default(),
+        Velocity::default(),
+        GlyphSpriteMirrored,
+        GamePhysicsGridMarker,
+    ));
 
     // Keyboard display
-    commands
-        .spawn((
-            GlyphSprite {
-                texture: glyph_textures.add(GlyphTextureSource {
-                    data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
-                }),
-                offset: IVec2 { x: 0, y: 0 },
-            },
-            SpatialBundle {
-                ..Default::default()
-            },
-            KeyboardInputMarker,
-        ))
-        .insert(GamePhysicsGridMarker);
+    commands.spawn((
+        GlyphSprite {
+            texture: glyph_textures.add(GlyphTextureSource {
+                data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
+            }),
+            offset: IVec2 { x: 0, y: 0 },
+        },
+        SpatialBundle {
+            ..Default::default()
+        },
+        KeyboardInputMarker,
+        GamePhysicsGridMarker,
+    ));
 
     // Floor
-    commands
-        .spawn((
-            GlyphSprite {
-                texture: glyph_textures.add(GlyphTextureSource {
-                    data: (0..2).map(|_| "#".repeat(100)).collect::<Vec<String>>(),
+    commands.spawn((
+        GlyphSprite {
+            texture: glyph_textures.add(GlyphTextureSource {
+                data: (0..2).map(|_| "#".repeat(100)).collect::<Vec<String>>(),
+            }),
+            offset: IVec2::ZERO,
+        },
+        SolidPhysicsBundle {
+            position: IVec2::new(0, 0).into(),
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::ZERO,
+                    size: UVec2 { x: 100, y: 2 },
                 }),
-                offset: IVec2::ZERO,
             },
-            SolidPhysicsBundle {
-                position: IVec2::new(0, 0).into(),
-                collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::ZERO,
-                        size: UVec2 { x: 100, y: 2 },
-                    }),
-                },
-                ..Default::default()
-            },
-        ))
-        .insert(GamePhysicsGridMarker);
-
+            ..Default::default()
+        },
+        GamePhysicsGridMarker,
+    ));
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
