@@ -1,9 +1,7 @@
-use bevy::{
-    ecs::{bundle::Bundle, component::Component},
-    math::IVec2,
-    prelude::{Deref, DerefMut},
-    reflect::Reflect,
-};
+use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::{bundle::Bundle, component::Component};
+use bevy_math::IVec2;
+use bevy_reflect::Reflect;
 
 use crate::remainder::Remainder;
 

@@ -1,7 +1,5 @@
-use bevy::{
-    ecs::{component::Component, entity::Entity},
-    math::Vec2,
-};
+use bevy_ecs::{component::Component, entity::Entity};
+use bevy_math::Vec2;
 
 #[derive(Component, Default, Debug, Clone)]
 pub struct Movement {

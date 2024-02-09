@@ -1,7 +1,5 @@
-use bevy::{
-    ecs::{component::Component, entity::Entity},
-    math::{IVec2, UVec2},
-};
+use bevy_ecs::{component::Component, entity::Entity};
+use bevy_math::{IVec2, UVec2};
 use spatial_grid::direction::Direction;
 
 use super::solid::SolidCollisionCache;

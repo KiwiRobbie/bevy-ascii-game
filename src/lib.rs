@@ -3,3 +3,5 @@ pub mod physics_grids;
 pub mod player;
 pub mod tilemap;
 pub mod tileset;
+
+pub mod debug;

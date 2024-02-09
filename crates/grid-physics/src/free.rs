@@ -1,12 +1,11 @@
-use bevy::{
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::{With, Without},
-        system::{Commands, Query, Res},
-    },
-    time::Time,
+use bevy_ecs::{
+    component::Component,
+    entity::Entity,
+    query::{With, Without},
+    system::{Commands, Query, Res},
 };
+use bevy_time::Time;
+
 use spatial_grid::{position::Position, remainder::Remainder};
 
 use super::{

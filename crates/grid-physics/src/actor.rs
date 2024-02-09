@@ -1,22 +1,19 @@
-use bevy::{
-    ecs::{
-        bundle::Bundle,
-        component::Component,
-        entity::Entity,
-        query::{With, Without},
-        system::{Commands, Query, Res},
-    },
-    math::{IVec2, Vec2},
-};
-use spatial_grid::{
-    position::{Position, SpatialBundle},
-    remainder::Remainder,
-};
-
 use super::{
     collision::Collider,
     movement::{Movement, MovementObstructed},
     solid::{Solid, SolidCollisionCache},
+};
+use bevy_ecs::{
+    bundle::Bundle,
+    component::Component,
+    entity::Entity,
+    query::{With, Without},
+    system::{Commands, Query, Res},
+};
+use bevy_math::{IVec2, Vec2};
+use spatial_grid::{
+    position::{Position, SpatialBundle},
+    remainder::Remainder,
 };
 
 pub type FilterActors = (With<Actor>, Without<Solid>);

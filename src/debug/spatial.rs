@@ -6,18 +6,34 @@ use bevy::{
     render::color::Color,
     transform::components::Transform,
 };
+
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::Position,
     remainder::Remainder,
 };
 
-use crate::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
+use grid_physics::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
+
+pub struct SpatialDebugPlugin;
+impl Plugin for SpatialDebugPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(
+            PostUpdate,
+            (debug_position_system, debug_collision_system), // .before(position_update_transforms_system),
+        )
+        .init_resource::<DebugCollisions>()
+        .init_resource::<DebugPositions>();
+    }
+}
 
 #[derive(Debug, Resource, Default, DerefMut, Deref)]
 pub struct DebugCollisions(pub bool);
 
-pub fn debug_collision_system(
+#[derive(Debug, Resource, DerefMut, Deref, Default)]
+pub struct DebugPositions(pub bool);
+
+fn debug_collision_system(
     mut gizmos: Gizmos,
     q_colliders: Query<(
         &Collider,
@@ -53,10 +69,7 @@ pub fn debug_collision_system(
     }
 }
 
-#[derive(Debug, Resource, DerefMut, Deref, Default)]
-pub struct DebugPositions(pub bool);
-
-pub fn debug_position_system(
+fn debug_position_system(
     mut gizmos: Gizmos,
     q_position: Query<(
         &Position,
@@ -91,17 +104,5 @@ pub fn debug_position_system(
         if let Some(velocity) = velocity {
             gizmos.line_2d(position, position + **velocity, Color::GREEN);
         }
-    }
-}
-
-pub struct DebugPlugin;
-impl Plugin for DebugPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(
-            PostUpdate,
-            (debug_position_system, debug_collision_system), // .before(position_update_transforms_system),
-        )
-        .init_resource::<DebugCollisions>()
-        .init_resource::<DebugPositions>();
     }
 }

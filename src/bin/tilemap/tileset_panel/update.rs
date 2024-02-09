@@ -22,17 +22,15 @@ use bevy::{
     time::Time,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
-use grid_physics::{
-    actor::Actor,
-    debug::{DebugCollisions, DebugPositions},
-    sets::EnablePhysicsSystems,
-    solid::Solid,
-};
+use grid_physics::{actor::Actor, sets::EnablePhysicsSystems, solid::Solid};
 
 use spatial_grid::grid::SpatialGrid;
 
 use bevy_ascii_game::{
-    physics_grids::UiPhysicsGrid, player::PlayerMarker, tileset::asset::TilesetSource,
+    debug::{DebugCollisions, DebugPositions},
+    physics_grids::UiPhysicsGrid,
+    player::PlayerMarker,
+    tileset::asset::TilesetSource,
 };
 
 use crate::list_builder_widget::ListBuilderWidget;
@@ -173,16 +171,4 @@ pub fn update_tilesets(
             }
         };
     }
-
-    // for item in q_buttons.iter() {
-    //     let (mut builder, mut column) = q_list_builder.get_mut(item.target).unwrap();
-    //     match item.mode {
-    //         super::setup::MutateMode::Add => {
-    //             builder.push(&mut *column, 0, &mut commands);
-    //         }
-    //         super::setup::MutateMode::Remove => {
-    //             builder.pop(&mut *column, &mut commands);
-    //         }
-    //     }
-    // }
 }

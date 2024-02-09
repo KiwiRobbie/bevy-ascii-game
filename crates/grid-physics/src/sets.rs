@@ -1,10 +1,9 @@
-use bevy::{
-    ecs::{
-        schedule::SystemSet,
-        system::{Res, Resource},
-    },
-    prelude::{Deref, DerefMut},
+use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::{
+    schedule::SystemSet,
+    system::{Res, Resource},
 };
+
 #[derive(Debug, SystemSet, PartialEq, Eq, Hash, Clone)]
 pub struct PhysicsPostUpdateSet;
 

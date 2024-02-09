@@ -27,6 +27,7 @@ use bevy::{
 };
 
 use bevy_ascii_game::{
+    debug::DebugPlugin,
     debug_menu::plugin::DebugMenuPlugin,
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
     player::{
@@ -80,6 +81,7 @@ fn main() {
         TilemapPlugin,
         PhysicsPlugin,
         GlyphRenderPlugin,
+        DebugPlugin,
         DebugMenuPlugin,
         PhysicsGridPlugin,
     ))

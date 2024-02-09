@@ -1,7 +1,5 @@
-use bevy::{
-    ecs::{component::Component, entity::Entity},
-    math::UVec2,
-};
+use bevy_ecs::{component::Component, entity::Entity};
+use bevy_math::UVec2;
 
 #[derive(Component, Clone)]
 pub struct PhysicsGridMember {

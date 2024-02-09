@@ -18,6 +18,7 @@ use bevy::{
 };
 
 use bevy_ascii_game::{
+    debug::DebugPlugin,
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin},
     player::PlayerPlugin,
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
@@ -58,6 +59,7 @@ fn main() {
         GlyphRenderPlugin,
         TilesetPanelPlugin,
         PhysicsGridPlugin,
+        DebugPlugin,
     ))
     .add_systems(Startup, setup_system)
     .add_systems(Update, (font_load_system,));

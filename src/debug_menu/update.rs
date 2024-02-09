@@ -18,16 +18,15 @@ use bevy::{
     time::Time,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
-use grid_physics::{
-    actor::Actor,
-    debug::{DebugCollisions, DebugPositions},
-    sets::EnablePhysicsSystems,
-    solid::Solid,
-};
+use grid_physics::{actor::Actor, sets::EnablePhysicsSystems, solid::Solid};
 
 use spatial_grid::grid::SpatialGrid;
 
-use crate::{physics_grids::UiPhysicsGrid, player::PlayerMarker};
+use crate::{
+    debug::{DebugCollisions, DebugPositions},
+    physics_grids::UiPhysicsGrid,
+    player::PlayerMarker,
+};
 
 use super::{setup::DebugMenuMarker, state::DebugMenuState};
 

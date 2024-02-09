@@ -1,4 +1,4 @@
-use bevy::utils::hashbrown::HashMap;
+use hashbrown::HashMap;
 pub fn mirror_lines_with(lines: &[String], map: HashMap<char, char>) -> Vec<String> {
     let mut mirrored_lines: Vec<String> = lines.to_vec();
 
