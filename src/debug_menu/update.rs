@@ -105,7 +105,7 @@ pub fn update_values(
     }
     if let Some(entity) = state.ui_checkbox {
         let state = q_checkbox.get(entity).unwrap().is_some();
-        **ui = !state;
+        **ui = state;
     }
 
     if let Some(entity) = state.fps_text {

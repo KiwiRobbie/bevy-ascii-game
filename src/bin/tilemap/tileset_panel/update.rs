@@ -27,7 +27,7 @@ use grid_physics::{actor::Actor, sets::EnablePhysicsSystems, solid::Solid};
 use spatial_grid::grid::SpatialGrid;
 
 use bevy_ascii_game::{
-    debug::{DebugCollisions, DebugPositions},
+    debug::{DebugCollisions, DebugPositions, DebugUi},
     physics_grids::UiPhysicsGrid,
     player::PlayerMarker,
     tileset::asset::TilesetSource,
@@ -88,6 +88,7 @@ pub fn update_values(
     mut collisions: ResMut<DebugCollisions>,
     mut positions: ResMut<DebugPositions>,
     mut pause_physics: ResMut<EnablePhysicsSystems>,
+    mut ui: ResMut<DebugUi>,
     mut q_text: Query<&mut widgets::text::Text>,
     q_checkbox: Query<Option<&CheckboxEnabledMarker>, With<Checkbox>>,
     q_player: Query<(), With<PlayerMarker>>,
@@ -111,6 +112,11 @@ pub fn update_values(
         let state = q_checkbox.get(entity).unwrap().is_some();
         **pause_physics = !state;
     }
+    if let Some(entity) = state.ui_checkbox {
+        let state = q_checkbox.get(entity).unwrap().is_some();
+        **ui = state;
+    }
+
     if let Some(entity) = state.fps_text {
         q_text.get_mut(entity).unwrap().text = format!("FPS: {:0.2}", 1.0 / time.delta_seconds());
     }
