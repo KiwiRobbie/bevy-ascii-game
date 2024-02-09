@@ -2,7 +2,7 @@ use ascii_ui::{
     attachments::{self, MainAxisAlignment},
     mouse::IntractableMarker,
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{self, Checkbox, Column, Container, Divider, Text},
+    widgets::{self, Column, Container, Divider},
 };
 use bevy::{
     asset::{AssetServer, Handle},
@@ -14,7 +14,11 @@ use bevy::{
     math::{IVec2, UVec2},
 };
 
-use bevy_ascii_game::{physics_grids::UiPhysicsGridMarker, tileset::asset::TilesetSource};
+use bevy_ascii_game::{
+    physics_grids::UiPhysicsGridMarker,
+    tileset::asset::TilesetSource,
+    widgets::{DebugOptions, InfoCounts},
+};
 
 use crate::list_builder_widget::ListBuilderWidget;
 
@@ -40,15 +44,9 @@ pub fn setup_ui(
     let menu_state = &mut *menu_state;
 
     let settings_tab = Column::build(vec![
-        Text::build("".into()).save_id(&mut menu_state.fps_text),
-        Text::build("".into()).save_id(&mut menu_state.player_count_text),
-        Text::build("".into()).save_id(&mut menu_state.actor_count_text),
-        Text::build("".into()).save_id(&mut menu_state.solid_count_text),
+        InfoCounts::build(),
         Divider::build('-'),
-        Checkbox::build("Debug Position".into()).save_id(&mut menu_state.position_checkbox),
-        Checkbox::build("Debug Colliders".into()).save_id(&mut menu_state.colliders_checkbox),
-        Checkbox::build("Debug ECS UI".into()).save_id(&mut menu_state.ui_checkbox),
-        Checkbox::build("Pause Physics".into()).save_id(&mut menu_state.pause_checkbox),
+        DebugOptions::build(),
     ])(&mut commands);
 
     let list_builder_tab = {

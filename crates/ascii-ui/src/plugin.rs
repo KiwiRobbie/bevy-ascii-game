@@ -1,4 +1,4 @@
-use bevy::app::{Plugin, Update};
+use bevy::app::Plugin;
 
 use crate::{
     attachments::Root,

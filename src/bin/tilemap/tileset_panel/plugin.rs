@@ -5,7 +5,7 @@ use super::{
     painter::PainterPlugin,
     setup::setup_ui,
     state::TilesetPanelState,
-    update::{toggle_menu, update_list_builder, update_position, update_tilesets, update_values},
+    update::{toggle_menu, update_list_builder, update_position, update_tilesets},
 };
 
 pub struct TilesetPanelPlugin;
@@ -16,7 +16,6 @@ impl Plugin for TilesetPanelPlugin {
             .add_systems(
                 Update,
                 (
-                    update_values,
                     update_position,
                     toggle_menu,
                     update_list_builder,

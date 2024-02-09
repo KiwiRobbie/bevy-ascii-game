@@ -1,10 +1,6 @@
 use ascii_ui::{
     attachments::Root,
-    widgets::{
-        self,
-        button::ButtonJustPressedMarker,
-        checkbox::{Checkbox, CheckboxEnabledMarker},
-    },
+    widgets::{self, button::ButtonJustPressedMarker},
 };
 use bevy::{
     asset::{AssetEvent, Assets, Handle},
@@ -19,19 +15,12 @@ use bevy::{
         keyboard::KeyCode,
         Input,
     },
-    time::Time,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
-use grid_physics::{actor::Actor, sets::EnablePhysicsSystems, solid::Solid};
 
 use spatial_grid::grid::SpatialGrid;
 
-use bevy_ascii_game::{
-    debug::{DebugCollisions, DebugPositions, DebugUi},
-    physics_grids::UiPhysicsGrid,
-    player::PlayerMarker,
-    tileset::asset::TilesetSource,
-};
+use bevy_ascii_game::{physics_grids::UiPhysicsGrid, tileset::asset::TilesetSource};
 
 use crate::list_builder_widget::ListBuilderWidget;
 
@@ -80,54 +69,6 @@ pub fn update_position(
     for mut root in q_root.iter_mut() {
         root.position.y = -(buffer.size.y as i32);
         root.position.x = buffer.size.x as i32 - root.size.x as i32;
-    }
-}
-
-pub fn update_values(
-    state: Res<TilesetPanelState>,
-    mut collisions: ResMut<DebugCollisions>,
-    mut positions: ResMut<DebugPositions>,
-    mut pause_physics: ResMut<EnablePhysicsSystems>,
-    mut ui: ResMut<DebugUi>,
-    mut q_text: Query<&mut widgets::text::Text>,
-    q_checkbox: Query<Option<&CheckboxEnabledMarker>, With<Checkbox>>,
-    q_player: Query<(), With<PlayerMarker>>,
-    q_solid: Query<(), With<Solid>>,
-    q_actor: Query<(), With<Actor>>,
-    time: Res<Time>,
-) {
-    if !state.enabled {
-        return;
-    }
-
-    if let Some(entity) = state.colliders_checkbox {
-        let state = q_checkbox.get(entity).unwrap().is_some();
-        **collisions = state;
-    }
-    if let Some(entity) = state.position_checkbox {
-        let state = q_checkbox.get(entity).unwrap().is_some();
-        **positions = state;
-    }
-    if let Some(entity) = state.pause_checkbox {
-        let state = q_checkbox.get(entity).unwrap().is_some();
-        **pause_physics = !state;
-    }
-    if let Some(entity) = state.ui_checkbox {
-        let state = q_checkbox.get(entity).unwrap().is_some();
-        **ui = state;
-    }
-
-    if let Some(entity) = state.fps_text {
-        q_text.get_mut(entity).unwrap().text = format!("FPS: {:0.2}", 1.0 / time.delta_seconds());
-    }
-    if let Some(entity) = state.player_count_text {
-        q_text.get_mut(entity).unwrap().text = format!("Player Count: {}", q_player.iter().count());
-    }
-    if let Some(entity) = state.solid_count_text {
-        q_text.get_mut(entity).unwrap().text = format!("Solid  Count: {}", q_solid.iter().count());
-    }
-    if let Some(entity) = state.actor_count_text {
-        q_text.get_mut(entity).unwrap().text = format!("Actor  Count: {}", q_actor.iter().count());
     }
 }
 

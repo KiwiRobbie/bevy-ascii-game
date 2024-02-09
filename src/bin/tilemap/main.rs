@@ -23,6 +23,7 @@ use bevy_ascii_game::{
     player::PlayerPlugin,
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
     tileset::plugin::TilesetPlugin,
+    widgets::UiSectionsPlugin,
 };
 use glyph_render::{
     atlas::FontAtlasPlugin, font::font_load_system, glyph_animation::GlyphAnimationPlugin,
@@ -35,7 +36,6 @@ use tileset_panel::plugin::TilesetPanelPlugin;
 
 mod list_builder_widget;
 mod tileset_panel;
-mod tileset_widget;
 fn main() {
     let mut app = App::new();
     app.add_plugins((
@@ -60,6 +60,7 @@ fn main() {
         TilesetPanelPlugin,
         PhysicsGridPlugin,
         DebugPlugin,
+        UiSectionsPlugin,
     ))
     .add_systems(Startup, setup_system)
     .add_systems(Update, (font_load_system,));

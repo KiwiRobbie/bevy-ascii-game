@@ -37,6 +37,7 @@ use bevy_ascii_game::{
     },
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
     tileset::plugin::TilesetPlugin,
+    widgets::UiSectionsPlugin,
 };
 use glyph_render::{
     atlas::FontAtlasPlugin,
@@ -84,6 +85,7 @@ fn main() {
         DebugPlugin,
         DebugMenuPlugin,
         PhysicsGridPlugin,
+        UiSectionsPlugin,
     ))
     .add_systems(Startup, setup_system)
     .add_systems(
