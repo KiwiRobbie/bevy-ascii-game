@@ -2,7 +2,7 @@ use bevy::{
     ecs::{
         event::EventReader,
         query::With,
-        system::{Local, Query, Res, ResMut, Resource},
+        system::{Query, Res, ResMut, Resource},
     },
     input::{
         mouse::{MouseButton, MouseWheel},

@@ -1,4 +1,3 @@
-#![feature(future_join)]
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
@@ -222,56 +221,6 @@ fn setup_system(
             GlyphSpriteMirrored,
         ))
         .insert(GamePhysicsGridMarker);
-    // // Stationary box
-    // commands
-    //     .spawn((
-    //         GlyphSprite {
-    //             texture: glyph_textures.add(GlyphTextureSource {
-    //                 data: (0..2).map(|_| "#".repeat(3)).collect::<Vec<String>>(),
-    //             }),
-    //             offset: IVec2::ZERO,
-    //         },
-    //         SolidPhysicsBundle {
-    //             position: IVec2::new(-30, 0).into(),
-    //             collider: Collider {
-    //                 shape: CollisionShape::Aabb(Aabb {
-    //                     min: IVec2::ZERO,
-    //                     size: UVec2 { x: 3, y: 2 },
-    //                 }),
-    //             },
-    //             ..Default::default()
-    //         },
-    //         Movement::default(),
-    //         Velocity {
-    //             velocity: Vec2 { x: 0.0, y: 0.0 },
-    //         },
-    //     ))
-    //     .insert(GamePhysicsGridMarker);
-
-    // Falling box
-    // commands.spawn((
-    //     GlyphSprite {
-    //         texture: glyph_textures.add(GlyphTextureSource {
-    //             data: (0..2).map(|_| ".".repeat(3)).collect::<Vec<String>>(),
-    //         }),
-    //         offset: IVec2::ZERO,
-    //     },
-    //     ActorPhysicsBundle {
-    //         collider: Collider {
-    //             shape: CollisionShape::Aabb(Aabb {
-    //                 min: IVec2::ZERO,
-    //                 size: UVec2 { x: 3, y: 2 },
-    //             }),
-    //         },
-    //         position: IVec2::new(-30, -10).into(),
-    //         ..Default::default()
-    //     },
-    //     Velocity {
-    //         velocity: Vec2 { x: 50.0, y: 70.0 },
-    //     },
-    //     Gravity::default(),
-    //     FreeMarker,
-    // ));
 
     // Keyboard display
     commands
@@ -333,9 +282,6 @@ fn setup_system(
 
 #[derive(Component)]
 struct KeyboardInputMarker;
-
-#[derive(Component)]
-struct GlitchMarker;
 
 fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
