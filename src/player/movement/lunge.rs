@@ -110,12 +110,7 @@ pub fn player_lunge_update_system(
                     PlayerLungeCooldown {
                         timer: settings.cooldown,
                     },
-                    Velocity {
-                        velocity: Vec2 {
-                            x: lunging.direction.x * settings.exit_velocity,
-                            y: 0.0,
-                        },
-                    },
+                    Velocity::new(lunging.direction.x * settings.exit_velocity, 0.0),
                 ))
                 .remove::<PlayerLunging>();
         }

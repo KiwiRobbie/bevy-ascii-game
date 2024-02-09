@@ -4,7 +4,7 @@ use bevy::{
 };
 use spatial_grid::{
     direction::Direction,
-    position::{Position, PositionBundle},
+    position::{Position, SpatialBundle},
     remainder::Remainder,
 };
 
@@ -117,7 +117,7 @@ pub struct SquishedMarker;
 #[derive(Bundle, Default)]
 pub struct SolidPhysicsBundle {
     pub solid: Solid,
-    pub position: PositionBundle,
+    pub position: SpatialBundle,
     pub collider: Collider,
     pub riding: RidingEntities,
 }

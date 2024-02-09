@@ -20,7 +20,7 @@ use glyph_render::{
 
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::PositionBundle,
+    position::SpatialBundle,
 };
 
 use self::resize::grid_resize_update;
@@ -83,7 +83,7 @@ pub fn create_physics_grids(
                 CustomFont(server.load("FiraCode-Regular.ttf")),
                 CharacterSet(CHARSET.chars().collect()),
                 FontSize(32),
-                PositionBundle::from(IVec2::ZERO),
+                SpatialBundle::from(IVec2::ZERO),
                 SpatialGrid {
                     size: UVec2 { x: 19, y: 40 },
                 },
@@ -106,7 +106,7 @@ pub fn create_physics_grids(
                 SpatialGrid {
                     size: UVec2 { x: 19, y: 40 },
                 },
-                PositionBundle::from(IVec2::ZERO),
+                SpatialBundle::from(IVec2::ZERO),
                 FontAtlasUser,
             ))
             .id(),

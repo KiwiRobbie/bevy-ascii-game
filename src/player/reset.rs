@@ -22,7 +22,7 @@ use grid_physics::{
     velocity::Velocity,
 };
 use spatial_grid::{
-    position::{Position, PositionBundle},
+    position::{Position, SpatialBundle},
     remainder::Remainder,
 };
 
@@ -70,7 +70,7 @@ pub fn create_player<'w, 's, 'a>(
         GlyphAnimationGraphBundle::from_source(server.load("anim/player/player.agraph.ron")),
         PlayerBundle {
             actor: ActorPhysicsBundle {
-                position: PositionBundle {
+                position: SpatialBundle {
                     position: Position(IVec2::new(10, 10)),
                     ..Default::default()
                 },

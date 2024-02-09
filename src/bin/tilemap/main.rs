@@ -6,17 +6,13 @@ use bevy::{
         bloom::BloomSettings,
         core_2d::{Camera2d, Camera2dBundle},
     },
-    ecs::{
-        schedule::IntoSystemConfigs,
-        system::{Commands, Query, Res},
-    },
+    ecs::system::{Commands, Res},
     math::IVec2,
     render::{
         camera::{Camera, CameraRenderGraph},
         color::Color,
         texture::ImagePlugin,
     },
-    time::Time,
     window::{Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
@@ -32,14 +28,8 @@ use glyph_render::{
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::GlyphRenderPlugin,
 };
-use grid_physics::{
-    movement::Movement,
-    plugin::PhysicsPlugin,
-    sets::physics_systems_enabled,
-    solid::{FilterSolids, SolidPhysicsBundle},
-    velocity::Velocity,
-};
-use spatial_grid::position::{Position, PositionBundle};
+use grid_physics::{plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
+use spatial_grid::position::SpatialBundle;
 use tileset_panel::plugin::TilesetPanelPlugin;
 
 mod list_builder_widget;
@@ -70,13 +60,7 @@ fn main() {
         PhysicsGridPlugin,
     ))
     .add_systems(Startup, setup_system)
-    .add_systems(
-        Update,
-        (
-            font_load_system,
-            moving_platform.run_if(physics_systems_enabled),
-        ),
-    );
+    .add_systems(Update, (font_load_system,));
 
     #[cfg(debug_assertions)]
     std::fs::write(
@@ -88,26 +72,12 @@ fn main() {
     app.run();
 }
 
-fn moving_platform(
-    mut q_solid_movement: Query<(&mut Movement, &mut Velocity, &Position), FilterSolids>,
-    time: Res<Time>,
-) {
-    for (mut movement, mut velocity, position) in q_solid_movement.iter_mut() {
-        if position.x > 50 {
-            velocity.velocity.x = -10.0;
-        } else if position.x < -50 {
-            velocity.velocity.x = 10.0;
-        }
-        movement.add(velocity.velocity * time.delta_seconds());
-    }
-}
-
 fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands
         .spawn((
             Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
             SolidPhysicsBundle {
-                position: PositionBundle::from(IVec2::new(20, 10)),
+                position: SpatialBundle::from(IVec2::new(20, 10)),
                 ..Default::default()
             },
         ))

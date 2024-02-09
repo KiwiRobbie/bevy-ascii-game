@@ -12,7 +12,7 @@ use spatial_grid::{
     remainder::Remainder,
 };
 
-use crate::{actor::Actor, collision::Collider, solid::Solid};
+use crate::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
 
 #[derive(Debug, Resource, Default, DerefMut, Deref)]
 pub struct DebugCollisions(pub bool);
@@ -58,7 +58,12 @@ pub struct DebugPositions(pub bool);
 
 pub fn debug_position_system(
     mut gizmos: Gizmos,
-    q_position: Query<(&Position, &Remainder, &PhysicsGridMember)>,
+    q_position: Query<(
+        &Position,
+        Option<&Remainder>,
+        Option<&Velocity>,
+        &PhysicsGridMember,
+    )>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
     enabled: Res<DebugPositions>,
 ) {
@@ -66,16 +71,26 @@ pub fn debug_position_system(
         return;
     }
 
-    for (position, remainder, grid_member) in q_position.iter() {
+    for (position, remainder, velocity, grid_member) in q_position.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
-        let remainder = **remainder * grid.size.as_vec2();
         let position = **position * grid.size.as_ivec2();
         let position = position.as_vec2() + transform.translation.truncate();
 
         gizmos.circle_2d(position, 5.0, Color::BLUE);
-        gizmos.circle_2d(position + remainder, 2.0, Color::RED);
+
+        let position = if let Some(remainder) = remainder {
+            let remainder = **remainder * grid.size.as_vec2();
+            gizmos.circle_2d(position + remainder, 2.0, Color::RED);
+            position + remainder
+        } else {
+            position
+        };
+
+        if let Some(velocity) = velocity {
+            gizmos.line_2d(position, position + **velocity, Color::GREEN);
+        }
     }
 }
 

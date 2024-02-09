@@ -11,12 +11,12 @@ use crate::remainder::Remainder;
 pub struct Position(pub IVec2);
 
 #[derive(Bundle, Default, Clone)]
-pub struct PositionBundle {
+pub struct SpatialBundle {
     pub position: Position,
     pub remainder: Remainder,
 }
 
-impl<V: Into<IVec2>> From<V> for PositionBundle {
+impl<V: Into<IVec2>> From<V> for SpatialBundle {
     fn from(value: V) -> Self {
         Self {
             position: Position(value.into()),

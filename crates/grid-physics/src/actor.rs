@@ -9,7 +9,7 @@ use bevy::{
     math::{IVec2, Vec2},
 };
 use spatial_grid::{
-    position::{Position, PositionBundle},
+    position::{Position, SpatialBundle},
     remainder::Remainder,
 };
 
@@ -111,7 +111,7 @@ impl Actor {
 #[derive(Bundle, Default, Clone)]
 pub struct ActorPhysicsBundle {
     pub actor: Actor,
-    pub position: PositionBundle,
+    pub position: SpatialBundle,
     pub collider: Collider,
     pub movement: Movement,
 }

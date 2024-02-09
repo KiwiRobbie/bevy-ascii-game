@@ -57,7 +57,7 @@ use grid_physics::{
     solid::{FilterSolids, SolidPhysicsBundle},
     velocity::Velocity,
 };
-use spatial_grid::position::{Position, PositionBundle};
+use spatial_grid::position::{Position, SpatialBundle};
 
 fn main() {
     let mut app = App::new();
@@ -110,11 +110,11 @@ fn moving_platform(
 ) {
     for (mut movement, mut velocity, position) in q_solid_movement.iter_mut() {
         if position.x > 50 {
-            velocity.velocity.x = -10.0;
+            velocity.x = -10.0;
         } else if position.x < -50 {
-            velocity.velocity.x = 10.0;
+            velocity.x = 10.0;
         }
-        movement.add(velocity.velocity * time.delta_seconds());
+        movement.add(**velocity * time.delta_seconds());
     }
 }
 
@@ -155,7 +155,7 @@ fn setup_system(
         .spawn((
             Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
             SolidPhysicsBundle {
-                position: PositionBundle::from(IVec2::new(20, 10)),
+                position: SpatialBundle::from(IVec2::new(20, 10)),
                 ..Default::default()
             },
         ))
@@ -231,7 +231,7 @@ fn setup_system(
                 }),
                 offset: IVec2 { x: 0, y: 0 },
             },
-            PositionBundle {
+            SpatialBundle {
                 ..Default::default()
             },
             KeyboardInputMarker,

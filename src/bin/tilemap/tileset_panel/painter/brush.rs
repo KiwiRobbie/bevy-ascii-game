@@ -24,7 +24,7 @@ use bevy_ascii_game::{
 use glyph_render::glyph_render_plugin::{GlyphSolidColor, GlyphSprite, GlyphTextureSource};
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::{Position, PositionBundle},
+    position::{Position, SpatialBundle},
 };
 
 use crate::tileset_panel::setup::TilesetTileId;
@@ -40,7 +40,7 @@ impl Plugin for BrushPlugin {
 pub fn setup(mut commands: Commands) {
     commands.spawn((
         Brush,
-        PositionBundle::default(),
+        SpatialBundle::default(),
         GamePhysicsGridMarker,
         GlyphSolidColor { color: Color::GRAY },
     ));
