@@ -26,6 +26,8 @@ use spatial_grid::{
     remainder::Remainder,
 };
 
+use crate::physics_grids::GamePhysicsGridMarker;
+
 use super::{
     input::{controller::PlayerInputController, PlayerInputReset},
     movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
@@ -59,7 +61,8 @@ pub fn create_player_with_gamepad(
             color: Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).as_rgba_linear()
                 * 10.0,
         })
-        .insert(TargetGlyphBuffer(glyph_buffer));
+        .insert(TargetGlyphBuffer(glyph_buffer))
+        .insert(GamePhysicsGridMarker);
 }
 
 pub fn create_player<'w, 's, 'a>(
