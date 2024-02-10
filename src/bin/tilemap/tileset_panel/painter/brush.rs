@@ -18,7 +18,7 @@ use bevy::{
 };
 use bevy_ascii_game::{
     physics_grids::GamePhysicsGridMarker,
-    tilemap::{asset::TilemapSource, component::Tilemap},
+    tilemap::{asset::TilemapSource, chunk::TilemapChunk, component::Tilemap},
     tileset::asset::TilesetSource,
 };
 use glyph_render::glyph_render_plugin::{GlyphSolidColor, GlyphSprite, GlyphTextureSource};
@@ -88,6 +88,7 @@ pub fn update_brush(
     >,
     q_tilemap: Query<(&Tilemap, &Position), Without<Brush>>,
     mut tilemaps: ResMut<Assets<TilemapSource>>,
+    mut chunks: ResMut<Assets<TilemapChunk>>,
     tilesets: Res<Assets<TilesetSource>>,
     mouse_input: Res<MouseInput>,
 ) {
@@ -128,6 +129,7 @@ pub fn update_brush(
                         tilesets.get(tile.tileset.id()),
                     ) {
                         tilemap.insert_tile(
+                            &mut chunks,
                             tilemap_local,
                             tileset.id.clone(),
                             tile.tile,
@@ -137,7 +139,7 @@ pub fn update_brush(
                 }
             } else if mouse_input.pressed(MouseButton::Right) {
                 if let Some(tilemap) = tilemaps.get_mut(target_tilemap.id()) {
-                    tilemap.clear_tile(tilemap_local);
+                    tilemap.clear_tile(&mut chunks, tilemap_local);
                 }
             }
 

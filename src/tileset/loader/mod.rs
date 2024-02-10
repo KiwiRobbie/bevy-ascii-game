@@ -59,8 +59,9 @@ impl AssetLoader for TilesetLoader {
             }
 
             let tile_size: UVec2 = meta.size.into();
-            let mut tiles = Vec::new();
-            let mut tile_names = HashMap::new();
+            let mut tiles = vec![];
+            let mut tile_ids = HashMap::new();
+            let mut tile_labels = vec![];
 
             for asset in meta.assets.iter() {
                 match &asset.tiles {
@@ -85,8 +86,9 @@ impl AssetLoader for TilesetLoader {
                                     tile.push(source_data[y][x_start..x_end].to_string());
                                 }
 
-                                tile_names
-                                    .insert(format!("{}-{}-{}", name, tile_x, tile_y), tiles.len());
+                                let label = format!("{}-{}-{}", name, tile_x, tile_y);
+                                tile_ids.insert(label.clone(), tiles.len());
+                                tile_labels.push(label);
                                 tiles.push(tile);
 
                                 tile_x += 1;
@@ -100,7 +102,8 @@ impl AssetLoader for TilesetLoader {
                 display_name: meta.display_name,
                 id: meta.id,
                 tile_size,
-                tile_names,
+                tile_ids,
+                tile_labels,
                 tiles,
             })
         })

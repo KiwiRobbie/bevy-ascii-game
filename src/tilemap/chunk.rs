@@ -1,6 +1,6 @@
-use bevy::math::UVec2;
+use bevy::{asset::Asset, math::UVec2, reflect::TypePath};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Asset, TypePath)]
 pub struct TilemapChunk {
     pub data: Box<[Option<(u32, u32)>]>,
 }

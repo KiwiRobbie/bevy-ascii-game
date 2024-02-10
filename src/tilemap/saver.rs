@@ -1,4 +1,10 @@
-use super::asset::TilemapSource;
+use crate::{tilemap::meta::ChunkMeta, tileset::asset::TilesetSource};
+
+use super::{
+    asset::TilemapSource,
+    chunk::TilemapChunk,
+    loader::{ChunkLoader, ChunkSettings},
+};
 use super::{loader::TilemapLoader, meta::TilemapMeta};
 use bevy::asset::{saver::AssetSaver, AssetLoader, AsyncWriteExt};
 
@@ -20,11 +26,15 @@ impl AssetSaver for TilemapSaver {
         'a,
         Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {
+        dbg!(&asset.iter_labels().collect::<Vec<_>>());
+
         Box::pin(async move {
             let mut tilesets = vec![];
             let mut chunks = vec![];
 
-            for (chunk_id, chunk) in asset.chunk_data.iter() {
+            dbg!(asset.iter_labels().collect::<Vec<_>>());
+
+            for (chunk_id, chunk) in asset.chunk_handles.iter() {
                 chunks.push((*chunk_id).into());
             }
 
@@ -43,78 +53,53 @@ impl AssetSaver for TilemapSaver {
             Ok(())
         })
     }
+}
 
-    // fn load<'a>(
-    //     &'a self,
-    //     reader: &'a mut Reader,
-    //     _settings: &'a Self::Settings,
-    //     load_context: &'a mut bevy::asset::LoadContext,
-    // ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
-    //     Box::pin(async move {
-    //         let mut bytes = Vec::new();
-    //         reader.read_to_end(&mut bytes).await?;
-    //         let meta = ron::de::from_bytes::<TilemapMeta>(&bytes)?;
+pub struct ChunkSaver;
+impl AssetSaver for ChunkSaver {
+    type OutputLoader = ChunkLoader;
+    type Asset = TilemapChunk;
+    type Error = anyhow::Error;
+    type Settings = ChunkSettings;
 
-    //         let mut tilesets = Vec::new();
-    //         for tileset in meta.tilesets.iter() {
-    //             let value: TilesetSource = load_context
-    //                 .load_direct(tileset)
-    //                 .await
-    //                 .unwrap()
-    //                 .take()
-    //                 .unwrap();
-    //             fn extensions(&self) -> &[&str] {
-    //                 &["tilemap.ron"]
-    //             }t mut tileset_names: HashMap<String, usize> = HashMap::new();
-    //         for (i, tileset) in tilesets.iter().enumerate() {
-    //             tileset_names.insert(tileset.id.clone(), i);
-    //         }
+    fn save<'a>(
+        &'a self,
+        writer: &'a mut bevy::asset::io::Writer,
+        asset: bevy::asset::saver::SavedAsset<'a, Self::Asset>,
+        settings: &'a Self::Settings,
+    ) -> bevy::utils::BoxedFuture<
+        'a,
+        Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
+    > {
+        Box::pin(async move {
+            let mut data = vec![];
 
-    //         let mut chunk_data: HashMap<IVec2, TilemapChunk> = HashMap::new();
+            let mut tilesets: Vec<&TilesetSource> = vec![];
+            for tileset in settings.tilesets.iter() {
+                tilesets.push(
+                    asset
+                        .get_labeled::<TilesetSource>(tileset.clone())
+                        .unwrap()
+                        .get(),
+                );
+            }
+            for row in asset.data.into_iter() {
+                let mut data_row = vec![];
+                for cell in row.into_iter() {
+                    let tileset = settings.tilesets[cell.0 as usize].clone();
+                    let tile = tilesets[cell.0 as usize].tile_labels[cell.1 as usize].clone();
+                    data_row.push((tileset, tile));
+                }
+                data.push(data_row);
+            }
 
-    //         for pos in meta.chunks.iter() {
-    //             let pos: IVec2 = (*pos).into();
-    //             let path =
-    //                 PathBuf::from(&meta.chunk_dir).join(format!("{}_{}.chunk.ron", pos.x, pos.y));
-    //             let data = load_context.read_asset_bytes(path).await.unwrap();
-    //             let Some(meta) = ron::de::from_bytes::<ChunkMeta>(&data).ok() else {
-    //                 continue;
-    //             };
-    //             let mut data = vec![];
+            let meta = ChunkMeta(data);
 
-    //             for row in meta.iter() {
-    //                 for tile in row.iter() {
-    //                     if let Some((tileset, tile)) = tile {
-    //                         let tileset = *tileset_names.get(tileset).unwrap();
-    //                         let tile = *tilesets[tileset].tile_names.get(tile).unwrap();
-    //                         data.push(Some((tileset as u32, tile as u32)));
-    //                     } else {
-    //                         data.push(None)
-    //                     }
-    //                 }
-    //             }
+            let string = ron::ser::to_string_pretty(&meta, Default::default()).unwrap();
+            dbg!(&string);
+            writer.write_all(string.as_bytes()).await.unwrap();
 
-    //             chunk_data.insert(
-    //                 pos,
-    //                 TilemapChunk {
-    //                     data: data.into_boxed_slice(),
-    //                 },
-    //             );
-    //         }
-
-    //         let mut tileset_handles = Vec::new();
-
-    //         for tileset in tilesets.into_iter() {
-    //             tileset_handles.push(load_context.add_labeled_asset(tileset.id.clone(), tileset));
-    //         }
-
-    //         Ok(TilemapSource {
-    //             chunk_size: meta.chunk_size.into(),
-    //             tile_size: meta.tile_size.into(),
-    //             tileset_names,
-    //             tilesets: tileset_handles,
-    //             chunk_data,
-    //         })
-    //     })
-    // }
+            Ok(settings.clone())
+        })
+    }
 }

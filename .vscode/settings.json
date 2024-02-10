@@ -8,6 +8,7 @@
     "cooldown",
     "debugdump",
     "despawn",
+    "labeled",
     "rect",
     "Tilemap",
     "tilemaps",

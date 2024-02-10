@@ -1,5 +1,6 @@
 use bevy::{
-    asset::{Asset, Handle},
+    asset::{Asset, Assets, Handle},
+    ecs::system::ResMut,
     math::{IVec2, UVec2},
     reflect::TypePath,
     utils::HashMap,
@@ -15,7 +16,7 @@ pub struct TilemapSource {
     pub tile_size: UVec2,
     pub tileset_names: HashMap<String, usize>,
     pub tilesets: Vec<Handle<TilesetSource>>,
-    pub chunk_data: HashMap<IVec2, TilemapChunk>,
+    pub chunk_handles: HashMap<IVec2, Handle<TilemapChunk>>,
 }
 
 impl TilemapSource {
@@ -29,6 +30,7 @@ impl TilemapSource {
 
     pub fn insert_tile(
         &mut self,
+        chunks: &mut ResMut<Assets<TilemapChunk>>,
         pos: IVec2,
         tileset_id: String,
         tileset_tile_index: u32,
@@ -36,9 +38,9 @@ impl TilemapSource {
     ) {
         let (chunk_id, chunk_tile_index) = self.chunk_id_index(pos);
         let chunk = self
-            .chunk_data
+            .chunk_handles
             .entry(chunk_id)
-            .or_insert(TilemapChunk::empty(self.chunk_size));
+            .or_insert(chunks.add(TilemapChunk::empty(self.chunk_size)));
 
         let tileset_index = {
             let new_index = self.tileset_names.len();
@@ -51,11 +53,16 @@ impl TilemapSource {
             }
         };
 
-        chunk.data[chunk_tile_index as usize] = Some((tileset_index as u32, tileset_tile_index));
+        chunks.get_mut(chunk.id()).unwrap().data[chunk_tile_index as usize] =
+            Some((tileset_index as u32, tileset_tile_index));
     }
-    pub fn clear_tile(&mut self, pos: IVec2) -> Option<(u32, u32)> {
+    pub fn clear_tile(
+        &mut self,
+        chunks: &mut ResMut<Assets<TilemapChunk>>,
+        pos: IVec2,
+    ) -> Option<(u32, u32)> {
         let (chunk_id, chunk_tile_index) = self.chunk_id_index(pos);
-        let chunk = self.chunk_data.get_mut(&chunk_id)?;
-        chunk.data[chunk_tile_index as usize].take()
+        let chunk = self.chunk_handles.get_mut(&chunk_id)?;
+        chunks.get_mut(chunk.id()).unwrap().data[chunk_tile_index as usize].take()
     }
 }

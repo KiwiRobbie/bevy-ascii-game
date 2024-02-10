@@ -1,4 +1,4 @@
-use std::{fs::File, future::IntoFuture, path::Path};
+use std::{ffi::OsStr, fs::File, future::IntoFuture, path::Path};
 
 use ascii_ui::{
     attachments::Root,
@@ -29,7 +29,13 @@ use spatial_grid::grid::SpatialGrid;
 
 use bevy_ascii_game::{
     physics_grids::UiPhysicsGrid,
-    tilemap::{asset::TilemapSource, component::Tilemap, saver::TilemapSaver},
+    tilemap::{
+        asset::TilemapSource,
+        chunk::TilemapChunk,
+        component::Tilemap,
+        loader::ChunkSettings,
+        saver::{ChunkSaver, TilemapSaver},
+    },
     tileset::asset::TilesetSource,
 };
 
@@ -142,6 +148,8 @@ pub(super) fn save_tilemap_system(
     >,
     q_tilemap: Query<&Tilemap>,
     tilemaps: Res<Assets<TilemapSource>>,
+    tilesets: Res<Assets<TilesetSource>>,
+    chunks: Res<Assets<TilemapChunk>>,
     server: Res<AssetServer>,
 ) {
     if q_buttons.iter().next().is_none() {
@@ -156,6 +164,40 @@ pub(super) fn save_tilemap_system(
     };
 
     let server = server.clone();
+
+    for (chunk_id, chunk) in tilemap.chunk_handles.iter() {
+        let tileset_names = tilemap.tileset_names.clone();
+        // let tilesets = tilemap.tilesets.iter().map(|h| tilesets.get(h.id()).unwrap().path)
+
+        let (chunk_id, chunk) = (*chunk_id, chunks.get(chunk.id()).unwrap().clone());
+        let loaded: LoadedAsset<_> = chunk.into();
+        let erased: ErasedLoadedAsset = loaded.into();
+        let server = server.clone();
+        IoTaskPool::get()
+            .spawn(async move {
+                let asset_source = server.get_source(AssetSourceId::default()).unwrap();
+                let chunk_label = format!("chunks/{}-{}.chunk.ron", chunk_id.x, chunk_id.y);
+
+                let output = asset_source
+                    .writer()
+                    .unwrap()
+                    .write(Path::new(OsStr::new(&chunk_label)));
+                let mut output = output.await.unwrap();
+
+                ChunkSaver
+                    .save(
+                        &mut output,
+                        SavedAsset::from_loaded(&erased).unwrap(),
+                        &ChunkSettings {
+                            tileset_names,
+                            tilesets,
+                        },
+                    )
+                    .await
+                    .unwrap();
+            })
+            .detach();
+    }
 
     IoTaskPool::get()
         .spawn(async move {

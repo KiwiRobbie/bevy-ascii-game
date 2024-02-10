@@ -16,7 +16,7 @@ use spatial_grid::position::Position;
 
 use crate::tileset::asset::TilesetSource;
 
-use super::{asset::TilemapSource, component::Tilemap};
+use super::{asset::TilemapSource, chunk::TilemapChunk, component::Tilemap};
 
 pub fn extract_tilemaps(
     mut commands: Commands,
@@ -33,6 +33,7 @@ pub fn extract_tilemaps(
     >,
     tilemaps: Extract<Res<Assets<TilemapSource>>>,
     tilesets: Extract<Res<Assets<TilesetSource>>>,
+    chunks: Extract<Res<Assets<TilemapChunk>>>,
 ) {
     for (buffer_position, buffer, font, font_size) in q_glyph_buffer.iter() {
         let Some(font) = fonts.get(font.id()) else {
@@ -77,7 +78,11 @@ pub fn extract_tilemaps(
                         * tilemap.tile_size.as_ivec2();
 
                     let chunk_id: IVec2 = (chunk_x, chunk_y).into();
-                    let Some(chunk) = tilemap.chunk_data.get(&chunk_id) else {
+                    let Some(chunk) = tilemap
+                        .chunk_handles
+                        .get(&chunk_id)
+                        .and_then(|chunk| chunks.get(chunk.id()))
+                    else {
                         continue;
                     };
 
