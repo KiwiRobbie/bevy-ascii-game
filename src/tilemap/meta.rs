@@ -16,4 +16,4 @@ pub enum ChunkDataLocation {
 }
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone, Deref, serde::Serialize)]
-pub struct ChunkMeta(pub Vec<Vec<(String, String)>>);
+pub struct ChunkMeta(pub Vec<Vec<(u32, u32)>>);

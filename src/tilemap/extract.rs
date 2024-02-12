@@ -16,7 +16,11 @@ use spatial_grid::position::Position;
 
 use crate::tileset::asset::TilesetSource;
 
-use super::{asset::TilemapSource, chunk::TilemapChunk, component::Tilemap};
+use super::{
+    asset::TilemapSource,
+    chunk::{TilemapChunk, EMPTY_TILE},
+    component::Tilemap,
+};
 
 pub fn extract_tilemaps(
     mut commands: Commands,
@@ -87,9 +91,9 @@ pub fn extract_tilemaps(
                     };
 
                     for (index, tile) in chunk.data.iter().enumerate() {
-                        let Some(tile) = tile else {
+                        if tile == &EMPTY_TILE {
                             continue;
-                        };
+                        }
 
                         let tileset = tilesets
                             .get(tilemap.tilesets[tile.0 as usize].id())

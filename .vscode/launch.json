@@ -11,7 +11,8 @@
             "cargo": {
                 "args": [
                     "build",
-                ],
+                    "--color",
+                    "always",                ],
                 "filter": {
                     "name": "bevy-ascii-game",
                     "kind": "bin"
@@ -31,6 +32,8 @@
             "cargo": {
                 "args": [
                     "build",
+                    "--color",
+                    "always",
                     "--bin",
                     "tilemap",
                 ],
@@ -53,6 +56,8 @@
             "cargo": {
                 "args": [
                     "build",
+                    "--color",
+                    "always",
                     "--release",
                 ],
                 "filter": {
@@ -74,6 +79,8 @@
             "cargo": {
                 "args": [
                     "build",
+                    "--color",
+                    "always",
                     "--release",
                     "--bin",
                     "tilemap",

@@ -8,7 +8,7 @@ use bevy::{
 
 use crate::tileset::asset::TilesetSource;
 
-use super::chunk::TilemapChunk;
+use super::chunk::{TilemapChunk, EMPTY_TILE};
 
 #[derive(Debug, Asset, TypePath, Clone)]
 pub struct TilemapSource {
@@ -54,15 +54,20 @@ impl TilemapSource {
         };
 
         chunks.get_mut(chunk.id()).unwrap().data[chunk_tile_index as usize] =
-            Some((tileset_index as u32, tileset_tile_index));
+            (tileset_index as u32, tileset_tile_index);
     }
     pub fn clear_tile(
         &mut self,
         chunks: &mut ResMut<Assets<TilemapChunk>>,
         pos: IVec2,
-    ) -> Option<(u32, u32)> {
+    ) -> (u32, u32) {
         let (chunk_id, chunk_tile_index) = self.chunk_id_index(pos);
-        let chunk = self.chunk_handles.get_mut(&chunk_id)?;
-        chunks.get_mut(chunk.id()).unwrap().data[chunk_tile_index as usize].take()
+        let Some(chunk) = self.chunk_handles.get_mut(&chunk_id) else {
+            return EMPTY_TILE;
+        };
+        std::mem::replace(
+            &mut chunks.get_mut(chunk.id()).unwrap().data[chunk_tile_index as usize],
+            EMPTY_TILE,
+        )
     }
 }

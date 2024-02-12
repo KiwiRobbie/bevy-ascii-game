@@ -1,5 +1,3 @@
-use crate::{tilemap::meta::ChunkMeta, tileset::asset::TilesetSource};
-
 use super::{
     asset::TilemapSource,
     chunk::TilemapChunk,
@@ -26,30 +24,30 @@ impl AssetSaver for TilemapSaver {
         'a,
         Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {
-        dbg!(&asset.iter_labels().collect::<Vec<_>>());
-
         Box::pin(async move {
-            let mut tilesets = vec![];
             let mut chunks = vec![];
 
-            dbg!(asset.iter_labels().collect::<Vec<_>>());
-
-            for (chunk_id, chunk) in asset.chunk_handles.iter() {
+            for (chunk_id, _) in asset.chunk_handles.iter() {
                 chunks.push((*chunk_id).into());
             }
 
             let meta = TilemapMeta {
                 chunk_size: asset.chunk_size.into(),
                 tile_size: asset.tile_size.into(),
-                chunk_dir: "chunks".into(),
-                tilesets,
+                chunk_dir: "tilemaps/output".into(),
+                tilesets: asset
+                    .tilesets
+                    .iter()
+                    .map(|h| h.path().unwrap().to_string())
+                    .collect(),
                 chunks,
             };
 
             let string = ron::ser::to_string_pretty(&meta, Default::default()).unwrap();
             dbg!(&string);
-            writer.write_all(string.as_bytes()).await.unwrap();
-
+            dbg!(writer.write_all(string.as_bytes()).await).unwrap();
+            writer.flush().await.unwrap();
+            writer.close().await.unwrap();
             Ok(())
         })
     }
@@ -72,33 +70,17 @@ impl AssetSaver for ChunkSaver {
         Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {
         Box::pin(async move {
-            let mut data = vec![];
+            let data = asset
+                .data
+                .iter()
+                .flat_map(|(tileset, tile)| {
+                    tileset.to_le_bytes().into_iter().chain(tile.to_le_bytes())
+                })
+                .collect::<Box<[_]>>();
 
-            let mut tilesets: Vec<&TilesetSource> = vec![];
-            for tileset in settings.tilesets.iter() {
-                tilesets.push(
-                    asset
-                        .get_labeled::<TilesetSource>(tileset.clone())
-                        .unwrap()
-                        .get(),
-                );
-            }
-            for row in asset.data.into_iter() {
-                let mut data_row = vec![];
-                for cell in row.into_iter() {
-                    let tileset = settings.tilesets[cell.0 as usize].clone();
-                    let tile = tilesets[cell.0 as usize].tile_labels[cell.1 as usize].clone();
-                    data_row.push((tileset, tile));
-                }
-                data.push(data_row);
-            }
-
-            let meta = ChunkMeta(data);
-
-            let string = ron::ser::to_string_pretty(&meta, Default::default()).unwrap();
-            dbg!(&string);
-            writer.write_all(string.as_bytes()).await.unwrap();
-
+            dbg!(writer.write_all(&data).await).unwrap();
+            writer.flush().await.unwrap();
+            writer.close().await.unwrap();
             Ok(settings.clone())
         })
     }

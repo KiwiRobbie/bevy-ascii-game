@@ -4,7 +4,7 @@ use bevy::ecs::{entity::Entity, system::Resource};
 pub(super) struct TilesetPanelState {
     pub enabled: bool,
     pub root_widget: Option<Entity>,
-    pub save_button: Option<Entity>,
+    pub _save_button: Option<Entity>,
 }
 
 impl Default for TilesetPanelState {
@@ -12,7 +12,7 @@ impl Default for TilesetPanelState {
         TilesetPanelState {
             enabled: true,
             root_widget: None,
-            save_button: None,
+            _save_button: None,
         }
     }
 }

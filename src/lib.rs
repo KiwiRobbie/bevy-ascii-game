@@ -1,3 +1,6 @@
+#![feature(array_chunks)]
+#![feature(iter_array_chunks)]
+
 pub mod debug;
 pub mod debug_menu;
 pub mod physics_grids;

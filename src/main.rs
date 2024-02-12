@@ -133,7 +133,7 @@ fn setup_system(
     mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
 ) {
     commands.spawn((
-        Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
+        Tilemap(server.load("tilemaps/output.tilemap.ron")),
         SolidPhysicsBundle {
             position: SpatialBundle::from(IVec2::new(20, 10)),
             ..Default::default()
@@ -217,12 +217,6 @@ fn setup_system(
 
     // Floor
     commands.spawn((
-        GlyphSprite {
-            texture: glyph_textures.add(GlyphTextureSource {
-                data: (0..2).map(|_| "#".repeat(100)).collect::<Vec<String>>(),
-            }),
-            offset: IVec2::ZERO,
-        },
         SolidPhysicsBundle {
             position: IVec2::new(0, 0).into(),
             collider: Collider {

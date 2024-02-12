@@ -15,6 +15,24 @@
 - Set physics grid sizes / ui root sizes in system
 - Game/UI layout + render independently
 
+# Tilemaps + Tilesets
+
+- RON + GZIP
+- Append only TileIDs: Adding/removing tiles only breaks removed tiles.
+- Chunk data file, `[(tilemap: u32,tile: u32)] as [u8]` + GZIP.
+- Tilemap
+
+(
+name: String,
+chunk_size
+chunks: {
+(x,y) : (
+
+    ),
+
+}
+)
+
 # # Glyph Colours
 
 - [ ] Option of solid colour or texture per character or shader

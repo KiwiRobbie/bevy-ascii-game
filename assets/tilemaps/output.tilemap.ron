@@ -1,0 +1,24 @@
+(
+    chunk_size: (4, 4),
+    tile_size: (8, 5),
+    tilesets: [
+        "tilesets/cave.tileset.ron",
+    ],
+    chunk_dir: "tilemaps/output",
+    chunks: [
+        (2, 1),
+        (1, 2),
+        (1, 0),
+        (1, -1),
+        (-1, 1),
+        (-1, 0),
+        (0, -1),
+        (0, 2),
+        (1, 1),
+        (0, 0),
+        (2, -1),
+        (0, 1),
+        (2, 0),
+        (-1, -1),
+    ],
+)

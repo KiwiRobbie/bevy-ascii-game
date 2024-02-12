@@ -78,7 +78,7 @@ fn main() {
 fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands
         .spawn((
-            Tilemap(server.load("tilemaps/cave_map.tilemap.ron")),
+            Tilemap(server.load("tilemaps/output.tilemap.ron")),
             SolidPhysicsBundle {
                 position: SpatialBundle::from(IVec2::new(20, 10)),
                 ..Default::default()

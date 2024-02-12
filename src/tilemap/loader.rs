@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 
 use bevy::{
-    asset::{io::Reader, meta::Settings, AssetLoader, AsyncReadExt, Handle},
-    math::IVec2,
+    asset::{io::Reader, AssetLoader, AsyncReadExt, Handle},
+    math::{IVec2, UVec2},
     utils::hashbrown::HashMap,
 };
 
 use crate::tileset::asset::TilesetSource;
 
-use super::meta::{ChunkMeta, TilemapMeta};
+use super::meta::TilemapMeta;
 
 use super::{asset::TilemapSource, chunk::TilemapChunk};
 
@@ -56,16 +56,7 @@ impl AssetLoader for TilemapLoader {
             for pos in meta.chunks.iter() {
                 let pos: IVec2 = (*pos).into();
                 let path =
-                    PathBuf::from(&meta.chunk_dir).join(format!("{}_{}.chunk.ron", pos.x, pos.y));
-
-                let tileset_names = tileset_names.clone();
-                let tilesets = meta.tilesets.clone();
-
-                // let chunk_handle =
-                //     load_context.load_with_settings(path, move |settings: &mut ChunkSettings| {
-                //         settings.tileset_names = tileset_names.clone();
-                //         settings.tilesets = tilesets.clone();
-                //     });
+                    PathBuf::from(&meta.chunk_dir).join(format!("{}_{}.chunk.bin", pos.x, pos.y));
 
                 let chunk = ChunkLoader
                     .load(
@@ -75,8 +66,7 @@ impl AssetLoader for TilemapLoader {
                             .unwrap()
                             .as_slice(),
                         &ChunkSettings {
-                            tileset_names: tileset_names.clone(),
-                            tilesets: tilesets.clone(),
+                            size: Some(meta.chunk_size.into()),
                         },
                         load_context,
                     )
@@ -91,8 +81,8 @@ impl AssetLoader for TilemapLoader {
 
             let mut tileset_handles = Vec::new();
 
-            for tileset in tilesets.into_iter() {
-                tileset_handles.push(load_context.add_labeled_asset(tileset.id.clone(), tileset));
+            for tileset in meta.tilesets.iter() {
+                tileset_handles.push(load_context.load(tileset));
             }
 
             Ok(TilemapSource {
@@ -106,10 +96,9 @@ impl AssetLoader for TilemapLoader {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Default, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Default, Clone)]
 pub struct ChunkSettings {
-    pub tileset_names: HashMap<String, usize>,
-    pub tilesets: Vec<String>,
+    size: Option<UVec2>,
 }
 
 #[derive(Default)]
@@ -120,59 +109,31 @@ impl AssetLoader for ChunkLoader {
     type Settings = ChunkSettings;
 
     fn extensions(&self) -> &[&str] {
-        &["chunk.ron"]
+        &["chunk.bin"]
     }
     fn load<'a>(
         &'a self,
         reader: &'a mut Reader,
         settings: &'a Self::Settings,
-        load_context: &'a mut bevy::asset::LoadContext,
+        _load_context: &'a mut bevy::asset::LoadContext,
     ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;
-            let meta = ron::de::from_bytes::<ChunkMeta>(&bytes)?;
 
-            let mut tilesets = Vec::new();
-            for tileset in settings.tilesets.iter() {
-                let value: TilesetSource = load_context
-                    .load_direct(tileset)
-                    .await
-                    .unwrap()
-                    .take()
-                    .unwrap();
-                tilesets.push(value);
-            }
+            let data = bytes
+                .array_chunks::<4>()
+                .array_chunks::<2>()
+                .map(|[tileset, tile]| (u32::from_le_bytes(*tileset), u32::from_le_bytes(*tile)))
+                .collect::<Box<[(u32, u32)]>>();
 
-            let mut tilesets = Vec::new();
-            for tileset in settings.tilesets.iter() {
-                let value: TilesetSource = load_context
-                    .load_direct(tileset)
-                    .await
-                    .unwrap()
-                    .take()
-                    .unwrap();
-                tilesets.push(value);
-            }
-
-            let mut data = vec![];
-            for row in meta.iter() {
-                for (tileset, tile) in row.iter() {
-                    if let Some(tileset) = settings.tileset_names.get(tileset) {
-                        if let Some(tile) = tilesets[*tileset].tile_ids.get(tile) {
-                            data.push(Some((*tileset as u32, *tile as u32)));
-                        } else {
-                            data.push(None)
-                        }
-                    } else {
-                        data.push(None)
-                    };
+            if let Some(size) = settings.size {
+                if data.len() != size.x as usize * size.y as usize {
+                    return Ok(TilemapChunk::empty(size));
                 }
             }
 
-            Ok(TilemapChunk {
-                data: data.into_boxed_slice(),
-            })
+            Ok(TilemapChunk { data })
         })
     }
 }

@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fs::File, future::IntoFuture, path::Path};
+use std::{ffi::OsStr, path::Path};
 
 use ascii_ui::{
     attachments::Root,
@@ -148,7 +148,6 @@ pub(super) fn save_tilemap_system(
     >,
     q_tilemap: Query<&Tilemap>,
     tilemaps: Res<Assets<TilemapSource>>,
-    tilesets: Res<Assets<TilesetSource>>,
     chunks: Res<Assets<TilemapChunk>>,
     server: Res<AssetServer>,
 ) {
@@ -166,9 +165,6 @@ pub(super) fn save_tilemap_system(
     let server = server.clone();
 
     for (chunk_id, chunk) in tilemap.chunk_handles.iter() {
-        let tileset_names = tilemap.tileset_names.clone();
-        // let tilesets = tilemap.tilesets.iter().map(|h| tilesets.get(h.id()).unwrap().path)
-
         let (chunk_id, chunk) = (*chunk_id, chunks.get(chunk.id()).unwrap().clone());
         let loaded: LoadedAsset<_> = chunk.into();
         let erased: ErasedLoadedAsset = loaded.into();
@@ -176,7 +172,8 @@ pub(super) fn save_tilemap_system(
         IoTaskPool::get()
             .spawn(async move {
                 let asset_source = server.get_source(AssetSourceId::default()).unwrap();
-                let chunk_label = format!("chunks/{}-{}.chunk.ron", chunk_id.x, chunk_id.y);
+                let chunk_label =
+                    format!("tilemaps/output/{}_{}.chunk.bin", chunk_id.x, chunk_id.y);
 
                 let output = asset_source
                     .writer()
@@ -188,10 +185,7 @@ pub(super) fn save_tilemap_system(
                     .save(
                         &mut output,
                         SavedAsset::from_loaded(&erased).unwrap(),
-                        &ChunkSettings {
-                            tileset_names,
-                            tilesets,
-                        },
+                        &ChunkSettings::default(),
                     )
                     .await
                     .unwrap();
@@ -206,20 +200,22 @@ pub(super) fn save_tilemap_system(
                 .unwrap()
                 .writer()
                 .unwrap()
-                .write(Path::new("output.ron"));
+                .write(Path::new("tilemaps/output.tilemap.ron"));
             let loaded: LoadedAsset<_> = tilemap.clone().into();
             let erased: ErasedLoadedAsset = loaded.into();
 
             let mut output = output.await.unwrap();
 
-            TilemapSaver
-                .save(
-                    &mut output,
-                    SavedAsset::from_loaded(&erased).unwrap(),
-                    &Default::default(),
-                )
-                .await
-                .unwrap();
+            dbg!(
+                TilemapSaver
+                    .save(
+                        &mut output,
+                        SavedAsset::from_loaded(&erased).unwrap(),
+                        &Default::default(),
+                    )
+                    .await
+            )
+            .unwrap();
         })
         .detach();
 }
