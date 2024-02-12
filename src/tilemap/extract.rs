@@ -52,7 +52,7 @@ pub fn extract_tilemaps(
         let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
-        for (tilemap_position, target, tilemap, _solid_color) in buffer
+        for (tilemap_position, target, tilemap, solid_color) in buffer
             .textures
             .iter()
             .flat_map(|entity| q_tilemaps.get(*entity))
@@ -112,13 +112,16 @@ pub fn extract_tilemaps(
                             font_size,
                         );
 
-                        commands.spawn((
+                        let mut entity_commands = commands.spawn((
                             Position::from(
                                 tilemap_offset + chunk_position + tile_offset.as_ivec2(),
                             ),
                             target.clone(),
                             extracted_glyph_texture,
                         ));
+                        if let Some(color) = solid_color {
+                            entity_commands.insert(color.clone());
+                        }
                     }
                 }
             }

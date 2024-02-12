@@ -134,6 +134,14 @@ fn setup_system(
 ) {
     commands.spawn((
         Tilemap(server.load("tilemaps/output.tilemap.ron")),
+        GlyphSolidColor {
+            color: Color::Hsla {
+                hue: 0.0,
+                saturation: 0.0,
+                lightness: 0.2,
+                alpha: 1.0,
+            },
+        },
         SolidPhysicsBundle {
             position: SpatialBundle::from(IVec2::new(20, 10)),
             ..Default::default()
