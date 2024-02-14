@@ -24,8 +24,6 @@ bevy = { version = "0.12.1", default-features = false, features = [
     "x11",
     "bevy_gizmos",
     "webgl2",
-    "dynamic_linking",
-    "file_watcher",
 ] }
 ascii-ui = { path = "crates/ascii-ui" }
 grid-physics = { path = "crates/grid-physics" }
