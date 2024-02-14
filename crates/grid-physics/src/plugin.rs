@@ -1,13 +1,8 @@
-use bevy::{
-    app::{Plugin, PostUpdate},
-    ecs::schedule::IntoSystemConfigs,
-    transform::TransformSystem,
-};
+use bevy_app::{Plugin, PostUpdate};
+use bevy_ecs::schedule::IntoSystemConfigs;
+use bevy_transform::TransformSystem;
 
-use crate::{
-    debug::DebugPlugin,
-    sets::{physics_systems_enabled, EnablePhysicsSystems},
-};
+use crate::sets::{physics_systems_enabled, EnablePhysicsSystems};
 
 use super::{
     actor::actor_move_system,
@@ -24,29 +19,25 @@ use super::{
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
+    fn build(&self, app: &mut bevy_app::App) {
         app.init_resource::<GravityResource>()
             .init_resource::<SolidCollisionCache>()
             .init_resource::<EnablePhysicsSystems>()
             .add_systems(
                 PostUpdate,
-                (
-                    (
-                        update_collision_cache,
-                        update_free_actor_state,
-                        solid_move_system,
-                        actor_move_system,
-                        obstruct_velocity,
-                        apply_velocity_to_free,
-                        apply_gravity_to_free,
-                    )
-                        .chain()
-                        .run_if(physics_systems_enabled),
-                    // position_update_transforms_system,
+                ((
+                    update_collision_cache,
+                    update_free_actor_state,
+                    solid_move_system,
+                    actor_move_system,
+                    obstruct_velocity,
+                    apply_velocity_to_free,
+                    apply_gravity_to_free,
                 )
                     .chain()
+                    .run_if(physics_systems_enabled),)
+                    .chain()
                     .before(TransformSystem::TransformPropagate),
-            )
-            .add_plugins(DebugPlugin);
+            );
     }
 }

@@ -1,10 +1,17 @@
-use bevy::{
-    prelude::*,
-    utils::{EntityHashMap, EntityHashSet},
+use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::{
+    bundle::Bundle,
+    component::Component,
+    entity::Entity,
+    query::{With, Without},
+    system::{Commands, Query, ResMut, Resource},
 };
+use bevy_math::Vec2;
+use bevy_utils::{EntityHashMap, EntityHashSet};
+
 use spatial_grid::{
     direction::Direction,
-    position::{Position, PositionBundle},
+    position::{Position, SpatialBundle},
     remainder::Remainder,
 };
 
@@ -117,7 +124,7 @@ pub struct SquishedMarker;
 #[derive(Bundle, Default)]
 pub struct SolidPhysicsBundle {
     pub solid: Solid,
-    pub position: PositionBundle,
+    pub position: SpatialBundle,
     pub collider: Collider,
     pub riding: RidingEntities,
 }

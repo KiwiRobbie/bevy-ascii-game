@@ -20,7 +20,7 @@ use glyph_render::{
 
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::PositionBundle,
+    position::SpatialBundle,
 };
 
 use self::resize::grid_resize_update;
@@ -38,7 +38,7 @@ pub struct GamePhysicsGrid(pub Option<Entity>);
 #[derive(Resource, Deref, DerefMut, Default)]
 pub struct UiPhysicsGrid(pub Option<Entity>);
 
-pub fn apply_physics_grid_markers(
+fn apply_physics_grid_markers(
     mut commands: Commands,
     game_grid: Res<GamePhysicsGrid>,
     ui_grid: Res<UiPhysicsGrid>,
@@ -64,7 +64,7 @@ pub fn apply_physics_grid_markers(
     }
 }
 
-pub fn create_physics_grids(
+fn create_physics_grids(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut game_grid: ResMut<GamePhysicsGrid>,
@@ -83,7 +83,7 @@ pub fn create_physics_grids(
                 CustomFont(server.load("FiraCode-Regular.ttf")),
                 CharacterSet(CHARSET.chars().collect()),
                 FontSize(32),
-                PositionBundle::from(IVec2::ZERO),
+                SpatialBundle::from(IVec2::ZERO),
                 SpatialGrid {
                     size: UVec2 { x: 19, y: 40 },
                 },
@@ -106,7 +106,7 @@ pub fn create_physics_grids(
                 SpatialGrid {
                     size: UVec2 { x: 19, y: 40 },
                 },
-                PositionBundle::from(IVec2::ZERO),
+                SpatialBundle::from(IVec2::ZERO),
                 FontAtlasUser,
             ))
             .id(),

@@ -1,12 +1,11 @@
-use bevy::{
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::{With, Without},
-        system::{Commands, Query, Res},
-    },
-    time::Time,
+use bevy_ecs::{
+    component::Component,
+    entity::Entity,
+    query::{With, Without},
+    system::{Commands, Query, Res},
 };
+use bevy_time::Time;
+
 use spatial_grid::{position::Position, remainder::Remainder};
 
 use super::{
@@ -21,41 +20,41 @@ use super::{
 #[derive(Component, Clone)]
 pub struct FreeMarker;
 
-pub fn obstruct_velocity(
+pub(super) fn obstruct_velocity(
     mut q_free_actors: Query<(&mut Velocity, &MovementObstructed), With<FreeMarker>>,
 ) {
     for (mut velocity, obstructed) in q_free_actors.iter_mut() {
-        if velocity.velocity.x > 0.0 && obstructed.x.is_some() {
-            velocity.velocity.x = 0.0;
+        if velocity.x > 0.0 && obstructed.x.is_some() {
+            velocity.x = 0.0;
         }
-        if velocity.velocity.x < 0.0 && obstructed.neg_x.is_some() {
-            velocity.velocity.x = 0.0;
+        if velocity.x < 0.0 && obstructed.neg_x.is_some() {
+            velocity.x = 0.0;
         }
-        if velocity.velocity.y > 0.0 && obstructed.y.is_some() {
-            velocity.velocity.y = 0.0;
+        if velocity.y > 0.0 && obstructed.y.is_some() {
+            velocity.y = 0.0;
         }
-        if velocity.velocity.y < 0.0 && obstructed.neg_y.is_some() {
-            velocity.velocity.y = 0.0;
+        if velocity.y < 0.0 && obstructed.neg_y.is_some() {
+            velocity.y = 0.0;
         }
     }
 }
 
-pub fn apply_velocity_to_free(
+pub(super) fn apply_velocity_to_free(
     mut q_free_actors: Query<(&mut Movement, &Velocity), With<FreeMarker>>,
     time: Res<Time>,
 ) {
     for (mut actor_movement, actor_velocity) in q_free_actors.iter_mut() {
-        actor_movement.add(actor_velocity.velocity * time.delta_seconds());
+        actor_movement.add(**actor_velocity * time.delta_seconds());
     }
 }
 
-pub fn apply_gravity_to_free(
+pub(super) fn apply_gravity_to_free(
     mut q_free_actors: Query<(&mut Velocity, &Gravity), With<FreeMarker>>,
     res_gravity: Res<GravityResource>,
     time: Res<Time>,
 ) {
     for (mut actor_velocity, actor_gravity) in q_free_actors.iter_mut() {
-        actor_velocity.velocity.y +=
+        actor_velocity.y +=
             res_gravity.acceleration * actor_gravity.multiplier * time.delta_seconds();
     }
 }
@@ -66,7 +65,7 @@ pub struct FreeGrounded;
 #[derive(Debug, Component, Default)]
 pub struct FreeAirborne;
 
-pub fn update_free_actor_state(
+pub(super) fn update_free_actor_state(
     mut commands: Commands,
     mut q_solids: Query<&mut RidingEntities, FilterSolids>,
     q_free_actors: Query<(Entity, &Position, &Remainder, &Velocity, &Collider), With<FreeMarker>>,
@@ -78,7 +77,7 @@ pub fn update_free_actor_state(
             riding.clear();
         }
 
-        if velocity.velocity.y <= 0.0 {
+        if velocity.y <= 0.0 {
             if let Some(solid) =
                 Actor::test_move_y(-1.0, position, remainder, collider, &solid_collision_cache)
             {

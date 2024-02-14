@@ -1,9 +1,7 @@
-use bevy::{
-    ecs::{bundle::Bundle, component::Component},
-    math::IVec2,
-    prelude::{Deref, DerefMut},
-    reflect::Reflect,
-};
+use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::{bundle::Bundle, component::Component};
+use bevy_math::IVec2;
+use bevy_reflect::Reflect;
 
 use crate::remainder::Remainder;
 
@@ -11,12 +9,12 @@ use crate::remainder::Remainder;
 pub struct Position(pub IVec2);
 
 #[derive(Bundle, Default, Clone)]
-pub struct PositionBundle {
+pub struct SpatialBundle {
     pub position: Position,
     pub remainder: Remainder,
 }
 
-impl<V: Into<IVec2>> From<V> for PositionBundle {
+impl<V: Into<IVec2>> From<V> for SpatialBundle {
     fn from(value: V) -> Self {
         Self {
             position: Position(value.into()),

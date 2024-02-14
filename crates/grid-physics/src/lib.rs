@@ -11,5 +11,4 @@ pub mod free;
 
 pub mod plugin;
 
-pub mod debug;
 pub mod sets;

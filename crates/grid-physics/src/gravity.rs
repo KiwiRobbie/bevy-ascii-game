@@ -1,4 +1,4 @@
-use bevy::ecs::{component::Component, system::Resource};
+use bevy_ecs::{component::Component, system::Resource};
 
 #[derive(Component, Clone)]
 pub struct Gravity {

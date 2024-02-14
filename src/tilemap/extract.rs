@@ -16,7 +16,11 @@ use spatial_grid::position::Position;
 
 use crate::tileset::asset::TilesetSource;
 
-use super::{asset::TilemapSource, component::Tilemap};
+use super::{
+    asset::TilemapSource,
+    chunk::{TilemapChunk, EMPTY_TILE},
+    component::Tilemap,
+};
 
 pub fn extract_tilemaps(
     mut commands: Commands,
@@ -33,6 +37,7 @@ pub fn extract_tilemaps(
     >,
     tilemaps: Extract<Res<Assets<TilemapSource>>>,
     tilesets: Extract<Res<Assets<TilesetSource>>>,
+    chunks: Extract<Res<Assets<TilemapChunk>>>,
 ) {
     for (buffer_position, buffer, font, font_size) in q_glyph_buffer.iter() {
         let Some(font) = fonts.get(font.id()) else {
@@ -47,7 +52,7 @@ pub fn extract_tilemaps(
         let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
-        for (tilemap_position, target, tilemap, _solid_color) in buffer
+        for (tilemap_position, target, tilemap, solid_color) in buffer
             .textures
             .iter()
             .flat_map(|entity| q_tilemaps.get(*entity))
@@ -77,18 +82,23 @@ pub fn extract_tilemaps(
                         * tilemap.tile_size.as_ivec2();
 
                     let chunk_id: IVec2 = (chunk_x, chunk_y).into();
-                    let Some(chunk) = tilemap.chunk_data.get(&chunk_id) else {
+                    let Some(chunk) = tilemap
+                        .chunk_handles
+                        .get(&chunk_id)
+                        .and_then(|chunk| chunks.get(chunk.id()))
+                    else {
                         continue;
                     };
 
                     for (index, tile) in chunk.data.iter().enumerate() {
-                        let Some(tile) = tile else {
+                        if tile == &EMPTY_TILE {
+                            continue;
+                        }
+
+                        let Some(tileset) = tilesets.get(tilemap.tilesets[tile.0 as usize].id())
+                        else {
                             continue;
                         };
-
-                        let tileset = tilesets
-                            .get(tilemap.tilesets[tile.0 as usize].id())
-                            .unwrap();
                         let tile_offset = UVec2::new(
                             (index as u32).rem_euclid(tilemap.chunk_size.x),
                             (index as u32).div_euclid(tilemap.chunk_size.x),
@@ -103,13 +113,16 @@ pub fn extract_tilemaps(
                             font_size,
                         );
 
-                        commands.spawn((
+                        let mut entity_commands = commands.spawn((
                             Position::from(
                                 tilemap_offset + chunk_position + tile_offset.as_ivec2(),
                             ),
                             target.clone(),
                             extracted_glyph_texture,
                         ));
+                        if let Some(color) = solid_color {
+                            entity_commands.insert(color.clone());
+                        }
                     }
                 }
             }

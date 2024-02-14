@@ -1,23 +1,45 @@
 use bevy::{
     app::{Plugin, PostUpdate},
-    ecs::system::{Query, Res, Resource},
+    ecs::{
+        schedule::IntoSystemConfigs,
+        system::{Query, Res, Resource},
+    },
     gizmos::gizmos::Gizmos,
     prelude::{Deref, DerefMut},
     render::color::Color,
     transform::components::Transform,
 };
+
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::Position,
     remainder::Remainder,
 };
 
-use crate::{actor::Actor, collision::Collider, solid::Solid};
+use grid_physics::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
+
+pub struct SpatialDebugPlugin;
+impl Plugin for SpatialDebugPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_systems(
+            PostUpdate,
+            (
+                debug_position_system.run_if(|enabled: Res<DebugPositions>| **enabled),
+                debug_collision_system.run_if(|enabled: Res<DebugCollisions>| **enabled),
+            ), // .before(position_update_transforms_system),
+        )
+        .init_resource::<DebugCollisions>()
+        .init_resource::<DebugPositions>();
+    }
+}
 
 #[derive(Debug, Resource, Default, DerefMut, Deref)]
 pub struct DebugCollisions(pub bool);
 
-pub fn debug_collision_system(
+#[derive(Debug, Resource, DerefMut, Deref, Default)]
+pub struct DebugPositions(pub bool);
+
+fn debug_collision_system(
     mut gizmos: Gizmos,
     q_colliders: Query<(
         &Collider,
@@ -27,11 +49,7 @@ pub fn debug_collision_system(
         Option<&Actor>,
     )>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
-    enabled: Res<DebugCollisions>,
 ) {
-    if !**enabled {
-        return;
-    }
     for (collider, position, grid_member, solid, actor) in q_colliders.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
@@ -53,40 +71,35 @@ pub fn debug_collision_system(
     }
 }
 
-#[derive(Debug, Resource, DerefMut, Deref, Default)]
-pub struct DebugPositions(pub bool);
-
-pub fn debug_position_system(
+fn debug_position_system(
     mut gizmos: Gizmos,
-    q_position: Query<(&Position, &Remainder, &PhysicsGridMember)>,
+    q_position: Query<(
+        &Position,
+        Option<&Remainder>,
+        Option<&Velocity>,
+        &PhysicsGridMember,
+    )>,
     q_physics_grid: Query<(&SpatialGrid, &Transform)>,
-    enabled: Res<DebugPositions>,
 ) {
-    if !**enabled {
-        return;
-    }
-
-    for (position, remainder, grid_member) in q_position.iter() {
+    for (position, remainder, velocity, grid_member) in q_position.iter() {
         let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
-        let remainder = **remainder * grid.size.as_vec2();
         let position = **position * grid.size.as_ivec2();
         let position = position.as_vec2() + transform.translation.truncate();
 
         gizmos.circle_2d(position, 5.0, Color::BLUE);
-        gizmos.circle_2d(position + remainder, 2.0, Color::RED);
-    }
-}
 
-pub struct DebugPlugin;
-impl Plugin for DebugPlugin {
-    fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(
-            PostUpdate,
-            (debug_position_system, debug_collision_system), // .before(position_update_transforms_system),
-        )
-        .init_resource::<DebugCollisions>()
-        .init_resource::<DebugPositions>();
+        let position = if let Some(remainder) = remainder {
+            let remainder = **remainder * grid.size.as_vec2();
+            gizmos.circle_2d(position + remainder, 2.0, Color::RED);
+            position + remainder
+        } else {
+            position
+        };
+
+        if let Some(velocity) = velocity {
+            gizmos.line_2d(position, position + **velocity, Color::GREEN);
+        }
     }
 }

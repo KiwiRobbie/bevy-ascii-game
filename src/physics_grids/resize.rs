@@ -13,7 +13,7 @@ use spatial_grid::grid::SpatialGrid;
 
 use super::{GamePhysicsGrid, UiPhysicsGrid};
 
-pub fn grid_resize_update(
+pub(super) fn grid_resize_update(
     mut resize_reader: EventReader<WindowResized>,
     mut q_glyph_buffer: Query<(
         &mut Transform,

@@ -11,7 +11,7 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{cast_slice, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
@@ -23,7 +23,7 @@ use crate::{
         extract::extract_glyph_buffers, prepare::prepare_glyph_buffers,
         update_glyph_buffer_entities,
     },
-    glyph_render_plugin::render_resources::{GlyphUniformBuffer, GlyphVertexBuffer},
+    glyph_render_plugin::render_resources::{GlyphBufferData, GlyphUniformBuffer},
 };
 
 use self::raster_descriptors::raster_bind_group_layout;
@@ -146,7 +146,7 @@ pub struct GlyphSolidColor {
 
 #[derive(Component)]
 pub struct GpuGlyphTexture {
-    pub vertex_buffer: Buffer,
+    pub buffer_texture: Texture,
     pub width: u32,
     pub height: u32,
 }
@@ -186,6 +186,33 @@ fn prepare_atlas_buffers(
     q_atlases: Query<(Entity, &ExtractedAtlas)>,
 ) {
     for (entity, atlas) in q_atlases.iter() {
+        let uv_texture_size =
+            (((atlas.items.len() * 3) as f64).sqrt().ceil() as u32).next_power_of_two();
+
+        let mut data = vec![0u8; 4 * 2 * (uv_texture_size as usize * uv_texture_size as usize)]
+            .into_boxed_slice();
+        let item_data = cast_slice(&atlas.items);
+        data[0..item_data.len()].copy_from_slice(item_data);
+
+        let uvs = render_device.create_texture_with_data(
+            &render_queue,
+            &TextureDescriptor {
+                label: Some("gpu font atlas uv texture"),
+                size: Extent3d {
+                    width: uv_texture_size,
+                    height: uv_texture_size,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: bevy::render::render_resource::TextureDimension::D2,
+                format: TextureFormat::Rg32Uint,
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
+                view_formats: &[TextureFormat::Rg32Uint],
+            },
+            &data,
+        );
+
         let data = render_device.create_texture_with_data(
             &render_queue,
             &TextureDescriptor {
@@ -205,7 +232,7 @@ fn prepare_atlas_buffers(
             &atlas.data,
         );
 
-        commands.entity(entity).insert(AtlasGpuBuffers { data });
+        commands.entity(entity).insert(AtlasGpuData { data, uvs });
     }
 }
 
@@ -221,8 +248,9 @@ pub struct GpuGlyphItem {
 }
 
 #[derive(Component)]
-pub struct AtlasGpuBuffers {
+pub struct AtlasGpuData {
     pub data: Texture,
+    pub uvs: Texture,
 }
 
 fn prepare_buffers(
@@ -253,7 +281,16 @@ fn prepare_buffers(
             UniformBuffer::from(GlyphModelUniform::new(*global_transform));
         model_uniform_buffer.write_buffer(&render_device, &render_queue);
 
-        let vertex_buffer = gpu_glyph_texture.vertex_buffer.clone();
+        let glyph_buffer_texture = gpu_glyph_texture.buffer_texture.clone();
+
+        let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
+        let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
+
+        let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
+            label: Some("Vertex buffer"),
+            contents: cast_slice(&[v_w, v_h]),
+            usage: BufferUsages::VERTEX,
+        });
 
         commands.entity(entity).insert((
             GlyphUniformBuffer(uniform_buffer),
@@ -262,7 +299,10 @@ fn prepare_buffers(
                 width: gpu_glyph_texture.width,
                 height: gpu_glyph_texture.height,
             },
-            GlyphVertexBuffer(vertex_buffer),
+            GlyphBufferData {
+                buffer: glyph_buffer_texture,
+                vertex,
+            },
         ));
     }
 }
@@ -295,37 +335,7 @@ impl FromWorld for GlyphPipelineData {
                     shader: glyph_raster_shader.clone(),
                     shader_defs: Vec::new(),
                     entry_point: "vertex".into(),
-                    buffers: vec![VertexBufferLayout {
-                        array_stride: 48,
-                        step_mode: VertexStepMode::Instance,
-                        attributes: vec![
-                            VertexAttribute {
-                                format: VertexFormat::Uint32x2,
-                                offset: 0,
-                                shader_location: 0,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Uint32x2,
-                                offset: 8,
-                                shader_location: 1,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Sint32x2,
-                                offset: 16,
-                                shader_location: 2,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Float32x2,
-                                offset: 24,
-                                shader_location: 3,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Float32x4,
-                                offset: 32,
-                                shader_location: 4,
-                            },
-                        ],
-                    }],
+                    buffers: vec![],
                 },
                 fragment: Some(FragmentState {
                     shader: glyph_raster_shader,

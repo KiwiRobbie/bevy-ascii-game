@@ -1,6 +1,6 @@
 use bevy::{asset::Asset, prelude::Deref, reflect::TypePath};
 
-#[derive(serde::Deserialize, Asset, TypePath, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Asset, TypePath, Clone)]
 pub struct TilemapMeta {
     pub chunk_size: (u32, u32),
     pub tile_size: (u32, u32),
@@ -15,5 +15,5 @@ pub enum ChunkDataLocation {
     Dir(String),
 }
 
-#[derive(serde::Deserialize, Asset, TypePath, Clone, Deref)]
-pub struct ChunkMeta(pub Vec<Vec<Option<(String, String)>>>);
+#[derive(serde::Deserialize, Asset, TypePath, Clone, Deref, serde::Serialize)]
+pub struct ChunkMeta(pub Vec<Vec<(u32, u32)>>);

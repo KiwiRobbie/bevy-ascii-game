@@ -1,8 +1,7 @@
-use bevy::app::{Plugin, Update};
+use bevy::app::Plugin;
 
 use crate::{
     attachments::Root,
-    debug_positions,
     mouse::InteractionPlugin,
     render::plugin::RenderPlugin,
     widgets::{column::Column, divider::Divider, plugin::WidgetPlugin, text::Text},
@@ -12,8 +11,7 @@ use crate::{layout::plugin::LayoutPlugin, widgets::container::Container};
 pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_plugins((LayoutPlugin, RenderPlugin, InteractionPlugin, WidgetPlugin))
-            .add_systems(Update, debug_positions);
+        app.add_plugins((LayoutPlugin, RenderPlugin, InteractionPlugin, WidgetPlugin));
     }
 }
 

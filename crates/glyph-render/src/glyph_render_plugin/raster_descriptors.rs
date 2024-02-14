@@ -6,7 +6,7 @@ use wgpu::{
 
 use super::{GlyphModelUniform, GlyphUniforms};
 
-pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 4] {
+pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
     [
         // UNIFORMS
         BindGroupLayoutEntry {
@@ -48,6 +48,28 @@ pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 4] {
             ty: BindingType::Texture {
                 multisampled: false,
                 sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                view_dimension: TextureViewDimension::D2,
+            },
+            count: None,
+        },
+        // Atlas UV's
+        BindGroupLayoutEntry {
+            binding: 4,
+            visibility: ShaderStages::VERTEX_FRAGMENT,
+            ty: BindingType::Texture {
+                multisampled: false,
+                sample_type: wgpu::TextureSampleType::Uint,
+                view_dimension: TextureViewDimension::D2,
+            },
+            count: None,
+        },
+        // Glyph Buffer
+        BindGroupLayoutEntry {
+            binding: 5,
+            visibility: ShaderStages::VERTEX_FRAGMENT,
+            ty: BindingType::Texture {
+                multisampled: false,
+                sample_type: wgpu::TextureSampleType::Uint,
                 view_dimension: TextureViewDimension::D2,
             },
             count: None,

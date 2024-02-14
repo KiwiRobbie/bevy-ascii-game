@@ -38,7 +38,7 @@ pub fn player_walk_system(
 
         movement.add(Vec2::X * horizontal * settings.speed);
         if grounded.is_some() {
-            velocity.velocity = Vec2::ZERO;
+            **velocity = Vec2::ZERO;
         }
     }
 }

@@ -6,7 +6,7 @@ use bevy::{
     },
     input::{
         mouse::{MouseButton, MouseWheel},
-        touch::{TouchInput, TouchPhase},
+        touch::TouchInput,
         Input,
     },
     math::{Vec2, Vec3},

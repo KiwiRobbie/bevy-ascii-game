@@ -2,7 +2,7 @@ use ascii_ui::{
     attachments::{self, MainAxisAlignment},
     mouse::IntractableMarker,
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{self, Checkbox, Column, Container, Divider, Text},
+    widgets::{self, Column, Container, Divider},
 };
 use bevy::{
     asset::{AssetServer, Handle},
@@ -14,7 +14,11 @@ use bevy::{
     math::{IVec2, UVec2},
 };
 
-use bevy_ascii_game::{physics_grids::UiPhysicsGridMarker, tileset::asset::TilesetSource};
+use bevy_ascii_game::{
+    physics_grids::UiPhysicsGridMarker,
+    tileset::asset::TilesetSource,
+    widgets::{DebugOptions, InfoCounts},
+};
 
 use crate::list_builder_widget::ListBuilderWidget;
 
@@ -32,7 +36,7 @@ pub enum MutateMode {
     Remove,
 }
 
-pub fn setup_ui(
+pub(super) fn setup_ui(
     mut commands: Commands,
     mut menu_state: ResMut<TilesetPanelState>,
     server: Res<AssetServer>,
@@ -40,15 +44,9 @@ pub fn setup_ui(
     let menu_state = &mut *menu_state;
 
     let settings_tab = Column::build(vec![
-        Text::build("".into()).save_id(&mut menu_state.fps_text),
-        Text::build("".into()).save_id(&mut menu_state.player_count_text),
-        Text::build("".into()).save_id(&mut menu_state.actor_count_text),
-        Text::build("".into()).save_id(&mut menu_state.solid_count_text),
+        InfoCounts::build(),
         Divider::build('-'),
-        Checkbox::build("Debug Position".into()).save_id(&mut menu_state.position_checkbox),
-        Checkbox::build("Debug Colliders".into()).save_id(&mut menu_state.colliders_checkbox),
-        Checkbox::build("Debug ECS UI".into()).save_id(&mut menu_state.ui_checkbox),
-        Checkbox::build("Pause Physics".into()).save_id(&mut menu_state.pause_checkbox),
+        DebugOptions::build(),
     ])(&mut commands);
 
     let list_builder_tab = {
@@ -84,14 +82,17 @@ pub fn setup_ui(
     }(&mut commands);
 
     let tileset_tab = {
-        ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
-            Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
-            vec![],
-            (),
-        )
-        .with(TilesetHandles {
-            handles: vec![server.load("tilesets/cave.tileset.ron")],
-        })
+        widgets::Column::build(vec![
+            widgets::Button::build("Save".into()).with(SaveTilemapButton),
+            ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
+                Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
+                vec![],
+                (),
+            )
+            .with(TilesetHandles {
+                handles: vec![server.load("tilesets/cave.tileset.ron")],
+            }),
+        ])
     }(&mut commands);
 
     Container::build(Some(widgets::TabView::build(vec![
@@ -118,6 +119,9 @@ pub fn setup_ui(
     ))
     .save_id(&mut menu_state.root_widget)(&mut commands);
 }
+
+#[derive(Debug, Component)]
+pub struct SaveTilemapButton;
 
 #[derive(Debug, Component)]
 pub struct DebugMenuMarker;

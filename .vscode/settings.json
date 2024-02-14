@@ -1,6 +1,15 @@
 {
   "rust-analyzer.rename.allowExternalItems": true,
   "cSpell.words": [
+    "Aabb",
+    "agraph",
+    "anim",
+    "color",
+    "cooldown",
+    "debugdump",
+    "despawn",
+    "labeled",
+    "rect",
     "Tilemap",
     "tilemaps",
     "tilesets"

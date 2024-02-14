@@ -19,6 +19,7 @@ impl Default for CharacterSet {
     }
 }
 
+use bytemuck::{Pod, Zeroable};
 pub use plugin::FontAtlasPlugin;
 
 pub use builder::AtlasBuilder;
@@ -30,7 +31,8 @@ pub struct FontAtlasCache {
     pub cached: HashMap<(FontSize, CustomFontCacheKey), Arc<FontAtlasSource>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Pod, Copy, Zeroable)]
+#[repr(C)]
 pub struct AtlasItem {
     pub start: UVec2,
     pub size: UVec2,

@@ -1,22 +1,19 @@
-use bevy::{
-    ecs::{
-        bundle::Bundle,
-        component::Component,
-        entity::Entity,
-        query::{With, Without},
-        system::{Commands, Query, Res},
-    },
-    math::{IVec2, Vec2},
-};
-use spatial_grid::{
-    position::{Position, PositionBundle},
-    remainder::Remainder,
-};
-
 use super::{
     collision::Collider,
     movement::{Movement, MovementObstructed},
     solid::{Solid, SolidCollisionCache},
+};
+use bevy_ecs::{
+    bundle::Bundle,
+    component::Component,
+    entity::Entity,
+    query::{With, Without},
+    system::{Commands, Query, Res},
+};
+use bevy_math::{IVec2, Vec2};
+use spatial_grid::{
+    position::{Position, SpatialBundle},
+    remainder::Remainder,
 };
 
 pub type FilterActors = (With<Actor>, Without<Solid>);
@@ -111,12 +108,12 @@ impl Actor {
 #[derive(Bundle, Default, Clone)]
 pub struct ActorPhysicsBundle {
     pub actor: Actor,
-    pub position: PositionBundle,
+    pub position: SpatialBundle,
     pub collider: Collider,
     pub movement: Movement,
 }
 
-pub fn actor_move_system(
+pub(super) fn actor_move_system(
     mut q_actors: Query<
         (
             Entity,
