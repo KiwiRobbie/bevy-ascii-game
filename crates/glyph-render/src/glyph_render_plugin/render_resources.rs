@@ -12,5 +12,8 @@ pub struct GlyphUniformBuffer(pub UniformBuffer<GlyphUniforms>);
 #[derive(Component, Deref, DerefMut)]
 pub struct GlyphStorageTexture(pub Texture);
 
-#[derive(Component, Deref, DerefMut)]
-pub struct GlyphVertexBuffer(pub Buffer);
+#[derive(Component)]
+pub struct GlyphBufferData {
+    pub buffer: Texture,
+    pub vertex: Buffer,
+}

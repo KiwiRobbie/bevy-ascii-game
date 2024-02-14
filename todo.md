@@ -9,6 +9,20 @@
 - Use atlases and avoid re-uploading data.
 - Pack atlas UV data into a texture. (WebGL2 support)
 
+## Operation
+
+- Create atlas texture
+- Insert visible glyph character textures into atlas.
+- Build mesh from visible sprites, reference atlas, apply instancing
+- Render mesh into glyph buffer texture.
+- Rendering glyph buffers onto screen as single quad.
+
+### Minimal Example
+
+- Add glyph buffer UV data as packed texture
+- Render sprites to glyph buffer texture
+- Draw glyph buffer texture using quad
+
 # Layout system
 
 - Separate layout and UI

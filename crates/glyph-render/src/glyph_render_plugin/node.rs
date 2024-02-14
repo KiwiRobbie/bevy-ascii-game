@@ -13,16 +13,16 @@ use bevy::{
 use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
 
 use super::{
-    render_resources::{GlyphUniformBuffer, GlyphVertexBuffer},
-    AtlasGpuBuffers, GlyphModelUniformBuffer, GlyphPipelineData, GlyphTextureInfo,
+    render_resources::{GlyphBufferData, GlyphUniformBuffer},
+    AtlasGpuData, GlyphModelUniformBuffer, GlyphPipelineData, GlyphTextureInfo,
 };
 
 type RenderResourceQuery = (
     &'static GlyphModelUniformBuffer,
     &'static GlyphUniformBuffer,
     &'static GlyphTextureInfo,
-    &'static GlyphVertexBuffer,
-    &'static AtlasGpuBuffers,
+    &'static GlyphBufferData,
+    &'static AtlasGpuData,
 );
 
 // type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
@@ -107,8 +107,8 @@ impl render_graph::Node for GlyphGenerationNode {
             glyph_model_uniforms,
             glyph_uniform_buffer,
             glyph_texture_info,
-            vertex_buffer,
-            atlas_buffers,
+            buffer_data,
+            atlas_data,
         ) in self
             .entities
             .iter()
@@ -123,8 +123,14 @@ impl render_graph::Node for GlyphGenerationNode {
                         glyph_uniform_buffer.binding().unwrap(),
                         world.resource::<ViewUniforms>().uniforms.binding().unwrap(),
                         glyph_model_uniforms.binding().unwrap(),
-                        &atlas_buffers
+                        &atlas_data
                             .data
+                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                        &atlas_data
+                            .uvs
+                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                        &buffer_data
+                            .buffer
                             .create_view(&wgpu::TextureViewDescriptor::default()),
                     )),
                 );
@@ -135,7 +141,7 @@ impl render_graph::Node for GlyphGenerationNode {
 
                 render_pass.set_bind_group(0, &bind_group, &[]);
                 render_pass.set_pipeline(raster_pipeline);
-                render_pass.set_vertex_buffer(0, *vertex_buffer.slice(..));
+                // render_pass.set_vertex_buffer(0, *buffer_data.vertex.slice(..));
 
                 render_pass.draw(
                     0..6,

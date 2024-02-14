@@ -95,9 +95,10 @@ pub fn extract_tilemaps(
                             continue;
                         }
 
-                        let tileset = tilesets
-                            .get(tilemap.tilesets[tile.0 as usize].id())
-                            .unwrap();
+                        let Some(tileset) = tilesets.get(tilemap.tilesets[tile.0 as usize].id())
+                        else {
+                            continue;
+                        };
                         let tile_offset = UVec2::new(
                             (index as u32).rem_euclid(tilemap.chunk_size.x),
                             (index as u32).div_euclid(tilemap.chunk_size.x),
