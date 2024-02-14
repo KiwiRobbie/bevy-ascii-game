@@ -5,26 +5,21 @@ use bevy::{
         entity::Entity,
         system::{Commands, Query, Res},
     },
-    math::{IVec2, UVec2, Vec2},
-    render::{
-        color::Color,
-        renderer::{RenderDevice, RenderQueue},
-    },
+    math::{IVec2, UVec2},
+    render::renderer::{RenderDevice, RenderQueue},
 };
-use bytemuck::{cast_slice, Zeroable};
+use bytemuck::cast_slice;
 use spatial_grid::position::Position;
-use wgpu::{util::BufferInitDescriptor, BufferUsages, Extent3d};
+use wgpu::Extent3d;
 
-use crate::glyph_render_plugin::{
-    ExtractedAtlas, ExtractedGlyphTexture, GlyphSolidColor, GpuGlyphItem, GpuGlyphTexture,
-};
+use crate::glyph_render_plugin::{ExtractedGlyphTexture, GlyphSolidColor, GpuGlyphTexture};
 
 use super::{GlyphBuffer, TargetGlyphBuffer};
 pub fn prepare_glyph_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
-    q_glyph_buffer: Query<(Entity, &GlyphBuffer, &ExtractedAtlas)>,
+    q_glyph_buffer: Query<(Entity, &GlyphBuffer)>,
     q_textures: Query<(
         &TargetGlyphBuffer,
         &Position,
@@ -32,13 +27,11 @@ pub fn prepare_glyph_buffers(
         Option<&GlyphSolidColor>,
     )>,
 ) {
-    for (buffer_entity, buffer, atlas) in q_glyph_buffer.iter() {
-        let atlas_uvs = &atlas.items;
-
+    for (buffer_entity, buffer) in q_glyph_buffer.iter() {
         let mut buffer_data: Box<[u16]> =
             vec![u16::MAX; buffer.size.x as usize * buffer.size.y as usize].into();
 
-        for (_, position, texture, solid_color) in q_textures
+        for (_, position, texture, _solid_color) in q_textures
             .iter()
             .filter(|(target, _, _, _)| target.0 == buffer_entity)
         {
@@ -74,7 +67,6 @@ pub fn prepare_glyph_buffers(
                     let glyph: u16 = texture.data[src_index];
 
                     if glyph != u16::MAX {
-                        let uv = &atlas_uvs[glyph as usize];
                         buffer_data[dst_index] = glyph;
                     }
                 }
@@ -99,15 +91,6 @@ pub fn prepare_glyph_buffers(
             },
             cast_slice(&buffer_data),
         );
-
-        // let vertex_buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
-        //     label: Some("glyph vertex buffer"),
-        //     usage: BufferUsages::STORAGE
-        //         | BufferUsages::COPY_SRC
-        //         | BufferUsages::COPY_DST
-        //         | BufferUsages::VERTEX,
-        //     contents: cast_slice(&buffer_data),
-        // });
 
         commands.entity(buffer_entity).insert(GpuGlyphTexture {
             buffer_texture,
