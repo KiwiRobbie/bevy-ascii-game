@@ -43,7 +43,6 @@ fn apply_clipping(
     mut textures: ResMut<Assets<GlyphTexture>>,
 ) {
     for (entity, clip, pos, sprite) in q_clipped.iter() {
-        return;
         let clip = clip.to_world_coord();
         let texture = textures.get(sprite.texture.id()).unwrap();
 
