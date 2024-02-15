@@ -1,103 +1,90 @@
 // Extract from textures
 
+use std::sync::Arc;
+
 use bevy::{
     ecs::{
         entity::Entity,
-        system::{Commands, Query, Res},
+        system::{Commands, Query, Res, ResMut},
     },
-    math::{IVec2, UVec2, Vec2},
-    render::{color::Color, renderer::RenderDevice},
+    math::UVec2,
+    render::{
+        render_resource::UniformBuffer,
+        renderer::{RenderDevice, RenderQueue},
+    },
 };
-use bytemuck::{cast_slice, Zeroable};
 use spatial_grid::position::Position;
-use wgpu::{util::BufferInitDescriptor, BufferUsages};
+use wgpu::{Extent3d, TextureUsages};
 
-use crate::glyph_render_plugin::{
-    ExtractedAtlas, ExtractedGlyphTexture, GlyphSolidColor, GpuGlyphItem, GpuGlyphTexture,
+use crate::{
+    glyph_render_plugin::{
+        GlyphRenderUniformBuffer, GlyphRenderUniforms, GlyphSolidColor, GpuGlyphTexture,
+        PreparedGlyphTextureSource,
+    },
+    glyph_texture::{ExtractedGlyphTexture, PreparedGlyphTextureCache},
 };
 
-use super::{GlyphBuffer, TargetGlyphBuffer};
+use super::{GlyphBuffer, TargetBufferTexture, TargetGlyphBuffer};
 pub fn prepare_glyph_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
-    q_glyph_buffer: Query<(Entity, &GlyphBuffer, &ExtractedAtlas)>,
+    render_queue: Res<RenderQueue>,
+    q_glyph_buffer: Query<(Entity, &GlyphBuffer)>,
     q_textures: Query<(
+        Entity,
         &TargetGlyphBuffer,
         &Position,
         &ExtractedGlyphTexture,
         Option<&GlyphSolidColor>,
     )>,
+    mut prepare_glyph_texture_cache: ResMut<PreparedGlyphTextureCache>,
 ) {
-    for (buffer_entity, buffer, atlas) in q_glyph_buffer.iter() {
-        let atlas_uvs = &atlas.items;
+    for (buffer_entity, buffer) in q_glyph_buffer.iter() {
+        let buffer_texture = render_device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("glyph buffer data"),
+            size: Extent3d {
+                depth_or_array_layers: 1,
+                width: buffer.size.x,
+                height: buffer.size.y,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::R16Uint,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        });
 
-        let buffer_width = buffer.size.x as usize;
-        let buffer_height = buffer.size.y as usize;
-        let mut buffer_data: Box<[GpuGlyphItem]> =
-            vec![GpuGlyphItem::zeroed(); buffer_height * buffer_width].into();
-
-        for (_, position, texture, solid_color) in q_textures
+        for (entity, _, position, texture, _solid_color) in q_textures
             .iter()
-            .filter(|(target, _, _, _)| target.0 == buffer_entity)
+            .filter(|(_, target, _, _, _)| target.0 == buffer_entity)
         {
-            let source_size = UVec2::new(texture.width as u32, texture.height as u32);
+            let mut uniform_buffer = UniformBuffer::from(GlyphRenderUniforms {
+                position: **position,
+                size: UVec2::new(texture.width, texture.height),
+                target_size: buffer.size,
+                padding: Default::default(),
+            });
+            uniform_buffer.set_label(Some("Glyph render uniforms"));
+            uniform_buffer.write_buffer(&render_device, &render_queue);
 
-            let buffer_start = IVec2::ZERO;
-            let buffer_end = buffer.size.as_ivec2();
-
-            let dst_min = position.clamp(buffer_start, buffer_end);
-            let dst_max = (**position + source_size.as_ivec2()).clamp(buffer_start, buffer_end);
-
-            let size = (dst_max - dst_min).as_uvec2();
-
-            if UVec2::ZERO.cmpeq(size).any() {
-                continue;
-            }
-
-            let src_min = (dst_min - **position).as_uvec2();
-            let dst_min = dst_min.as_uvec2();
-
-            for dy in 0..size.y as usize {
-                let src_y = src_min.y as usize + dy;
-                let src_start_x = src_min.x as usize;
-                let src_start = src_y * source_size.x as usize + src_start_x;
-
-                let dst_y = dst_min.y as usize + dy;
-                let dst_start_x = dst_min.x as usize;
-                let dst_start = dst_y * buffer_width + dst_start_x;
-
-                for dx in 0..size.x as usize {
-                    let src_index = src_start + dx;
-                    let dst_index = dst_start + dx;
-                    let glyph: u16 = texture.data[src_index];
-
-                    if glyph != u16::MAX {
-                        let uv = &atlas_uvs[glyph as usize];
-                        buffer_data[dst_index] = GpuGlyphItem {
-                            start: uv.start,
-                            size: uv.size,
-                            offset: uv.offset,
-                            color: solid_color.map(|c| c.color).unwrap_or(Color::WHITE).into(),
-                            padding: Vec2::ZERO,
-                        };
-                    }
-                }
-            }
+            commands.entity(entity).insert((
+                GpuGlyphTexture(prepare_glyph_texture_cache.get_or_create(
+                    texture,
+                    &render_device,
+                    &render_queue,
+                )),
+                TargetBufferTexture(buffer_texture.create_view(&Default::default())),
+                GlyphRenderUniformBuffer(uniform_buffer),
+            ));
         }
 
-        let vertex_buffer = render_device.create_buffer_with_data(&BufferInitDescriptor {
-            label: Some("glyph vertex buffer"),
-            usage: BufferUsages::STORAGE
-                | BufferUsages::COPY_SRC
-                | BufferUsages::COPY_DST
-                | BufferUsages::VERTEX,
-            contents: cast_slice(&buffer_data),
-        });
-
-        commands.entity(buffer_entity).insert(GpuGlyphTexture {
-            vertex_buffer,
-            width: buffer_width as u32,
-            height: buffer_height as u32,
-        });
+        commands
+            .entity(buffer_entity)
+            .insert(GpuGlyphTexture(Arc::new(PreparedGlyphTextureSource {
+                buffer_texture,
+                width: buffer.size.x,
+                height: buffer.size.y,
+            })));
     }
 }

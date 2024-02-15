@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use bevy::{
-    ecs::system::SystemState,
     prelude::*,
     render::{
         extract_component::ExtractComponent,
@@ -11,22 +10,22 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
-use bytemuck::{Pod, Zeroable};
+use bytemuck::{cast_slice, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
 
 use crate::{
     atlas::FontAtlasSource,
-    font::FontSize,
     glyph_buffer::{
         extract::extract_glyph_buffers, prepare::prepare_glyph_buffers,
         update_glyph_buffer_entities,
     },
-    glyph_render_plugin::render_resources::{GlyphUniformBuffer, GlyphVertexBuffer},
+    glyph_render_plugin::render_resources::{GlyphBufferData, GlyphUniformBuffer},
+    glyph_texture::{PreparedAtlasCache, RenderGlyphTextureCachePlugin},
 };
 
-use self::raster_descriptors::raster_bind_group_layout;
+use self::raster_descriptors::{raster_bind_group_layout, render_bind_group_layout};
 
 mod node;
 mod raster_descriptors;
@@ -37,10 +36,11 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<GlyphTextureSource>()
+        app.init_asset::<GlyphTexture>()
             .add_systems(Last, update_glyph_buffer_entities);
         app.get_sub_app_mut(RenderApp)
             .unwrap()
+            .add_plugins(RenderGlyphTextureCachePlugin)
             .add_systems(ExtractSchedule, (extract_glyph_buffers,))
             .add_systems(
                 Render,
@@ -76,38 +76,41 @@ pub struct GlyphUniforms {
     pub line_spacing: u32,
 }
 
-#[derive(Asset, TypePath, Clone)]
+#[derive(Debug, Clone)]
 pub struct GlyphTextureSource {
     pub data: Vec<String>,
 }
 
-impl GlyphTextureSource {
+#[derive(Asset, TypePath, Clone)]
+pub struct GlyphTexture {
+    pub source: Arc<GlyphTextureSource>,
+}
+
+impl GlyphTexture {
+    pub fn new(data: Vec<String>) -> Self {
+        Self {
+            source: Arc::new(GlyphTextureSource { data }),
+        }
+    }
+
     pub fn size(&self) -> UVec2 {
         UVec2 {
-            x: self.data[0].len() as u32,
-            y: self.data.len() as u32,
+            x: self.source.as_ref().data[0].len() as u32,
+            y: self.source.as_ref().data.len() as u32,
         }
     }
 }
 
-#[derive(Component, Clone)]
-pub struct ExtractedGlyphTexture {
+#[derive(Clone)]
+pub struct ExtractedGlyphTextureSource {
     pub data: Box<[u16]>,
 
     pub width: u32,
     pub height: u32,
-
-    pub advance: u32,
-    pub line_spacing: u32,
 }
 
-impl ExtractedGlyphTexture {
-    pub fn from_text_data(
-        text: &Vec<String>,
-        atlas: &FontAtlasSource,
-        font: FontRef,
-        font_size: &FontSize,
-    ) -> Self {
+impl ExtractedGlyphTextureSource {
+    pub fn from_text_data(text: &Vec<String>, atlas: &FontAtlasSource, font: FontRef) -> Self {
         let height = text.len();
         let width = text[0].len();
 
@@ -127,15 +130,13 @@ impl ExtractedGlyphTexture {
             data,
             width: width as u32,
             height: height as u32,
-            advance: font_size.advance(),
-            line_spacing: font_size.line_spacing(),
         }
     }
 }
 
 #[derive(Component, Clone)]
 pub struct GlyphSprite {
-    pub texture: Handle<GlyphTextureSource>,
+    pub texture: Handle<GlyphTexture>,
     pub offset: IVec2,
 }
 
@@ -144,9 +145,11 @@ pub struct GlyphSolidColor {
     pub color: Color,
 }
 
-#[derive(Component)]
-pub struct GpuGlyphTexture {
-    pub vertex_buffer: Buffer,
+#[derive(Component, DerefMut, Deref)]
+pub struct GpuGlyphTexture(pub Arc<PreparedGlyphTextureSource>);
+
+pub struct PreparedGlyphTextureSource {
+    pub buffer_texture: Texture,
     pub width: u32,
     pub height: u32,
 }
@@ -184,28 +187,16 @@ fn prepare_atlas_buffers(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     q_atlases: Query<(Entity, &ExtractedAtlas)>,
+    mut cache: ResMut<PreparedAtlasCache>,
 ) {
     for (entity, atlas) in q_atlases.iter() {
-        let data = render_device.create_texture_with_data(
-            &render_queue,
-            &TextureDescriptor {
-                label: Some("gpu font atlas storage texture"),
-                size: Extent3d {
-                    width: atlas.size,
-                    height: atlas.size,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: bevy::render::render_resource::TextureDimension::D2,
-                format: TextureFormat::Rgba8Unorm,
-                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[TextureFormat::Rgba8Unorm],
-            },
-            &atlas.data,
-        );
-
-        commands.entity(entity).insert(AtlasGpuBuffers { data });
+        commands
+            .entity(entity)
+            .insert(AtlasGpuData(cache.get_or_create(
+                atlas,
+                &render_device,
+                &render_queue,
+            )));
     }
 }
 
@@ -220,9 +211,12 @@ pub struct GpuGlyphItem {
     pub color: Vec4,
 }
 
-#[derive(Component)]
-pub struct AtlasGpuBuffers {
+#[derive(Component, Deref)]
+pub struct AtlasGpuData(pub Arc<AtlasGpuDataSource>);
+
+pub struct AtlasGpuDataSource {
     pub data: Texture,
+    pub uvs: Texture,
 }
 
 fn prepare_buffers(
@@ -247,13 +241,24 @@ fn prepare_buffers(
             advance: grid.size.x,
             line_spacing: grid.size.y,
         });
+        uniform_buffer.set_label(Some("Glyph raster uniforms"));
         uniform_buffer.write_buffer(&render_device, &render_queue);
 
         let mut model_uniform_buffer =
             UniformBuffer::from(GlyphModelUniform::new(*global_transform));
+        model_uniform_buffer.set_label(Some("Glyph raster model uniforms"));
         model_uniform_buffer.write_buffer(&render_device, &render_queue);
 
-        let vertex_buffer = gpu_glyph_texture.vertex_buffer.clone();
+        let glyph_buffer_texture = gpu_glyph_texture.buffer_texture.clone();
+
+        let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
+        let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
+
+        let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
+            label: Some("Vertex buffer"),
+            contents: cast_slice(&[v_w, v_h]),
+            usage: BufferUsages::VERTEX,
+        });
 
         commands.entity(entity).insert((
             GlyphUniformBuffer(uniform_buffer),
@@ -262,30 +267,87 @@ fn prepare_buffers(
                 width: gpu_glyph_texture.width,
                 height: gpu_glyph_texture.height,
             },
-            GlyphVertexBuffer(vertex_buffer),
+            GlyphBufferData {
+                buffer: glyph_buffer_texture,
+                vertex,
+            },
         ));
     }
 }
 
 #[derive(Resource)]
 struct GlyphPipelineData {
+    glyph_render_pipeline_id: CachedRenderPipelineId,
+    glyph_render_bind_group_layout: BindGroupLayout,
     glyph_raster_pipeline_id: CachedRenderPipelineId,
     glyph_raster_bind_group_layout: BindGroupLayout,
 }
 
 impl FromWorld for GlyphPipelineData {
     fn from_world(render_world: &mut World) -> Self {
-        let mut system_state: SystemState<Res<RenderDevice>> = SystemState::new(render_world);
-        let render_device = system_state.get_mut(render_world);
+        let (glyph_render_pipeline_id, glyph_render_bind_group_layout) = {
+            let render_device: Mut<RenderDevice> = render_world.get_resource_mut().unwrap();
 
+            let glyph_render_bind_group_layout =
+                render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                    label: Some("glyph render bind group layout"),
+                    entries: &render_bind_group_layout(),
+                });
+            let glyph_render_shader = render_world
+                .get_resource::<AssetServer>()
+                .unwrap()
+                .load("shaders/glyph_render.wgsl");
+
+            let raster_pipeline_descriptor = RenderPipelineDescriptor {
+                label: Some("glyph render pipeline".into()),
+                layout: vec![glyph_render_bind_group_layout.clone()],
+                push_constant_ranges: Vec::new(),
+                vertex: VertexState {
+                    shader: glyph_render_shader.clone(),
+                    shader_defs: Vec::new(),
+                    entry_point: "vertex".into(),
+                    buffers: vec![],
+                },
+                fragment: Some(FragmentState {
+                    shader: glyph_render_shader,
+                    shader_defs: Vec::new(),
+                    entry_point: "fragment".into(),
+                    targets: vec![Some(ColorTargetState {
+                        format: TextureFormat::R16Uint,
+                        blend: None,
+                        write_mask: ColorWrites::ALL,
+                    })],
+                }),
+                primitive: PrimitiveState {
+                    topology: PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: FrontFace::Ccw,
+                    cull_mode: None,
+                    unclipped_depth: false,
+                    polygon_mode: PolygonMode::Fill,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: Default::default(),
+            };
+
+            let cache = render_world.resource::<PipelineCache>();
+            let pipeline_id = cache.queue_render_pipeline(raster_pipeline_descriptor);
+
+            (pipeline_id, glyph_render_bind_group_layout)
+        };
         let (glyph_raster_pipeline_id, glyph_raster_bind_group_layout) = {
+            let render_device: Mut<RenderDevice> = render_world.get_resource_mut().unwrap();
+
             let glyph_raster_bind_group_layout =
                 render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: Some("glyph raster bind group layout"),
                     entries: &raster_bind_group_layout(),
                 });
-            let asset_server = render_world.get_resource::<AssetServer>().unwrap();
-            let glyph_raster_shader = asset_server.load("shaders/glyph_raster.wgsl");
+            let glyph_raster_shader = render_world
+                .get_resource::<AssetServer>()
+                .unwrap()
+                .load("shaders/glyph_raster.wgsl");
 
             let raster_pipeline_descriptor = RenderPipelineDescriptor {
                 label: Some("glyph raster pipeline".into()),
@@ -295,37 +357,7 @@ impl FromWorld for GlyphPipelineData {
                     shader: glyph_raster_shader.clone(),
                     shader_defs: Vec::new(),
                     entry_point: "vertex".into(),
-                    buffers: vec![VertexBufferLayout {
-                        array_stride: 48,
-                        step_mode: VertexStepMode::Instance,
-                        attributes: vec![
-                            VertexAttribute {
-                                format: VertexFormat::Uint32x2,
-                                offset: 0,
-                                shader_location: 0,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Uint32x2,
-                                offset: 8,
-                                shader_location: 1,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Sint32x2,
-                                offset: 16,
-                                shader_location: 2,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Float32x2,
-                                offset: 24,
-                                shader_location: 3,
-                            },
-                            VertexAttribute {
-                                format: VertexFormat::Float32x4,
-                                offset: 32,
-                                shader_location: 4,
-                            },
-                        ],
-                    }],
+                    buffers: vec![],
                 },
                 fragment: Some(FragmentState {
                     shader: glyph_raster_shader,
@@ -355,10 +387,21 @@ impl FromWorld for GlyphPipelineData {
 
             (pipeline_id, glyph_raster_bind_group_layout)
         };
-
         GlyphPipelineData {
+            glyph_render_pipeline_id,
+            glyph_render_bind_group_layout,
             glyph_raster_pipeline_id,
             glyph_raster_bind_group_layout,
         }
     }
+}
+
+#[derive(Component, Deref, DerefMut)]
+pub struct GlyphRenderUniformBuffer(pub UniformBuffer<GlyphRenderUniforms>);
+#[derive(Clone, ShaderType)]
+pub struct GlyphRenderUniforms {
+    pub position: IVec2,
+    pub size: UVec2,
+    pub target_size: UVec2,
+    pub padding: Vec2,
 }

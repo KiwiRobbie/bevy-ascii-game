@@ -1,10 +1,12 @@
 // Extract from textures
 
+use std::sync::Arc;
+
 use bevy::{
     asset::Assets,
     ecs::{
         entity::Entity,
-        system::{Commands, Query, Res},
+        system::{Commands, Query, Res, ResMut},
     },
     math::IVec2,
     render::Extract,
@@ -17,9 +19,10 @@ use crate::{
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationSource},
     glyph_render_plugin::{
-        ExtractedAtlas, ExtractedGlyphTexture, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored,
+        ExtractedAtlas, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored, GlyphTexture,
         GlyphTextureSource,
     },
+    glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 
 use super::{GlyphBuffer, TargetGlyphBuffer};
@@ -50,8 +53,9 @@ pub fn extract_glyph_buffers(
         )>,
     >,
 
-    glyph_textures: Extract<Res<Assets<GlyphTextureSource>>>,
+    glyph_textures: Extract<Res<Assets<GlyphTexture>>>,
     glyph_animations: Extract<Res<Assets<GlyphAnimationSource>>>,
+    mut glyph_texture_cache: ResMut<ExtractedGlyphTextureCache>,
 ) {
     for (buffer_entity, transform, buffer, font, font_size, grid) in q_glyph_buffer.iter() {
         let Some(font) = fonts.get(font.id()) else {
@@ -79,38 +83,31 @@ pub fn extract_glyph_buffers(
                         continue;
                     };
 
-                    let extracted_glyph_texture = ExtractedGlyphTexture::from_text_data(
-                        &data,
-                        atlas,
-                        font.as_ref(),
-                        font_size,
-                    );
+                    let extracted_glyph_texture =
+                        glyph_texture_cache.get_or_create(&data, atlas, font.as_ref());
 
                     commands.insert_or_spawn_batch([(
                         entity,
                         (
                             Position::from(**position + offset),
                             target.clone(),
-                            extracted_glyph_texture,
+                            ExtractedGlyphTexture(extracted_glyph_texture),
                         ),
                     )]);
                 } else if let Some(glyph_sprite) = sprite {
-                    let Some(source) = glyph_textures.get(glyph_sprite.texture.clone()) else {
+                    let Some(texture) = glyph_textures.get(glyph_sprite.texture.clone()) else {
                         continue;
                     };
 
-                    let extracted_glyph_texture = ExtractedGlyphTexture::from_text_data(
-                        &source.data,
-                        atlas,
-                        font.as_ref(),
-                        font_size,
-                    );
+                    let extracted_glyph_texture =
+                        glyph_texture_cache.get_or_create(&texture.source, atlas, font.as_ref());
+
                     commands.insert_or_spawn_batch([(
                         entity,
                         (
                             Position::from(**position + glyph_sprite.offset),
                             target.clone(),
-                            extracted_glyph_texture,
+                            ExtractedGlyphTexture(extracted_glyph_texture),
                         ),
                     )]);
                 }
@@ -129,19 +126,19 @@ pub fn extract_glyph_buffers(
     }
 }
 
-fn extract_animation_frame(
-    glyph_animations: &Assets<GlyphAnimationSource>,
-    glyph_animation: &GlyphAnimation,
+fn extract_animation_frame<'a>(
+    glyph_animations: &'a Assets<GlyphAnimationSource>,
+    glyph_animation: &'a GlyphAnimation,
     mirrored: bool,
-) -> Option<(Vec<String>, IVec2)> {
+) -> Option<(&'a Arc<GlyphTextureSource>, IVec2)> {
     let source = glyph_animations.get(glyph_animation.source.clone())?;
     let (data, mirrored_data) = source.frames.get(glyph_animation.frame as usize)?;
 
     if mirrored {
         let data = mirrored_data.as_ref().unwrap_or(data);
 
-        Some((data.data.clone(), data.offset))
+        Some((&data.source, data.offset))
     } else {
-        Some((data.data.clone(), data.offset))
+        Some((&data.source, data.offset))
     }
 }

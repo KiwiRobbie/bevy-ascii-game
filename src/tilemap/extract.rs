@@ -2,7 +2,7 @@ use std::ops::Div;
 
 use bevy::{
     asset::Assets,
-    ecs::system::{Commands, Query, Res},
+    ecs::system::{Commands, Query, Res, ResMut},
     math::{IVec2, UVec2},
     render::Extract,
 };
@@ -10,7 +10,8 @@ use glyph_render::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
-    glyph_render_plugin::{ExtractedGlyphTexture, GlyphSolidColor},
+    glyph_render_plugin::GlyphSolidColor,
+    glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 use spatial_grid::position::Position;
 
@@ -38,6 +39,7 @@ pub fn extract_tilemaps(
     tilemaps: Extract<Res<Assets<TilemapSource>>>,
     tilesets: Extract<Res<Assets<TilesetSource>>>,
     chunks: Extract<Res<Assets<TilemapChunk>>>,
+    mut extracted_glyph_cache: ResMut<ExtractedGlyphTextureCache>,
 ) {
     for (buffer_position, buffer, font, font_size) in q_glyph_buffer.iter() {
         let Some(font) = fonts.get(font.id()) else {
@@ -52,7 +54,7 @@ pub fn extract_tilemaps(
         let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
-        for (tilemap_position, target, tilemap, _solid_color) in buffer
+        for (tilemap_position, target, tilemap, solid_color) in buffer
             .textures
             .iter()
             .flat_map(|entity| q_tilemaps.get(*entity))
@@ -95,9 +97,10 @@ pub fn extract_tilemaps(
                             continue;
                         }
 
-                        let tileset = tilesets
-                            .get(tilemap.tilesets[tile.0 as usize].id())
-                            .unwrap();
+                        let Some(tileset) = tilesets.get(tilemap.tilesets[tile.0 as usize].id())
+                        else {
+                            continue;
+                        };
                         let tile_offset = UVec2::new(
                             (index as u32).rem_euclid(tilemap.chunk_size.x),
                             (index as u32).div_euclid(tilemap.chunk_size.x),
@@ -105,20 +108,19 @@ pub fn extract_tilemaps(
 
                         let data = &tileset.tiles[tile.1 as usize];
 
-                        let extracted_glyph_texture = ExtractedGlyphTexture::from_text_data(
-                            data,
-                            atlas,
-                            font.as_ref(),
-                            font_size,
-                        );
+                        let extracted_glyph_texture =
+                            extracted_glyph_cache.get_or_create(data, atlas, font.as_ref());
 
-                        commands.spawn((
+                        let mut entity_commands = commands.spawn((
                             Position::from(
                                 tilemap_offset + chunk_position + tile_offset.as_ivec2(),
                             ),
                             target.clone(),
-                            extracted_glyph_texture,
+                            ExtractedGlyphTexture(extracted_glyph_texture),
                         ));
+                        if let Some(color) = solid_color {
+                            entity_commands.insert(color.clone());
+                        }
                     }
                 }
             }

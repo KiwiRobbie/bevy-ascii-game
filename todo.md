@@ -1,3 +1,28 @@
+# Simple tasks
+
+- Add z-sorting / ordering
+- Add GZIP to art/tilemaps
+
+# Improve text rendering
+
+- Less CPU side calculations
+- Use atlases and avoid re-uploading data.
+- Pack atlas UV data into a texture. (WebGL2 support)
+
+## Operation
+
+- Create atlas texture
+- Insert visible glyph character textures into atlas.
+- Build mesh from visible sprites, reference atlas, apply instancing
+- Render mesh into glyph buffer texture.
+- Rendering glyph buffers onto screen as single quad.
+
+### Minimal Example
+
+- Add glyph buffer UV data as packed texture
+- Render sprites to glyph buffer texture
+- Draw glyph buffer texture using quad
+
 # Layout system
 
 - Separate layout and UI
@@ -14,13 +39,6 @@
 - Layout system places containers with game/ui/...
 - Set physics grid sizes / ui root sizes in system
 - Game/UI layout + render independently
-
-# Tilemaps + Tilesets
-
-- RON + GZIP
-- Append only TileIDs: Adding/removing tiles only breaks removed tiles.
-- Chunk data file, `[(tilemap: u32,tile: u32)] as [u8]` + GZIP.
-- Tilemap
 
 (
 name: String,

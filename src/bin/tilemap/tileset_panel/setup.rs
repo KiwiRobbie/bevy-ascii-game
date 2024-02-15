@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ascii_ui::{
     attachments::{self, MainAxisAlignment},
     mouse::IntractableMarker,
@@ -19,6 +21,7 @@ use bevy_ascii_game::{
     tileset::asset::TilesetSource,
     widgets::{DebugOptions, InfoCounts},
 };
+use glyph_render::glyph_render_plugin::GlyphTextureSource;
 
 use crate::list_builder_widget::ListBuilderWidget;
 
@@ -142,8 +145,8 @@ fn build_tileset_ui<'a>(
         widgets::Divider::build('-'),
         widgets::Container::build(Some(
             widgets::ScrollingView::build(vec![ListBuilderWidget::build::<widgets::Grid>(
-                Box::new(move |index, item: &Vec<String>| {
-                    widgets::Texture::build(item.clone(), tile_size).with((
+                Box::new(move |index, item: &Arc<GlyphTextureSource>| {
+                    widgets::Texture::build(item.data.clone(), tile_size).with((
                         IntractableMarker,
                         TilesetTileId {
                             tile: index as u32,
