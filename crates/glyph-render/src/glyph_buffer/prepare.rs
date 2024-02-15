@@ -19,7 +19,7 @@ use wgpu::{Extent3d, TextureUsages};
 use crate::{
     glyph_render_plugin::{
         GlyphRenderUniformBuffer, GlyphRenderUniforms, GlyphSolidColor, GpuGlyphTexture,
-        GpuGlyphTextureSource,
+        PreparedGlyphTextureSource,
     },
     glyph_texture::{ExtractedGlyphTexture, PreparedGlyphTextureCache},
 };
@@ -65,6 +65,7 @@ pub fn prepare_glyph_buffers(
                 target_size: buffer.size,
                 padding: Default::default(),
             });
+            uniform_buffer.set_label(Some("Glyph render uniforms"));
             uniform_buffer.write_buffer(&render_device, &render_queue);
 
             commands.entity(entity).insert((
@@ -80,7 +81,7 @@ pub fn prepare_glyph_buffers(
 
         commands
             .entity(buffer_entity)
-            .insert(GpuGlyphTexture(Arc::new(GpuGlyphTextureSource {
+            .insert(GpuGlyphTexture(Arc::new(PreparedGlyphTextureSource {
                 buffer_texture,
                 width: buffer.size.x,
                 height: buffer.size.y,

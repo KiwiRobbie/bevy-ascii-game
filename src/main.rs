@@ -66,12 +66,13 @@ fn main() {
                 primary_window: Some(Window {
                     fit_canvas_to_parent: true,
                     resolution: WindowResolution::default().with_scale_factor_override(1.0),
+                    present_mode: bevy::window::PresentMode::AutoNoVsync,
                     ..Default::default()
                 }),
                 ..Default::default()
             }),
         // .set(LogPlugin {
-        //     filter: "wgpu=error,bevy_render=info,bevy_ecs=trace".to_string(),
+        //     filter: "wgpu=info".to_string(),
         //     level: Level::DEBUG,
         // }),
         PlayerPlugin,
