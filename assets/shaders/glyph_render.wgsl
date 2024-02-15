@@ -4,6 +4,7 @@ struct UniformBuffer {
     position: vec2<i32>,
     size: vec2<u32>,
     target_size: vec2<u32>,
+    padding: vec2<f32>,
 
 }
 

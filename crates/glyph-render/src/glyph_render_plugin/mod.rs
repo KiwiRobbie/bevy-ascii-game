@@ -438,4 +438,5 @@ pub struct GlyphRenderUniforms {
     pub position: IVec2,
     pub size: UVec2,
     pub target_size: UVec2,
+    pub padding: Vec2,
 }
