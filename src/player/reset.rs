@@ -87,7 +87,7 @@ pub fn create_player<'w, 's, 'a>(
                 ..Default::default()
             },
             movement: PlayerMovementBundle {
-                walk_speed: PlayerWalkSpeed { speed: 1.0 },
+                walk_speed: PlayerWalkSpeed { speed: 50.0 },
                 ..Default::default()
             },
             ..Default::default()

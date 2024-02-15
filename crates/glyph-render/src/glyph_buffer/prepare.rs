@@ -65,6 +65,7 @@ pub fn prepare_glyph_buffers(
                 target_size: buffer.size,
                 padding: Default::default(),
             });
+            uniform_buffer.set_label(Some("Glyph render uniforms"));
             uniform_buffer.write_buffer(&render_device, &render_queue);
 
             commands.entity(entity).insert((

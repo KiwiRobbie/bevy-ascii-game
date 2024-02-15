@@ -1,8 +1,12 @@
 use super::{direction::PlayerDirection, MovementFilter};
 use crate::player::input::PlayerInputMovement;
 use bevy::{
-    ecs::{component::Component, system::Query},
+    ecs::{
+        component::Component,
+        system::{Query, Res},
+    },
     math::Vec2,
+    time::Time,
 };
 use grid_physics::{free::FreeGrounded, movement::Movement, velocity::Velocity};
 
@@ -22,6 +26,7 @@ pub fn player_walk_system(
         ),
         MovementFilter,
     >,
+    time: Res<Time>,
 ) {
     for (mut movement, mut velocity, mut direction, input, settings, grounded) in
         q_player.iter_mut()
@@ -36,7 +41,7 @@ pub fn player_walk_system(
             0.0
         };
 
-        movement.add(Vec2::X * horizontal * settings.speed);
+        movement.add(Vec2::X * horizontal * settings.speed * time.delta_seconds());
         if grounded.is_some() {
             **velocity = Vec2::ZERO;
         }

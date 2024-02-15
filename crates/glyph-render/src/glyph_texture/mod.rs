@@ -16,12 +16,13 @@ use bevy::{
 };
 use bytemuck::cast_slice;
 use swash::FontRef;
-use wgpu::{Extent3d, TextureDescriptor, TextureUsages};
+use wgpu::{Extent3d, TextureDescriptor, TextureFormat, TextureUsages};
 
 use crate::{
     atlas::FontAtlasSource,
     glyph_render_plugin::{
-        ExtractedGlyphTextureSource, GlyphTextureSource, PreparedGlyphTextureSource,
+        AtlasGpuDataSource, ExtractedGlyphTextureSource, GlyphTextureSource,
+        PreparedGlyphTextureSource,
     },
 };
 
@@ -65,14 +66,14 @@ trait GlyphCacheTrait<K, V> {
 }
 
 #[derive(Resource)]
-pub struct GlyphCache<K, V>
+pub struct RenderCache<K, V>
 where
     K: PartialEq + Eq + std::hash::Hash,
     V: Clone,
 {
     cached: HashMap<K, CacheItem<V>>,
 }
-impl<K, V> GlyphCacheTrait<K, V> for GlyphCache<K, V>
+impl<K, V> GlyphCacheTrait<K, V> for RenderCache<K, V>
 where
     K: PartialEq + Eq + std::hash::Hash,
     V: Clone,
@@ -106,7 +107,7 @@ where
         });
     }
 }
-impl<K, V> Default for GlyphCache<K, V>
+impl<K, V> Default for RenderCache<K, V>
 where
     K: PartialEq + Eq + std::hash::Hash,
     V: Clone,
@@ -119,7 +120,7 @@ where
 }
 
 pub type ExtractedGlyphTextureCache =
-    GlyphCache<ExtractedTextureKey, Arc<ExtractedGlyphTextureSource>>;
+    RenderCache<ExtractedTextureKey, Arc<ExtractedGlyphTextureSource>>;
 impl ExtractedGlyphTextureCache {
     pub fn get_or_create(
         &mut self,
@@ -164,7 +165,7 @@ impl PreparedTextureKey {
 }
 
 pub type PreparedGlyphTextureCache =
-    GlyphCache<PreparedTextureKey, Arc<PreparedGlyphTextureSource>>;
+    RenderCache<PreparedTextureKey, Arc<PreparedGlyphTextureSource>>;
 impl PreparedGlyphTextureCache {
     pub fn get_or_create(
         &mut self,
@@ -204,16 +205,110 @@ impl PreparedGlyphTextureCache {
     }
 }
 
+pub struct AtlasKey {
+    pub atlas: Weak<FontAtlasSource>,
+}
+
+impl PartialEq for AtlasKey {
+    fn eq(&self, other: &Self) -> bool {
+        Weak::ptr_eq(&self.atlas, &other.atlas)
+    }
+}
+impl Eq for AtlasKey {}
+impl std::hash::Hash for AtlasKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        state.write_usize(Weak::as_ptr(&self.atlas) as usize);
+    }
+}
+impl AtlasKey {
+    pub fn new(atlas: &Arc<FontAtlasSource>) -> Self {
+        Self {
+            atlas: Arc::downgrade(atlas),
+        }
+    }
+}
+
+pub type PreparedAtlasCache = RenderCache<AtlasKey, Arc<AtlasGpuDataSource>>;
+impl PreparedAtlasCache {
+    pub fn get_or_create(
+        &mut self,
+        atlas: &Arc<FontAtlasSource>,
+        render_device: &RenderDevice,
+        render_queue: &RenderQueue,
+    ) -> Arc<AtlasGpuDataSource> {
+        let key = AtlasKey::new(atlas);
+        GlyphCacheTrait::<AtlasKey, Arc<AtlasGpuDataSource>>::get_or_create(self, key, &|| {
+            Arc::new(Self::builder(atlas, render_device, render_queue))
+        })
+    }
+
+    fn builder(
+        atlas: &Arc<FontAtlasSource>,
+        render_device: &RenderDevice,
+        render_queue: &RenderQueue,
+    ) -> AtlasGpuDataSource {
+        let uv_texture_size =
+            (((atlas.items.len() * 3) as f64).sqrt().ceil() as u32).next_power_of_two();
+
+        let mut data = vec![0u8; 4 * 2 * (uv_texture_size as usize * uv_texture_size as usize)]
+            .into_boxed_slice();
+        let item_data = cast_slice(&atlas.items);
+        data[0..item_data.len()].copy_from_slice(item_data);
+
+        let uvs = render_device.create_texture_with_data(
+            &render_queue,
+            &TextureDescriptor {
+                label: Some("gpu font atlas uv texture"),
+                size: Extent3d {
+                    width: uv_texture_size,
+                    height: uv_texture_size,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: bevy::render::render_resource::TextureDimension::D2,
+                format: TextureFormat::Rg32Uint,
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
+                view_formats: &[TextureFormat::Rg32Uint],
+            },
+            &data,
+        );
+
+        let data = render_device.create_texture_with_data(
+            &render_queue,
+            &TextureDescriptor {
+                label: Some("gpu font atlas texture"),
+                size: Extent3d {
+                    width: atlas.size,
+                    height: atlas.size,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: bevy::render::render_resource::TextureDimension::D2,
+                format: TextureFormat::Rgba8Unorm,
+                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
+                view_formats: &[TextureFormat::Rgba8Unorm],
+            },
+            &atlas.data,
+        );
+
+        AtlasGpuDataSource { data, uvs }
+    }
+}
+
 pub struct RenderGlyphTextureCachePlugin;
 impl Plugin for RenderGlyphTextureCachePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<ExtractedGlyphTextureCache>()
             .init_resource::<PreparedGlyphTextureCache>()
+            .init_resource::<PreparedAtlasCache>()
             .add_systems(
                 Render,
                 (
                     maintain_cache::<ExtractedGlyphTextureCache, _, _>,
                     maintain_cache::<PreparedGlyphTextureCache, _, _>,
+                    maintain_cache::<PreparedAtlasCache, _, _>,
                 )
                     .in_set(RenderSet::Cleanup),
             );

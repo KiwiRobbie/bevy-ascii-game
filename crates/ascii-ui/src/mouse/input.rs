@@ -6,7 +6,7 @@ use bevy::{
     },
     input::{
         mouse::{MouseButton, MouseWheel},
-        touch::TouchInput,
+        touch::{TouchInput, TouchPhase},
         Input,
     },
     math::{Vec2, Vec3},
@@ -63,15 +63,36 @@ pub fn update_mouse_position(
     mouse_buttons: Res<Input<MouseButton>>,
     mut ev_mouse_scroll: EventReader<MouseWheel>,
     mut mouse_input: ResMut<MouseInput>,
-    mut touch: EventReader<TouchInput>,
+    mut ev_touch: EventReader<TouchInput>,
 ) {
+    let tap_pos = ev_touch
+        .read()
+        .filter_map(|ev| {
+            if ev.phase == TouchPhase::Started {
+                Some(ev.position)
+            } else {
+                None
+            }
+        })
+        .last();
+
     let mut frame = MouseInputFrame::default();
     frame.buttons = Some(mouse_buttons.clone());
-
+    if tap_pos.is_some() {
+        frame.buttons.as_mut().unwrap().press(MouseButton::Left);
+        frame.buttons.as_mut().unwrap().release(MouseButton::Left);
+    }
     {
         let mut scroll_distance = Vec2::ZERO;
         for ev in ev_mouse_scroll.read() {
-            scroll_distance += Vec2::new(ev.x, ev.y);
+            match ev.unit {
+                bevy::input::mouse::MouseScrollUnit::Line => {
+                    scroll_distance += Vec2::new(ev.x, ev.y);
+                }
+                bevy::input::mouse::MouseScrollUnit::Pixel => {
+                    scroll_distance += Vec2::new(ev.x / 16.0, ev.y / 16.0);
+                }
+            };
         }
         frame.scroll = Some(scroll_distance);
     }
@@ -81,7 +102,7 @@ pub fn update_mouse_position(
             if let Some(position) = q_windows
                 .single()
                 .cursor_position()
-                .or_else(|| touch.read().map(|ev| ev.position).last())
+                .or(tap_pos)
                 .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
                 .map(|ray| ray.origin)
             {

@@ -159,6 +159,7 @@ impl render_graph::Node for GlyphGenerationNode {
                     depth_stencil_attachment: None,
                 };
 
+                let mut bind_groups = vec![];
                 // Render textures to buffers
                 for (uniforms, texture, _) in self
                     .texture_entities
@@ -177,11 +178,15 @@ impl render_graph::Node for GlyphGenerationNode {
                                 .create_view(&wgpu::TextureViewDescriptor::default()),
                         )),
                     );
-                    let mut render_pass = render_context
-                        .command_encoder()
-                        .begin_render_pass(&glyph_render_render_pass_descriptor);
 
-                    render_pass.set_bind_group(0, &bind_group, &[]);
+                    bind_groups.push(bind_group);
+                }
+                let mut render_pass = render_context
+                    .command_encoder()
+                    .begin_render_pass(&glyph_render_render_pass_descriptor);
+
+                for bind_group in bind_groups.iter() {
+                    render_pass.set_bind_group(0, bind_group, &[]);
                     render_pass.set_pipeline(&render_pipeline);
                     render_pass.draw(0..6, 0..1);
                 }

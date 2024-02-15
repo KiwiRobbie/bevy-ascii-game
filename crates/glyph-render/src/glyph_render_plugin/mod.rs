@@ -22,7 +22,7 @@ use crate::{
         update_glyph_buffer_entities,
     },
     glyph_render_plugin::render_resources::{GlyphBufferData, GlyphUniformBuffer},
-    glyph_texture::RenderGlyphTextureCachePlugin,
+    glyph_texture::{PreparedAtlasCache, RenderGlyphTextureCachePlugin},
 };
 
 use self::raster_descriptors::{raster_bind_group_layout, render_bind_group_layout};
@@ -187,55 +187,16 @@ fn prepare_atlas_buffers(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
     q_atlases: Query<(Entity, &ExtractedAtlas)>,
+    mut cache: ResMut<PreparedAtlasCache>,
 ) {
     for (entity, atlas) in q_atlases.iter() {
-        let uv_texture_size =
-            (((atlas.items.len() * 3) as f64).sqrt().ceil() as u32).next_power_of_two();
-
-        let mut data = vec![0u8; 4 * 2 * (uv_texture_size as usize * uv_texture_size as usize)]
-            .into_boxed_slice();
-        let item_data = cast_slice(&atlas.items);
-        data[0..item_data.len()].copy_from_slice(item_data);
-
-        let uvs = render_device.create_texture_with_data(
-            &render_queue,
-            &TextureDescriptor {
-                label: Some("gpu font atlas uv texture"),
-                size: Extent3d {
-                    width: uv_texture_size,
-                    height: uv_texture_size,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: bevy::render::render_resource::TextureDimension::D2,
-                format: TextureFormat::Rg32Uint,
-                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[TextureFormat::Rg32Uint],
-            },
-            &data,
-        );
-
-        let data = render_device.create_texture_with_data(
-            &render_queue,
-            &TextureDescriptor {
-                label: Some("gpu font atlas storage texture"),
-                size: Extent3d {
-                    width: atlas.size,
-                    height: atlas.size,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: bevy::render::render_resource::TextureDimension::D2,
-                format: TextureFormat::Rgba8Unorm,
-                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
-                view_formats: &[TextureFormat::Rgba8Unorm],
-            },
-            &atlas.data,
-        );
-
-        commands.entity(entity).insert(AtlasGpuData { data, uvs });
+        commands
+            .entity(entity)
+            .insert(AtlasGpuData(cache.get_or_create(
+                atlas,
+                &render_device,
+                &render_queue,
+            )));
     }
 }
 
@@ -250,8 +211,10 @@ pub struct GpuGlyphItem {
     pub color: Vec4,
 }
 
-#[derive(Component)]
-pub struct AtlasGpuData {
+#[derive(Component, Deref)]
+pub struct AtlasGpuData(pub Arc<AtlasGpuDataSource>);
+
+pub struct AtlasGpuDataSource {
     pub data: Texture,
     pub uvs: Texture,
 }
@@ -278,10 +241,12 @@ fn prepare_buffers(
             advance: grid.size.x,
             line_spacing: grid.size.y,
         });
+        uniform_buffer.set_label(Some("Glyph raster uniforms"));
         uniform_buffer.write_buffer(&render_device, &render_queue);
 
         let mut model_uniform_buffer =
             UniformBuffer::from(GlyphModelUniform::new(*global_transform));
+        model_uniform_buffer.set_label(Some("Glyph raster model uniforms"));
         model_uniform_buffer.write_buffer(&render_device, &render_queue);
 
         let glyph_buffer_texture = gpu_glyph_texture.buffer_texture.clone();
