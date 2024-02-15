@@ -69,7 +69,14 @@ fn vertex(input: InstanceInput) -> VertexOutput {
     let grid_size: vec2<i32> = vec2<i32>(i32(uniform_buffer.advance), i32(uniform_buffer.line_spacing));
     let corner = verticies[input.vertex_index];
 
-    let glyph_id = textureLoad(glyph_buffer, location, 0).r - 1u;
+    let glyph_data = textureLoad(glyph_buffer, location, 0);
+    let glyph_id = glyph_data.r - 1u;
+    let glpyh_color = bitcast<vec3<f32>>(glyph_data.gba);
+
+
+
+
+
     let atlas_uv_dim = textureDimensions(atlas_uvs);
     let glyph_atlas_pos = vec2<u32>(glyph_id % atlas_uv_dim.x, glyph_id / atlas_uv_dim.x);
 
@@ -82,7 +89,7 @@ fn vertex(input: InstanceInput) -> VertexOutput {
     var out: VertexOutput;
     out.position = view.view_proj * model.model * vec4<f32>(f32(pos.x), f32(pos.y), 0.0, 1.0);
     out.uv = vec2<f32>(start + size * vec2<u32>(u32(corner.x), u32(corner.y))) / vec2<f32>(textureDimensions(atlas_texture).xy);
-    out.color = vec4<f32>(1.0);
+    out.color = vec4<f32>(glpyh_color, 1.0);
     return out;
 }
 

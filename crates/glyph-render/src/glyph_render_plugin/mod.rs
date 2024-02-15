@@ -10,7 +10,7 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
-use bytemuck::{cast_slice, Pod, Zeroable};
+use bytemuck::{cast_slice, cast_slice_mut, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
@@ -103,26 +103,40 @@ impl GlyphTexture {
 
 #[derive(Clone)]
 pub struct ExtractedGlyphTextureSource {
-    pub data: Box<[u16]>,
+    pub data: Box<[u8]>,
 
     pub width: u32,
     pub height: u32,
 }
 
 impl ExtractedGlyphTextureSource {
-    pub fn from_text_data(text: &Vec<String>, atlas: &FontAtlasSource, font: FontRef) -> Self {
+    pub fn from_text_data(
+        text: &Vec<String>,
+        atlas: &FontAtlasSource,
+        font: FontRef,
+        color: Color,
+    ) -> Self {
         let height = text.len();
         let width = text[0].len();
 
-        let mut data: Box<[u16]> = vec![0; width * height].into();
+        let mut data: Box<[u8]> = vec![0; 4 * 4 * width * height].into();
         let charmap = font.charmap();
 
         for (y, chars) in text.iter().enumerate() {
             assert_eq!(text[y].len(), width);
             for (x, c) in chars.chars().enumerate() {
-                let index = x + (height - y - 1) * width;
-                let glyph_id = atlas.local_index.get(&charmap.map(c)).unwrap_or(&u16::MAX);
-                data[index] = *glyph_id;
+                let index = 16 * (x + (height - y - 1) * width);
+                let glyph_id = atlas
+                    .local_index
+                    .get(&charmap.map(c))
+                    .unwrap_or(&u16::MAX)
+                    .to_le_bytes();
+
+                data[index + 4..index + 16]
+                    .copy_from_slice(cast_slice_mut(&mut color.as_rgba_f32()[0..3]));
+
+                data[index + 0] = glyph_id[0];
+                data[index + 1] = glyph_id[1];
             }
         }
 
@@ -140,7 +154,7 @@ pub struct GlyphSprite {
     pub offset: IVec2,
 }
 
-#[derive(Component, Clone, ExtractComponent)]
+#[derive(Component, Clone, ExtractComponent, Debug)]
 pub struct GlyphSolidColor {
     pub color: Color,
 }
@@ -313,7 +327,7 @@ impl FromWorld for GlyphPipelineData {
                     shader_defs: Vec::new(),
                     entry_point: "fragment".into(),
                     targets: vec![Some(ColorTargetState {
-                        format: TextureFormat::R16Uint,
+                        format: TextureFormat::Rgba32Uint,
                         blend: None,
                         write_mask: ColorWrites::ALL,
                     })],

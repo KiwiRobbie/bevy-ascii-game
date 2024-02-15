@@ -54,12 +54,13 @@ fn vertex(input: InstanceInput) -> VertexOutput {
 
 
 @fragment
-fn fragment(input: VertexOutput) -> @location(0) u32 {
+fn fragment(input: VertexOutput) -> @location(0) vec4<u32> {
     let uv = vec2<f32>(textureDimensions(glyph_buffer).xy);
-    let glyph_id = textureLoad(glyph_buffer, vec2<u32>(uv * input.uv), 0).r;
+    let sample = textureLoad(glyph_buffer, vec2<u32>(uv * input.uv), 0);
+    let glyph_id = sample.r;
     if glyph_id == 65535u {
         discard;
     }
 
-    return glyph_id + 1u;
+    return vec4<u32>(glyph_id + 1u, sample.gba);
 }

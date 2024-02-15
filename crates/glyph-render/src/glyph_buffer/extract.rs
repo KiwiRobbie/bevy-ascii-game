@@ -9,7 +9,7 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     math::IVec2,
-    render::Extract,
+    render::{color::Color, Extract},
     transform::components::GlobalTransform,
 };
 use spatial_grid::{grid::SpatialGrid, position::Position};
@@ -71,9 +71,6 @@ pub fn extract_glyph_buffers(
             if let Ok((entity, position, target, sprite, animation, mirrored, solid_color)) =
                 q_textures.get(*entity)
             {
-                if let Some(solid_color) = solid_color {
-                    commands.insert_or_spawn_batch([(entity, (solid_color.clone(),))]);
-                }
                 if let Some(glyph_animation) = animation {
                     let Some((data, offset)) = extract_animation_frame(
                         &*glyph_animations,
@@ -83,8 +80,12 @@ pub fn extract_glyph_buffers(
                         continue;
                     };
 
-                    let extracted_glyph_texture =
-                        glyph_texture_cache.get_or_create(&data, atlas, font.as_ref());
+                    let extracted_glyph_texture = glyph_texture_cache.get_or_create(
+                        &data,
+                        solid_color.map(|c| c.color).unwrap_or(Color::WHITE),
+                        atlas,
+                        font.as_ref(),
+                    );
 
                     commands.insert_or_spawn_batch([(
                         entity,
@@ -99,8 +100,12 @@ pub fn extract_glyph_buffers(
                         continue;
                     };
 
-                    let extracted_glyph_texture =
-                        glyph_texture_cache.get_or_create(&texture.source, atlas, font.as_ref());
+                    let extracted_glyph_texture = glyph_texture_cache.get_or_create(
+                        &texture.source,
+                        solid_color.map(|c| c.color).unwrap_or(Color::WHITE),
+                        atlas,
+                        font.as_ref(),
+                    );
 
                     commands.insert_or_spawn_batch([(
                         entity,
