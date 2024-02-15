@@ -9,6 +9,7 @@ use bevy::{
     },
     prelude::Deref,
     render::{
+        color::Color,
         renderer::{RenderDevice, RenderQueue},
         Render, RenderSet,
     },
@@ -34,10 +35,13 @@ pub struct CacheItem<T> {
 pub struct ExtractedTextureKey {
     pub data: Weak<GlyphTextureSource>,
     pub atlas: Weak<FontAtlasSource>,
+    pub color: Color,
 }
 impl PartialEq for ExtractedTextureKey {
     fn eq(&self, other: &Self) -> bool {
-        Weak::ptr_eq(&self.data, &other.data) && Weak::ptr_eq(&self.atlas, &other.atlas)
+        Weak::ptr_eq(&self.data, &other.data)
+            && Weak::ptr_eq(&self.atlas, &other.atlas)
+            && self.color == other.color
     }
 }
 impl Eq for ExtractedTextureKey {}
@@ -45,13 +49,18 @@ impl std::hash::Hash for ExtractedTextureKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(Weak::as_ptr(&self.data) as usize);
         state.write_usize(Weak::as_ptr(&self.atlas) as usize);
+        state.write_u32(self.color.r().to_bits());
+        state.write_u32(self.color.g().to_bits());
+        state.write_u32(self.color.b().to_bits());
+        state.write_u32(self.color.a().to_bits());
     }
 }
 impl ExtractedTextureKey {
-    pub fn new(data: &Arc<GlyphTextureSource>, atlas: &Arc<FontAtlasSource>) -> Self {
+    pub fn new(data: &Arc<GlyphTextureSource>, atlas: &Arc<FontAtlasSource>, color: Color) -> Self {
         Self {
             data: Arc::downgrade(data),
             atlas: Arc::downgrade(atlas),
+            color,
         }
     }
 }
@@ -125,16 +134,17 @@ impl ExtractedGlyphTextureCache {
     pub fn get_or_create(
         &mut self,
         data: &Arc<GlyphTextureSource>,
+        color: Color,
         atlas: &Arc<FontAtlasSource>,
         font: FontRef,
     ) -> Arc<ExtractedGlyphTextureSource> {
-        let key = ExtractedTextureKey::new(data, atlas);
+        let key = ExtractedTextureKey::new(data, atlas, color);
         GlyphCacheTrait::<ExtractedTextureKey, Arc<ExtractedGlyphTextureSource>>::get_or_create(
             self,
             key,
             || {
                 Arc::new(ExtractedGlyphTextureSource::from_text_data(
-                    &data.data, atlas, font,
+                    &data.data, atlas, font, color,
                 ))
             },
         )
@@ -193,7 +203,7 @@ impl PreparedGlyphTextureCache {
                             mip_level_count: 1,
                             sample_count: 1,
                             dimension: wgpu::TextureDimension::D2,
-                            format: wgpu::TextureFormat::R16Uint,
+                            format: wgpu::TextureFormat::Rgba32Uint,
                             usage: TextureUsages::TEXTURE_BINDING,
                             view_formats: &[],
                         },

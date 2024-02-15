@@ -13,7 +13,7 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
-    log::{self, Level, LogPlugin},
+    log::{self},
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},

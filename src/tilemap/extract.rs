@@ -4,7 +4,7 @@ use bevy::{
     asset::Assets,
     ecs::system::{Commands, Query, Res, ResMut},
     math::{IVec2, UVec2},
-    render::Extract,
+    render::{color::Color, Extract},
 };
 use glyph_render::{
     atlas::FontAtlasCache,
@@ -108,8 +108,12 @@ pub fn extract_tilemaps(
 
                         let data = &tileset.tiles[tile.1 as usize];
 
-                        let extracted_glyph_texture =
-                            extracted_glyph_cache.get_or_create(data, atlas, font.as_ref());
+                        let extracted_glyph_texture = extracted_glyph_cache.get_or_create(
+                            data,
+                            solid_color.map(|c| c.color).unwrap_or(Color::WHITE),
+                            atlas,
+                            font.as_ref(),
+                        );
 
                         let mut entity_commands = commands.spawn((
                             Position::from(
