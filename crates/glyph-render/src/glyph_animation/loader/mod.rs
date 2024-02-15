@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
     math::{IVec2, UVec2},
@@ -8,14 +6,13 @@ use bevy::{
 
 use text_util::text_mirror::mirror_lines;
 
-use crate::glyph_render_plugin::GlyphTextureSource;
-
-use super::{GlyphAnimationFrame, GlyphAnimationSource};
 pub mod meta;
 
 use self::meta::{
     create_data, CountDirection, FrameIndex, FrameMeta, GlyphAnimationMeta, MirroredFrame,
 };
+
+use super::{GlyphAnimationFrame, GlyphAnimationSource};
 
 #[derive(Default)]
 pub struct GlyphAnimationAssetLoader {}

@@ -146,9 +146,9 @@ pub struct GlyphSolidColor {
 }
 
 #[derive(Component, DerefMut, Deref)]
-pub struct GpuGlyphTexture(pub Arc<GpuGlyphTextureSource>);
+pub struct GpuGlyphTexture(pub Arc<PreparedGlyphTextureSource>);
 
-pub struct GpuGlyphTextureSource {
+pub struct PreparedGlyphTextureSource {
     pub buffer_texture: Texture,
     pub width: u32,
     pub height: u32,
