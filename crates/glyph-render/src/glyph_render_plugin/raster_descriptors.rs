@@ -4,7 +4,7 @@ use wgpu::{
     TextureViewDimension,
 };
 
-use super::{GlyphModelUniform, GlyphUniforms};
+use super::{GlyphModelUniform, GlyphRenderUniforms, GlyphUniforms};
 
 pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
     [
@@ -66,6 +66,30 @@ pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
         // Glyph Buffer
         BindGroupLayoutEntry {
             binding: 5,
+            visibility: ShaderStages::VERTEX_FRAGMENT,
+            ty: BindingType::Texture {
+                multisampled: false,
+                sample_type: wgpu::TextureSampleType::Uint,
+                view_dimension: TextureViewDimension::D2,
+            },
+            count: None,
+        },
+    ]
+}
+pub fn render_bind_group_layout() -> [BindGroupLayoutEntry; 2] {
+    [
+        BindGroupLayoutEntry {
+            binding: 0,
+            visibility: ShaderStages::VERTEX_FRAGMENT,
+            ty: BindingType::Buffer {
+                ty: BufferBindingType::Uniform,
+                has_dynamic_offset: false,
+                min_binding_size: BufferSize::new(GlyphRenderUniforms::SHADER_SIZE.get()),
+            },
+            count: None,
+        },
+        BindGroupLayoutEntry {
+            binding: 1,
             visibility: ShaderStages::VERTEX_FRAGMENT,
             ty: BindingType::Texture {
                 multisampled: false,

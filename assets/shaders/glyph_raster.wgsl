@@ -69,7 +69,7 @@ fn vertex(input: InstanceInput) -> VertexOutput {
     let grid_size: vec2<i32> = vec2<i32>(i32(uniform_buffer.advance), i32(uniform_buffer.line_spacing));
     let corner = verticies[input.vertex_index];
 
-    let glyph_id = textureLoad(glyph_buffer, location, 0).r ;
+    let glyph_id = textureLoad(glyph_buffer, location, 0).r - 1u;
     let atlas_uv_dim = textureDimensions(atlas_uvs);
     let glyph_atlas_pos = vec2<u32>(glyph_id % atlas_uv_dim.x, glyph_id / atlas_uv_dim.x);
 
