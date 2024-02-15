@@ -9,7 +9,6 @@ use bevy::{
     },
     math::UVec2,
     render::{
-        color::Color,
         render_resource::UniformBuffer,
         renderer::{RenderDevice, RenderQueue},
     },
