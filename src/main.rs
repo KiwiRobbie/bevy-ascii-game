@@ -13,7 +13,7 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
-    log,
+    log::{self, Level, LogPlugin},
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
@@ -43,7 +43,7 @@ use glyph_render::{
     glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{
-        GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored, GlyphTextureSource,
+        GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored, GlyphTexture,
     },
 };
 use grid_physics::{
@@ -70,6 +70,10 @@ fn main() {
                 }),
                 ..Default::default()
             }),
+        // .set(LogPlugin {
+        //     filter: "wgpu=error,bevy_render=info,bevy_ecs=trace".to_string(),
+        //     level: Level::DEBUG,
+        // }),
         PlayerPlugin,
         GlyphAnimationPlugin,
         GlyphAnimationGraphPlugin,
@@ -130,7 +134,7 @@ fn handle_gamepads(
 fn setup_system(
     mut commands: Commands,
     server: Res<AssetServer>,
-    mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
     commands.spawn((
         Tilemap(server.load("tilemaps/output.tilemap.ron")),
@@ -211,9 +215,9 @@ fn setup_system(
     // Keyboard display
     commands.spawn((
         GlyphSprite {
-            texture: glyph_textures.add(GlyphTextureSource {
-                data: (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
-            }),
+            texture: glyph_textures.add(GlyphTexture::new(
+                (0..16).map(|_| " ".repeat(32)).collect::<Vec<String>>(),
+            )),
             offset: IVec2 { x: 0, y: 0 },
         },
         SpatialBundle {
@@ -263,7 +267,7 @@ struct KeyboardInputMarker;
 fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
     q_glyph_sprite: Query<&GlyphSprite, &KeyboardInputMarker>,
-    mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut position: Local<usize>,
 ) {
     let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
@@ -271,8 +275,8 @@ fn keyboard_input_system(
     };
 
     let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
-    let width = glyph_texture.data.first().unwrap().len();
-    let height = glyph_texture.data.len();
+    let width = glyph_texture.source.data.first().unwrap().len();
+    let height = glyph_texture.source.data.len();
 
     fn get_pos(index: usize, width: usize, height: usize) -> (usize, usize) {
         (
@@ -283,19 +287,21 @@ fn keyboard_input_system(
 
     for character in ev_character.read() {
         log::info!("{:?}", character);
+        let mut data = glyph_texture.source.data.clone();
         if character.char == '\u{8}' {
             *position = (*position + width * height - 1).rem_euclid(width * height);
             let (x, y) = get_pos(*position, width, height);
-            glyph_texture.data[y].replace_range(x..=x, "_");
+            data[y].replace_range(x..=x, "_");
             let (x, y) = get_pos(*position + 1, width, height);
-            glyph_texture.data[y].replace_range(x..=x, " ");
+            data[y].replace_range(x..=x, " ");
         } else {
             let (x, y) = get_pos(*position, width, height);
-            glyph_texture.data[y].replace_range(x..=x, character.char.to_string().as_str());
+            data[y].replace_range(x..=x, character.char.to_string().as_str());
             let (x, y) = get_pos(*position + 1, width, height);
-            glyph_texture.data[y].replace_range(x..=x, "_");
+            data[y].replace_range(x..=x, "_");
 
             *position = (*position + 1).rem_euclid(width * height);
         }
+        *glyph_texture = GlyphTexture::new(data);
     }
 }

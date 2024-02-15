@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bevy::{
     app::Plugin,
     asset::{Asset, AssetApp, Handle},
@@ -5,6 +7,8 @@ use bevy::{
     math::{IVec2, UVec2},
     reflect::TypePath,
 };
+
+use crate::glyph_render_plugin::GlyphTextureSource;
 
 use self::loader::GlyphAnimationAssetLoader;
 
@@ -19,8 +23,17 @@ pub struct GlyphAnimationSource {
 
 #[derive(Clone, Debug)]
 pub struct GlyphAnimationFrame {
-    pub data: Vec<String>,
+    pub source: Arc<GlyphTextureSource>,
     pub offset: IVec2,
+}
+
+impl GlyphAnimationFrame {
+    pub fn new(data: Vec<String>, offset: IVec2) -> Self {
+        Self {
+            source: Arc::new(GlyphTextureSource { data }),
+            offset,
+        }
+    }
 }
 
 #[derive(Component, Clone)]

@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use bevy::{asset::Asset, math::UVec2, reflect::TypePath, utils::HashMap};
+use glyph_render::glyph_render_plugin::GlyphTextureSource;
 
 #[derive(Debug, Asset, TypePath, Clone)]
 pub struct TilesetSource {
@@ -7,5 +10,5 @@ pub struct TilesetSource {
     pub tile_size: UVec2,
     pub tile_ids: HashMap<String, usize>,
     pub tile_labels: Vec<String>,
-    pub tiles: Vec<Vec<String>>,
+    pub tiles: Vec<Arc<GlyphTextureSource>>,
 }

@@ -6,13 +6,13 @@ use bevy::{
     },
     math::IVec2,
 };
-use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTextureSource};
+use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTexture};
 use spatial_grid::position::Position;
 
 use crate::{attachments::border::Border, layout::positioned::Positioned};
 
 pub fn border_render(
-    mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut commands: Commands,
     q_text: Query<(Entity, &Positioned, &Border)>,
 ) {
@@ -22,7 +22,7 @@ pub fn border_render(
         commands.entity(entity).insert((
             Position(position),
             GlyphSprite {
-                texture: glyph_textures.add(GlyphTextureSource { data }),
+                texture: glyph_textures.add(GlyphTexture::new(data)),
                 offset: IVec2::ZERO,
             },
         ));
