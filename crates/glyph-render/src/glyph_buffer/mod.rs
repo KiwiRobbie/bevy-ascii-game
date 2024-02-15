@@ -2,6 +2,7 @@ use bevy::{
     ecs::{bundle::Bundle, component::Component, entity::Entity, query::Without, system::Query},
     math::UVec2,
     prelude::{Deref, DerefMut},
+    render::render_resource::TextureView,
     utils::HashSet,
 };
 
@@ -47,3 +48,6 @@ pub fn update_glyph_buffer_entities(
             .insert(source_entity);
     }
 }
+
+#[derive(Component, Clone, Deref, DerefMut)]
+pub struct TargetBufferTexture(pub TextureView);

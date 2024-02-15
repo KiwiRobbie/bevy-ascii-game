@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use bevy::{
-    ecs::system::SystemState,
     prelude::*,
     render::{
         extract_component::ExtractComponent,
@@ -26,7 +25,7 @@ use crate::{
     glyph_render_plugin::render_resources::{GlyphBufferData, GlyphUniformBuffer},
 };
 
-use self::raster_descriptors::raster_bind_group_layout;
+use self::raster_descriptors::{raster_bind_group_layout, render_bind_group_layout};
 
 mod node;
 mod raster_descriptors;
@@ -309,23 +308,77 @@ fn prepare_buffers(
 
 #[derive(Resource)]
 struct GlyphPipelineData {
+    glyph_render_pipeline_id: CachedRenderPipelineId,
+    glyph_render_bind_group_layout: BindGroupLayout,
     glyph_raster_pipeline_id: CachedRenderPipelineId,
     glyph_raster_bind_group_layout: BindGroupLayout,
 }
 
 impl FromWorld for GlyphPipelineData {
     fn from_world(render_world: &mut World) -> Self {
-        let mut system_state: SystemState<Res<RenderDevice>> = SystemState::new(render_world);
-        let render_device = system_state.get_mut(render_world);
+        let (glyph_render_pipeline_id, glyph_render_bind_group_layout) = {
+            let render_device: Mut<RenderDevice> = render_world.get_resource_mut().unwrap();
 
+            let glyph_render_bind_group_layout =
+                render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                    label: Some("glyph render bind group layout"),
+                    entries: &render_bind_group_layout(),
+                });
+            let glyph_render_shader = render_world
+                .get_resource::<AssetServer>()
+                .unwrap()
+                .load("shaders/glyph_render.wgsl");
+
+            let raster_pipeline_descriptor = RenderPipelineDescriptor {
+                label: Some("glyph render pipeline".into()),
+                layout: vec![glyph_render_bind_group_layout.clone()],
+                push_constant_ranges: Vec::new(),
+                vertex: VertexState {
+                    shader: glyph_render_shader.clone(),
+                    shader_defs: Vec::new(),
+                    entry_point: "vertex".into(),
+                    buffers: vec![],
+                },
+                fragment: Some(FragmentState {
+                    shader: glyph_render_shader,
+                    shader_defs: Vec::new(),
+                    entry_point: "fragment".into(),
+                    targets: vec![Some(ColorTargetState {
+                        format: TextureFormat::R16Uint,
+                        blend: None,
+                        write_mask: ColorWrites::ALL,
+                    })],
+                }),
+                primitive: PrimitiveState {
+                    topology: PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: FrontFace::Ccw,
+                    cull_mode: None,
+                    unclipped_depth: false,
+                    polygon_mode: PolygonMode::Fill,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: Default::default(),
+            };
+
+            let cache = render_world.resource::<PipelineCache>();
+            let pipeline_id = cache.queue_render_pipeline(raster_pipeline_descriptor);
+
+            (pipeline_id, glyph_render_bind_group_layout)
+        };
         let (glyph_raster_pipeline_id, glyph_raster_bind_group_layout) = {
+            let render_device: Mut<RenderDevice> = render_world.get_resource_mut().unwrap();
+
             let glyph_raster_bind_group_layout =
                 render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                     label: Some("glyph raster bind group layout"),
                     entries: &raster_bind_group_layout(),
                 });
-            let asset_server = render_world.get_resource::<AssetServer>().unwrap();
-            let glyph_raster_shader = asset_server.load("shaders/glyph_raster.wgsl");
+            let glyph_raster_shader = render_world
+                .get_resource::<AssetServer>()
+                .unwrap()
+                .load("shaders/glyph_raster.wgsl");
 
             let raster_pipeline_descriptor = RenderPipelineDescriptor {
                 label: Some("glyph raster pipeline".into()),
@@ -365,10 +418,20 @@ impl FromWorld for GlyphPipelineData {
 
             (pipeline_id, glyph_raster_bind_group_layout)
         };
-
         GlyphPipelineData {
+            glyph_render_pipeline_id,
+            glyph_render_bind_group_layout,
             glyph_raster_pipeline_id,
             glyph_raster_bind_group_layout,
         }
     }
+}
+
+#[derive(Component, Deref, DerefMut)]
+pub struct GlyphRenderUniformBuffer(pub UniformBuffer<GlyphRenderUniforms>);
+#[derive(Clone, ShaderType)]
+pub struct GlyphRenderUniforms {
+    pub position: IVec2,
+    pub size: UVec2,
+    pub target_size: UVec2,
 }
