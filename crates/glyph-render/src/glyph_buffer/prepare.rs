@@ -1,9 +1,11 @@
 // Extract from textures
 
+use std::sync::Arc;
+
 use bevy::{
     ecs::{
         entity::Entity,
-        system::{Commands, Query, Res},
+        system::{Commands, Query, Res, ResMut},
     },
     math::UVec2,
     render::{
@@ -11,13 +13,15 @@ use bevy::{
         renderer::{RenderDevice, RenderQueue},
     },
 };
-use bytemuck::cast_slice;
 use spatial_grid::position::Position;
-use wgpu::{Extent3d, TextureDescriptor, TextureUsages};
+use wgpu::{Extent3d, TextureUsages};
 
-use crate::glyph_render_plugin::{
-    ExtractedGlyphTexture, GlyphRenderUniformBuffer, GlyphRenderUniforms, GlyphSolidColor,
-    GpuGlyphTexture,
+use crate::{
+    glyph_render_plugin::{
+        GlyphRenderUniformBuffer, GlyphRenderUniforms, GlyphSolidColor, GpuGlyphTexture,
+        GpuGlyphTextureSource,
+    },
+    glyph_texture::{ExtractedGlyphTexture, PreparedGlyphTextureCache},
 };
 
 use super::{GlyphBuffer, TargetBufferTexture, TargetGlyphBuffer};
@@ -33,6 +37,7 @@ pub fn prepare_glyph_buffers(
         &ExtractedGlyphTexture,
         Option<&GlyphSolidColor>,
     )>,
+    mut prepare_glyph_texture_cache: ResMut<PreparedGlyphTextureCache>,
 ) {
     for (buffer_entity, buffer) in q_glyph_buffer.iter() {
         let buffer_texture = render_device.create_texture(&wgpu::TextureDescriptor {
@@ -58,41 +63,27 @@ pub fn prepare_glyph_buffers(
                 position: **position,
                 size: UVec2::new(texture.width, texture.height),
                 target_size: buffer.size,
+                padding: Default::default(),
             });
             uniform_buffer.write_buffer(&render_device, &render_queue);
 
             commands.entity(entity).insert((
-                GpuGlyphTexture {
-                    width: texture.width,
-                    height: texture.height,
-                    buffer_texture: render_device.create_texture_with_data(
-                        &render_queue,
-                        &TextureDescriptor {
-                            label: "glyph texture".into(),
-                            size: Extent3d {
-                                width: texture.width,
-                                height: texture.height,
-                                depth_or_array_layers: 1,
-                            },
-                            mip_level_count: 1,
-                            sample_count: 1,
-                            dimension: wgpu::TextureDimension::D2,
-                            format: wgpu::TextureFormat::R16Uint,
-                            usage: TextureUsages::TEXTURE_BINDING,
-                            view_formats: &[],
-                        },
-                        cast_slice(&texture.data),
-                    ),
-                },
+                GpuGlyphTexture(prepare_glyph_texture_cache.get_or_create(
+                    texture,
+                    &render_device,
+                    &render_queue,
+                )),
                 TargetBufferTexture(buffer_texture.create_view(&Default::default())),
                 GlyphRenderUniformBuffer(uniform_buffer),
             ));
         }
 
-        commands.entity(buffer_entity).insert(GpuGlyphTexture {
-            buffer_texture,
-            width: buffer.size.x,
-            height: buffer.size.y,
-        });
+        commands
+            .entity(buffer_entity)
+            .insert(GpuGlyphTexture(Arc::new(GpuGlyphTextureSource {
+                buffer_texture,
+                width: buffer.size.x,
+                height: buffer.size.y,
+            })));
     }
 }

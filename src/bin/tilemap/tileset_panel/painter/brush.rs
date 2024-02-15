@@ -21,7 +21,7 @@ use bevy_ascii_game::{
     tilemap::{asset::TilemapSource, chunk::TilemapChunk, component::Tilemap},
     tileset::asset::TilesetSource,
 };
-use glyph_render::glyph_render_plugin::{GlyphSolidColor, GlyphSprite, GlyphTextureSource};
+use glyph_render::glyph_render_plugin::{GlyphSolidColor, GlyphSprite, GlyphTexture};
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::{Position, SpatialBundle},
@@ -55,7 +55,7 @@ pub fn set_brush(
     mut commands: Commands,
 
     tilesets: Res<Assets<TilesetSource>>,
-    mut glyph_textures: ResMut<Assets<GlyphTextureSource>>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
     let Ok(entity) = q_brush.get_single() else {
         return;
@@ -66,7 +66,9 @@ pub fn set_brush(
         commands.entity(entity).insert((
             GlyphSprite {
                 offset: IVec2::ZERO,
-                texture: glyph_textures.add(GlyphTextureSource { data: tile.clone() }),
+                texture: glyph_textures.add(GlyphTexture {
+                    source: tile.clone(),
+                }),
             },
             BrushTileSize(tileset.tile_size),
             tile_id.clone(),

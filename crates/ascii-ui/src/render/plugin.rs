@@ -8,7 +8,7 @@ use bevy::{
     },
     math::IVec2,
 };
-use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTextureSource};
+use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTexture};
 use spatial_grid::position::Position;
 
 use crate::layout::{build_layout::propagate_data_positions, render_clip::ClipRegion};
@@ -40,7 +40,7 @@ impl Plugin for RenderPlugin {
 fn apply_clipping(
     mut commands: Commands,
     q_clipped: Query<(Entity, &ClipRegion, &Position, &GlyphSprite)>,
-    mut textures: ResMut<Assets<GlyphTextureSource>>,
+    mut textures: ResMut<Assets<GlyphTexture>>,
 ) {
     for (entity, clip, pos, sprite) in q_clipped.iter() {
         let clip = clip.to_world_coord();
@@ -61,15 +61,16 @@ fn apply_clipping(
             {
                 let mut data = Vec::new();
 
-                let t = texture.data.len() as usize;
+                let t = texture.source.data.len() as usize;
                 for src_y in (t - clipping_end.y as usize)..(t - clipping_start.y as usize) {
                     let src_start_x = clipping_start.x as usize;
                     let src_end_x = clipping_end.x as usize;
-                    data.push(texture.data[src_y][src_start_x..src_end_x].to_string());
+                    data.push(texture.source.data[src_y][src_start_x..src_end_x].to_string());
                 }
+                // TODO: Cache / speed up
                 commands.entity(entity).insert(GlyphSprite {
                     offset: sprite.offset + clipping_start,
-                    texture: textures.add(GlyphTextureSource { data }),
+                    texture: textures.add(GlyphTexture::new(data)),
                 });
             }
         }

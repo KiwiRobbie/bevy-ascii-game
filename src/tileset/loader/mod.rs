@@ -1,10 +1,13 @@
 pub mod meta;
 
+use std::sync::Arc;
+
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
     math::UVec2,
     utils::hashbrown::{HashMap, HashSet},
 };
+use glyph_render::glyph_render_plugin::GlyphTextureSource;
 
 use self::meta::TilesetMeta;
 
@@ -89,7 +92,7 @@ impl AssetLoader for TilesetLoader {
                                 let label = format!("{}-{}-{}", name, tile_x, tile_y);
                                 tile_ids.insert(label.clone(), tiles.len());
                                 tile_labels.push(label);
-                                tiles.push(tile);
+                                tiles.push(Arc::new(GlyphTextureSource { data: tile }));
 
                                 tile_x += 1;
                             }

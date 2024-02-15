@@ -17,12 +17,12 @@ use swash::FontRef;
 
 use crate::{
     atlas::FontAtlasSource,
-    font::FontSize,
     glyph_buffer::{
         extract::extract_glyph_buffers, prepare::prepare_glyph_buffers,
         update_glyph_buffer_entities,
     },
     glyph_render_plugin::render_resources::{GlyphBufferData, GlyphUniformBuffer},
+    glyph_texture::RenderGlyphTextureCachePlugin,
 };
 
 use self::raster_descriptors::{raster_bind_group_layout, render_bind_group_layout};
@@ -36,10 +36,11 @@ const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
 
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<GlyphTextureSource>()
+        app.init_asset::<GlyphTexture>()
             .add_systems(Last, update_glyph_buffer_entities);
         app.get_sub_app_mut(RenderApp)
             .unwrap()
+            .add_plugins(RenderGlyphTextureCachePlugin)
             .add_systems(ExtractSchedule, (extract_glyph_buffers,))
             .add_systems(
                 Render,
@@ -75,38 +76,41 @@ pub struct GlyphUniforms {
     pub line_spacing: u32,
 }
 
-#[derive(Asset, TypePath, Clone)]
+#[derive(Debug, Clone)]
 pub struct GlyphTextureSource {
     pub data: Vec<String>,
 }
 
-impl GlyphTextureSource {
+#[derive(Asset, TypePath, Clone)]
+pub struct GlyphTexture {
+    pub source: Arc<GlyphTextureSource>,
+}
+
+impl GlyphTexture {
+    pub fn new(data: Vec<String>) -> Self {
+        Self {
+            source: Arc::new(GlyphTextureSource { data }),
+        }
+    }
+
     pub fn size(&self) -> UVec2 {
         UVec2 {
-            x: self.data[0].len() as u32,
-            y: self.data.len() as u32,
+            x: self.source.as_ref().data[0].len() as u32,
+            y: self.source.as_ref().data.len() as u32,
         }
     }
 }
 
-#[derive(Component, Clone)]
-pub struct ExtractedGlyphTexture {
+#[derive(Clone)]
+pub struct ExtractedGlyphTextureSource {
     pub data: Box<[u16]>,
 
     pub width: u32,
     pub height: u32,
-
-    pub advance: u32,
-    pub line_spacing: u32,
 }
 
-impl ExtractedGlyphTexture {
-    pub fn from_text_data(
-        text: &Vec<String>,
-        atlas: &FontAtlasSource,
-        font: FontRef,
-        font_size: &FontSize,
-    ) -> Self {
+impl ExtractedGlyphTextureSource {
+    pub fn from_text_data(text: &Vec<String>, atlas: &FontAtlasSource, font: FontRef) -> Self {
         let height = text.len();
         let width = text[0].len();
 
@@ -126,15 +130,13 @@ impl ExtractedGlyphTexture {
             data,
             width: width as u32,
             height: height as u32,
-            advance: font_size.advance(),
-            line_spacing: font_size.line_spacing(),
         }
     }
 }
 
 #[derive(Component, Clone)]
 pub struct GlyphSprite {
-    pub texture: Handle<GlyphTextureSource>,
+    pub texture: Handle<GlyphTexture>,
     pub offset: IVec2,
 }
 
@@ -143,8 +145,10 @@ pub struct GlyphSolidColor {
     pub color: Color,
 }
 
-#[derive(Component)]
-pub struct GpuGlyphTexture {
+#[derive(Component, DerefMut, Deref)]
+pub struct GpuGlyphTexture(pub Arc<GpuGlyphTextureSource>);
+
+pub struct GpuGlyphTextureSource {
     pub buffer_texture: Texture,
     pub width: u32,
     pub height: u32,
@@ -434,4 +438,5 @@ pub struct GlyphRenderUniforms {
     pub position: IVec2,
     pub size: UVec2,
     pub target_size: UVec2,
+    pub padding: Vec2,
 }

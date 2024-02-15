@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bevy::{
     asset::{io::Reader, AssetLoader, AsyncReadExt},
     math::{IVec2, UVec2},
@@ -5,6 +7,8 @@ use bevy::{
 };
 
 use text_util::text_mirror::mirror_lines;
+
+use crate::glyph_render_plugin::GlyphTextureSource;
 
 use super::{GlyphAnimationFrame, GlyphAnimationSource};
 pub mod meta;
@@ -109,23 +113,20 @@ impl AssetLoader for GlyphAnimationAssetLoader {
             ) {
                 let mirrored = match &meta.1 {
                     MirroredFrame::Auto(mirror_offset_x, mirror_offset_y) => {
-                        Some(GlyphAnimationFrame {
-                            data: mirror_lines(&data),
-                            offset: Into::<IVec2>::into(meta.0.offset)
+                        Some(GlyphAnimationFrame::new(
+                            mirror_lines(&data),
+                            Into::<IVec2>::into(meta.0.offset)
                                 + Into::<IVec2>::into((*mirror_offset_x, *mirror_offset_y)),
-                        })
+                        ))
                     }
-                    MirroredFrame::Override(meta) => Some(GlyphAnimationFrame {
-                        data: mirrored_iter.next().expect("Missing mirrored frame!"),
-                        offset: meta.offset.into(),
-                    }),
+                    MirroredFrame::Override(meta) => Some(GlyphAnimationFrame::new(
+                        mirrored_iter.next().expect("Missing mirrored frame!"),
+                        meta.offset.into(),
+                    )),
                     MirroredFrame::None => None,
                 };
                 frames.push((
-                    GlyphAnimationFrame {
-                        data,
-                        offset: meta.0.offset.into(),
-                    },
+                    GlyphAnimationFrame::new(data, meta.0.offset.into()),
                     mirrored,
                 ))
             }
