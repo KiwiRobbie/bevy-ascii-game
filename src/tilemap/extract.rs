@@ -13,7 +13,7 @@ use glyph_render::{
     glyph_render_plugin::GlyphSolidColor,
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
-use spatial_grid::position::Position;
+use spatial_grid::{depth::Depth, position::Position};
 
 use crate::tileset::asset::TilesetSource;
 
@@ -31,6 +31,7 @@ pub fn extract_tilemaps(
     q_tilemaps: Extract<
         Query<(
             &Position,
+            Option<&Depth>,
             &TargetGlyphBuffer,
             &Tilemap,
             Option<&GlyphSolidColor>,
@@ -54,7 +55,7 @@ pub fn extract_tilemaps(
         let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
-        for (tilemap_position, target, tilemap, solid_color) in buffer
+        for (tilemap_position, tilemap_depth, target, tilemap, solid_color) in buffer
             .textures
             .iter()
             .flat_map(|entity| q_tilemaps.get(*entity))
@@ -119,6 +120,7 @@ pub fn extract_tilemaps(
                             Position::from(
                                 tilemap_offset + chunk_position + tile_offset.as_ivec2(),
                             ),
+                            tilemap_depth.cloned().unwrap_or_default(),
                             target.clone(),
                             ExtractedGlyphTexture(extracted_glyph_texture),
                         ));

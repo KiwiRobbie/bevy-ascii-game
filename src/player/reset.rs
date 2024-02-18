@@ -22,6 +22,7 @@ use grid_physics::{
     velocity::Velocity,
 };
 use spatial_grid::{
+    depth::Depth,
     position::{Position, SpatialBundle},
     remainder::Remainder,
 };
@@ -95,5 +96,6 @@ pub fn create_player<'w, 's, 'a>(
         FreeMarker,
         Gravity::default(),
         Velocity::default(),
+        Depth(0.0),
     ))
 }

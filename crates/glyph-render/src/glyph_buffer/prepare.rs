@@ -13,7 +13,7 @@ use bevy::{
         renderer::{RenderDevice, RenderQueue},
     },
 };
-use spatial_grid::position::Position;
+use spatial_grid::{depth::Depth, position::Position};
 use wgpu::{Extent3d, TextureUsages};
 
 use crate::{
@@ -34,6 +34,7 @@ pub fn prepare_glyph_buffers(
         Entity,
         &TargetGlyphBuffer,
         &Position,
+        &Depth,
         &ExtractedGlyphTexture,
         Option<&GlyphSolidColor>,
     )>,
@@ -55,14 +56,15 @@ pub fn prepare_glyph_buffers(
             view_formats: &[],
         });
 
-        for (entity, _, position, texture, _solid_color) in q_textures
+        for (entity, _, position, depth, texture, _solid_color) in q_textures
             .iter()
-            .filter(|(_, target, _, _, _)| target.0 == buffer_entity)
+            .filter(|(_, target, _, _, _, _)| target.0 == buffer_entity)
         {
             let mut uniform_buffer = UniformBuffer::from(GlyphRenderUniforms {
                 position: **position,
                 size: UVec2::new(texture.width, texture.height),
                 target_size: buffer.size,
+                depth: **depth,
                 padding: Default::default(),
             });
             uniform_buffer.set_label(Some("Glyph render uniforms"));

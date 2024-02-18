@@ -117,19 +117,19 @@ impl ExtractedGlyphTextureSource {
         color: Color,
     ) -> Self {
         let height = text.len();
-        let width = text[0].len();
+        let width = text[0].chars().count();
 
         let mut data: Box<[u8]> = vec![0; 4 * 4 * width * height].into();
         let charmap = font.charmap();
 
         for (y, chars) in text.iter().enumerate() {
-            assert_eq!(text[y].len(), width);
+            assert_eq!(chars.chars().count(), width);
             for (x, c) in chars.chars().enumerate() {
                 let index = 16 * (x + (height - y - 1) * width);
                 let glyph_id = atlas
                     .local_index
                     .get(&charmap.map(c))
-                    .unwrap_or(&u16::MAX)
+                    .unwrap_or(&if c == '·' { u16::MAX - 1 } else { u16::MAX })
                     .to_le_bytes();
 
                 data[index + 4..index + 16]
@@ -417,5 +417,6 @@ pub struct GlyphRenderUniforms {
     pub position: IVec2,
     pub size: UVec2,
     pub target_size: UVec2,
-    pub padding: Vec2,
+    pub depth: f32,
+    pub padding: f32,
 }

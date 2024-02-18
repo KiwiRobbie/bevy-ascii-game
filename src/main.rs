@@ -42,9 +42,7 @@ use glyph_render::{
     font::font_load_system,
     glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
-    glyph_render_plugin::{
-        GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored, GlyphTexture,
-    },
+    glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
@@ -55,7 +53,7 @@ use grid_physics::{
     solid::SolidPhysicsBundle,
     velocity::Velocity,
 };
-use spatial_grid::position::SpatialBundle;
+use spatial_grid::{depth::Depth, position::SpatialBundle};
 
 fn main() {
     let mut app = App::new();
@@ -152,6 +150,7 @@ fn setup_system(
             ..Default::default()
         },
         GamePhysicsGridMarker,
+        Depth(-1.0),
     ));
 
     create_player(&mut commands, &server).insert((
@@ -185,32 +184,7 @@ fn setup_system(
         Gravity::default(),
         Velocity::default(),
         GamePhysicsGridMarker,
-    ));
-    commands.spawn((
-        GlyphAnimation {
-            source: server.load("anim/horse/states/gallop.anim.ron"),
-            frame: 0,
-        },
-        GlyphAnimationPlayer {
-            framerate: 10.0,
-            repeat: true,
-            frame_timer: 0.0,
-        },
-        ActorPhysicsBundle {
-            collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::new(0, 0),
-                    size: UVec2 { x: 30, y: 10 },
-                }),
-            },
-            position: IVec2::new(-30, 0).into(),
-            ..Default::default()
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-        GlyphSpriteMirrored,
-        GamePhysicsGridMarker,
+        Depth(0.5),
     ));
 
     // Keyboard display
@@ -226,6 +200,7 @@ fn setup_system(
         },
         KeyboardInputMarker,
         GamePhysicsGridMarker,
+        Depth(2.0),
     ));
 
     // Floor
@@ -242,6 +217,7 @@ fn setup_system(
         },
         GamePhysicsGridMarker,
     ));
+
     commands.spawn((
         Camera2dBundle {
             camera: Camera {

@@ -20,9 +20,8 @@ impl TilesetLoader {
         bytes
             .split(|&b| b == b'\n')
             .map(|line| {
-                String::from_utf8(line.strip_suffix(b"\r").unwrap_or(line).to_vec())
-                    .unwrap()
-                    .replace('·', " ")
+                String::from_utf8(line.strip_suffix(b"\r").unwrap_or(line).to_vec()).unwrap()
+                // .replace('·', " ")
             })
             .collect::<Vec<_>>()
     }
@@ -86,7 +85,13 @@ impl AssetLoader for TilesetLoader {
                                         break 'add_x;
                                     }
 
-                                    tile.push(source_data[y][x_start..x_end].to_string());
+                                    tile.push(
+                                        source_data[y]
+                                            .chars()
+                                            .skip(x_start)
+                                            .take(x_end - x_start)
+                                            .collect::<String>(),
+                                    );
                                 }
 
                                 let label = format!("{}-{}-{}", name, tile_x, tile_y);
