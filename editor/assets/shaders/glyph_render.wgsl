@@ -4,7 +4,8 @@ struct UniformBuffer {
     position: vec2<i32>,
     size: vec2<u32>,
     target_size: vec2<u32>,
-    padding: vec2<f32>,
+    depth: f32,
+    padding: f32
 
 }
 
@@ -47,7 +48,7 @@ fn vertex(input: InstanceInput) -> VertexOutput {
     let pos = start * (vec2<f32>(1.0) - corner) + end * corner;
 
     var out: VertexOutput;
-    out.position = vec4<f32>(2.0 * pos.x - 1.0, 1.0 - 2.0 * pos.y, 0.0, 1.0);
+    out.position = vec4<f32>(2.0 * pos.x - 1.0, 1.0 - 2.0 * pos.y, 0.5 + uniform_buffer.depth / 2048.0, 1.0);
     out.uv = corner;
     return out;
 }
