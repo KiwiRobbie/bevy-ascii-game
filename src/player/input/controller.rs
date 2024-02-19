@@ -8,7 +8,7 @@ use bevy::{
     },
     input::{
         gamepad::{Gamepad, GamepadAxis, GamepadAxisType, GamepadButton, GamepadButtonType},
-        Axis, Input,
+        Axis, ButtonInput,
     },
 };
 
@@ -51,7 +51,7 @@ fn player_controller_input_movement(
 
 fn player_controller_input_buttons(
     mut commands: Commands,
-    buttons: Res<Input<GamepadButton>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
     q_players: Query<
         (Entity, &PlayerInputController),
         (With<PlayerMarker>, With<PlayerInputMarker>),

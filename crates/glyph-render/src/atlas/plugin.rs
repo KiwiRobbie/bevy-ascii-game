@@ -4,7 +4,7 @@ use bevy::{
     app::{Plugin, PostUpdate},
     asset::{AssetApp, Assets},
     ecs::{
-        query::{Added, Changed, Or},
+        query::{Added, Changed, Or, With},
         system::{Query, Res, ResMut},
     },
 };
@@ -31,7 +31,7 @@ fn update_atlases_system(
     fonts: Res<Assets<CustomFontSource>>,
     q_users: Query<
         (&FontSize, Option<&CustomFont>, &CharacterSet),
-        (&FontAtlasUser, FontUpdatedFilter),
+        (With<FontAtlasUser>, FontUpdatedFilter),
     >,
     default_font: Res<DefaultFont>,
 ) {

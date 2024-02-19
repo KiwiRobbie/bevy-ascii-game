@@ -2,12 +2,11 @@ use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::{
     bundle::Bundle,
     component::Component,
-    entity::Entity,
+    entity::{Entity, EntityHashMap, EntityHashSet},
     query::{With, Without},
     system::{Commands, Query, ResMut, Resource},
 };
 use bevy_math::Vec2;
-use bevy_utils::{EntityHashMap, EntityHashSet};
 
 use spatial_grid::{
     direction::Direction,
@@ -25,7 +24,7 @@ use super::{
 pub struct Solid;
 
 #[derive(Component, Deref, DerefMut, Default)]
-pub struct RidingEntities(pub EntityHashSet<Entity>);
+pub struct RidingEntities(pub EntityHashSet);
 
 pub type FilterSolids = (With<Solid>, Without<Actor>);
 
@@ -131,7 +130,7 @@ pub struct SolidPhysicsBundle {
 
 #[derive(Resource, Debug, Default)]
 pub struct SolidCollisionCache {
-    pub collisions: EntityHashMap<Entity, Vec<Aabb>>,
+    pub collisions: EntityHashMap<Vec<Aabb>>,
 }
 
 pub fn update_collision_cache(

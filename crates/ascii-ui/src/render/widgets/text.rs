@@ -7,7 +7,7 @@ use bevy::{
     math::IVec2,
 };
 use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTexture};
-use spatial_grid::position::Position;
+use spatial_grid::{depth::Depth, position::Position};
 
 use crate::{layout::positioned::Positioned, widgets::text::Text};
 
@@ -23,6 +23,7 @@ pub fn text_render(
                 texture: glyph_textures.add(GlyphTexture::new(vec![text.text.clone()])),
                 offset: IVec2::ZERO,
             },
+            Depth(0.0),
         ));
     }
 }

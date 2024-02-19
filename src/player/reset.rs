@@ -22,6 +22,7 @@ use grid_physics::{
     velocity::Velocity,
 };
 use spatial_grid::{
+    depth::Depth,
     position::{Position, SpatialBundle},
     remainder::Remainder,
 };
@@ -68,7 +69,7 @@ pub fn create_player_with_gamepad(
 pub fn create_player<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
     server: &Res<AssetServer>,
-) -> bevy::ecs::system::EntityCommands<'w, 's, 'a> {
+) -> bevy::ecs::system::EntityCommands<'a> {
     commands.spawn((
         GlyphAnimationGraphBundle::from_source(server.load("anim/player/player.agraph.ron")),
         PlayerBundle {
@@ -95,5 +96,6 @@ pub fn create_player<'w, 's, 'a>(
         FreeMarker,
         Gravity::default(),
         Velocity::default(),
+        Depth(0.0),
     ))
 }

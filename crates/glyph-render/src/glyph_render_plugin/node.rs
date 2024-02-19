@@ -1,7 +1,7 @@
 use bevy::{
     ecs::{
         entity::Entity,
-        query::QueryState,
+        query::{QueryData, QueryFilter, QueryState, With},
         world::{FromWorld, World},
     },
     render::{
@@ -20,25 +20,43 @@ use super::{
     GlyphTextureInfo, GpuGlyphTexture,
 };
 
-type BufferQuery = (
-    Entity,
-    &'static GlyphModelUniformBuffer,
-    &'static GlyphUniformBuffer,
-    &'static GlyphTextureInfo,
-    &'static GlyphBufferData,
-    &'static AtlasGpuData,
-);
-type TextureQuery = (
-    &'static GlyphRenderUniformBuffer,
-    &'static GpuGlyphTexture,
-    &'static TargetGlyphBuffer,
-);
+#[derive(QueryData)]
 
-// type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
+struct BufferQueryData {
+    buffer_entity: Entity,
+    glyph_model_uniforms: &'static GlyphModelUniformBuffer,
+    glyph_uniform_buffer: &'static GlyphUniformBuffer,
+    glyph_texture_info: &'static GlyphTextureInfo,
+    buffer_data: &'static GlyphBufferData,
+    atlas_data: &'static AtlasGpuData,
+}
+
+#[derive(QueryFilter)]
+struct BufferQueryFilter {
+    _glyph_model_uniforms: With<GlyphModelUniformBuffer>,
+    _glyph_uniform_buffer: With<GlyphUniformBuffer>,
+    _glyph_texture_info: With<GlyphTextureInfo>,
+    _buffer_data: With<GlyphBufferData>,
+    _atlas_data: With<AtlasGpuData>,
+}
+
+#[derive(QueryData)]
+struct TextureQueryData {
+    render_uniforms: &'static GlyphRenderUniformBuffer,
+    glyph_texture: &'static GpuGlyphTexture,
+    target: &'static TargetGlyphBuffer,
+}
+
+#[derive(QueryFilter)]
+struct TextureQueryFilter {
+    _render_uniforms: With<GlyphRenderUniformBuffer>,
+    _glyph_texture: With<GpuGlyphTexture>,
+    _target: With<TargetGlyphBuffer>,
+}
 
 pub struct GlyphGenerationNode {
-    q_buffers: QueryState<BufferQuery>,
-    q_textures: QueryState<TextureQuery>,
+    q_buffers: QueryState<BufferQueryData>,
+    q_textures: QueryState<TextureQueryData>,
     q_view: QueryState<&'static ViewTarget>,
     buffer_entities: Vec<Entity>,
     texture_entities: Vec<Entity>,
@@ -51,11 +69,11 @@ impl GlyphGenerationNode {
             q_buffers: world.query(),
             q_textures: world.query(),
             buffer_entities: world
-                .query_filtered::<Entity, BufferQuery>()
+                .query_filtered::<Entity, BufferQueryFilter>()
                 .iter(world)
                 .collect(),
             texture_entities: world
-                .query_filtered::<Entity, TextureQuery>()
+                .query_filtered::<Entity, TextureQueryFilter>()
                 .iter(world)
                 .collect(),
         }
@@ -79,13 +97,13 @@ impl render_graph::Node for GlyphGenerationNode {
         self.q_view = world.query();
         self.q_buffers = world.query();
         self.buffer_entities = world
-            .query_filtered::<Entity, BufferQuery>()
+            .query_filtered::<Entity, BufferQueryFilter>()
             .iter(world)
             .collect();
 
         self.q_textures = world.query();
         self.texture_entities = world
-            .query_filtered::<Entity, TextureQuery>()
+            .query_filtered::<Entity, TextureQueryFilter>()
             .iter(world)
             .collect();
     }
@@ -121,25 +139,27 @@ impl render_graph::Node for GlyphGenerationNode {
 
         let glyph_raster_render_pass_descriptor = RenderPassDescriptor {
             label: Some("glyph raster pass"),
+            occlusion_query_set: None,
+            timestamp_writes: None,
             color_attachments: &[Some(RenderPassColorAttachment {
                 view: target.main_texture_view(),
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Load,
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
         };
 
-        for (
+        for BufferQueryDataItem {
             buffer_entity,
             glyph_model_uniforms,
             glyph_uniform_buffer,
             glyph_texture_info,
             buffer_data,
             atlas_data,
-        ) in self
+        } in self
             .buffer_entities
             .iter()
             .map(|e| self.q_buffers.get_manual(world, *e).unwrap())
@@ -148,12 +168,14 @@ impl render_graph::Node for GlyphGenerationNode {
                 let view = buffer_data.buffer.create_view(&Default::default());
                 let glyph_render_render_pass_descriptor = RenderPassDescriptor {
                     label: Some("glyph render pass"),
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
                     color_attachments: &[Some(RenderPassColorAttachment {
                         view: &view,
                         resolve_target: None,
                         ops: wgpu::Operations {
                             load: wgpu::LoadOp::Load,
-                            store: true,
+                            store: wgpu::StoreOp::Store,
                         },
                     })],
                     depth_stencil_attachment: None,
@@ -161,19 +183,23 @@ impl render_graph::Node for GlyphGenerationNode {
 
                 let mut bind_groups = vec![];
                 // Render textures to buffers
-                for (uniforms, texture, _) in self
+                for TextureQueryDataItem {
+                    render_uniforms,
+                    glyph_texture,
+                    target: _,
+                } in self
                     .texture_entities
                     .iter()
                     .flat_map(|e| self.q_textures.get_manual(world, *e))
-                    .filter(|(_, _, target_entity)| ***target_entity == buffer_entity)
+                    .filter(|item| **item.target == buffer_entity)
                 {
                     let render_device = render_context.render_device();
                     let bind_group = render_device.create_bind_group(
                         Some("render bind group".into()),
                         &glyph_pipeline_data.glyph_render_bind_group_layout,
                         &BindGroupEntries::sequential((
-                            uniforms.binding().unwrap(),
-                            &texture
+                            render_uniforms.binding().unwrap(),
+                            &glyph_texture
                                 .buffer_texture
                                 .create_view(&wgpu::TextureViewDescriptor::default()),
                         )),

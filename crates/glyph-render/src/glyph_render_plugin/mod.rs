@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     render::{
         extract_component::ExtractComponent,
-        render_graph::RenderGraphApp,
+        render_graph::{RenderGraphApp, RenderLabel},
         render_resource::*,
         renderer::{RenderDevice, RenderQueue},
         Render, RenderApp, RenderSet,
@@ -31,8 +31,12 @@ mod node;
 mod raster_descriptors;
 mod render_resources;
 
+#[derive(RenderLabel, Hash, Debug, PartialEq, Eq, Clone)]
+pub struct GlyphGeneration;
+
 pub struct GlyphRenderPlugin;
-const MAIN_GRAPH_2D: &str = bevy::core_pipeline::core_2d::graph::NAME;
+const MAIN_GRAPH_2D: bevy::core_pipeline::core_2d::graph::Core2d =
+    bevy::core_pipeline::core_2d::graph::Core2d;
 
 impl Plugin for GlyphRenderPlugin {
     fn build(&self, app: &mut App) {
@@ -51,14 +55,14 @@ impl Plugin for GlyphRenderPlugin {
                 Render,
                 (prepare_atlas_buffers, prepare_buffers).in_set(RenderSet::Prepare),
             )
-            .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, "glyph_generation")
+            .add_render_graph_node::<GlyphGenerationNode>(MAIN_GRAPH_2D, GlyphGeneration)
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
-                &[
-                    bevy::core_pipeline::core_2d::graph::node::MAIN_PASS,
-                    "glyph_generation",
-                    bevy::core_pipeline::core_2d::graph::node::BLOOM,
-                ],
+                (
+                    bevy::core_pipeline::core_2d::graph::Node2d::MainPass,
+                    GlyphGeneration,
+                    bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
+                ),
             );
     }
     fn finish(&self, app: &mut App) {
@@ -117,19 +121,19 @@ impl ExtractedGlyphTextureSource {
         color: Color,
     ) -> Self {
         let height = text.len();
-        let width = text[0].len();
+        let width = text[0].chars().count();
 
         let mut data: Box<[u8]> = vec![0; 4 * 4 * width * height].into();
         let charmap = font.charmap();
 
         for (y, chars) in text.iter().enumerate() {
-            assert_eq!(text[y].len(), width);
+            assert_eq!(chars.chars().count(), width);
             for (x, c) in chars.chars().enumerate() {
                 let index = 16 * (x + (height - y - 1) * width);
                 let glyph_id = atlas
                     .local_index
                     .get(&charmap.map(c))
-                    .unwrap_or(&u16::MAX)
+                    .unwrap_or(&if c == '·' { u16::MAX - 1 } else { u16::MAX })
                     .to_le_bytes();
 
                 data[index + 4..index + 16]
@@ -248,8 +252,8 @@ fn prepare_buffers(
     for (entity, color, global_transform, gpu_glyph_texture, grid) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: color
-                .map(|color| color.color.into())
-                .unwrap_or(Color::WHITE.into()),
+                .map(|color| color.color.rgba_to_vec4())
+                .unwrap_or(Color::WHITE.rgba_to_vec4()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
             advance: grid.size.x,
@@ -302,11 +306,10 @@ impl FromWorld for GlyphPipelineData {
         let (glyph_render_pipeline_id, glyph_render_bind_group_layout) = {
             let render_device: Mut<RenderDevice> = render_world.get_resource_mut().unwrap();
 
-            let glyph_render_bind_group_layout =
-                render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-                    label: Some("glyph render bind group layout"),
-                    entries: &render_bind_group_layout(),
-                });
+            let glyph_render_bind_group_layout = render_device.create_bind_group_layout(
+                Some("glyph render bind group layout"),
+                &render_bind_group_layout(),
+            );
             let glyph_render_shader = render_world
                 .get_resource::<AssetServer>()
                 .unwrap()
@@ -353,11 +356,10 @@ impl FromWorld for GlyphPipelineData {
         let (glyph_raster_pipeline_id, glyph_raster_bind_group_layout) = {
             let render_device: Mut<RenderDevice> = render_world.get_resource_mut().unwrap();
 
-            let glyph_raster_bind_group_layout =
-                render_device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-                    label: Some("glyph raster bind group layout"),
-                    entries: &raster_bind_group_layout(),
-                });
+            let glyph_raster_bind_group_layout = render_device.create_bind_group_layout(
+                Some("glyph raster bind group layout"),
+                &raster_bind_group_layout(),
+            );
             let glyph_raster_shader = render_world
                 .get_resource::<AssetServer>()
                 .unwrap()
@@ -417,5 +419,6 @@ pub struct GlyphRenderUniforms {
     pub position: IVec2,
     pub size: UVec2,
     pub target_size: UVec2,
-    pub padding: Vec2,
+    pub depth: f32,
+    pub padding: f32,
 }

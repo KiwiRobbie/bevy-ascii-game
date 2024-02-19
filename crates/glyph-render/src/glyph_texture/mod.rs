@@ -17,7 +17,7 @@ use bevy::{
 };
 use bytemuck::cast_slice;
 use swash::FontRef;
-use wgpu::{Extent3d, TextureDescriptor, TextureFormat, TextureUsages};
+use wgpu::{util::TextureDataOrder, Extent3d, TextureDescriptor, TextureFormat, TextureUsages};
 
 use crate::{
     atlas::FontAtlasSource,
@@ -207,6 +207,7 @@ impl PreparedGlyphTextureCache {
                             usage: TextureUsages::TEXTURE_BINDING,
                             view_formats: &[],
                         },
+                        TextureDataOrder::default(),
                         cast_slice(&texture.data),
                     ),
                 })
@@ -281,6 +282,7 @@ impl PreparedAtlasCache {
                 usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
                 view_formats: &[TextureFormat::Rg32Uint],
             },
+            TextureDataOrder::default(),
             &data,
         );
 
@@ -300,6 +302,7 @@ impl PreparedAtlasCache {
                 usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
                 view_formats: &[TextureFormat::Rgba8Unorm],
             },
+            TextureDataOrder::default(),
             &atlas.data,
         );
 

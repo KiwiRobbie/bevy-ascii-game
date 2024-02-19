@@ -12,7 +12,7 @@ use bevy::{
     render::{color::Color, Extract},
     transform::components::GlobalTransform,
 };
-use spatial_grid::{grid::SpatialGrid, position::Position};
+use spatial_grid::{depth::Depth, grid::SpatialGrid, position::Position};
 
 use crate::{
     atlas::FontAtlasCache,
@@ -50,6 +50,7 @@ pub fn extract_glyph_buffers(
             Option<&GlyphAnimation>,
             Option<&GlyphSpriteMirrored>,
             Option<&GlyphSolidColor>,
+            Option<&Depth>,
         )>,
     >,
 
@@ -68,7 +69,7 @@ pub fn extract_glyph_buffers(
             .unwrap();
 
         for entity in buffer.textures.iter() {
-            if let Ok((entity, position, target, sprite, animation, mirrored, solid_color)) =
+            if let Ok((entity, position, target, sprite, animation, mirrored, solid_color, depth)) =
                 q_textures.get(*entity)
             {
                 if let Some(glyph_animation) = animation {
@@ -93,6 +94,7 @@ pub fn extract_glyph_buffers(
                             Position::from(**position + offset),
                             target.clone(),
                             ExtractedGlyphTexture(extracted_glyph_texture),
+                            depth.cloned().unwrap_or_default(),
                         ),
                     )]);
                 } else if let Some(glyph_sprite) = sprite {
@@ -113,6 +115,7 @@ pub fn extract_glyph_buffers(
                             Position::from(**position + glyph_sprite.offset),
                             target.clone(),
                             ExtractedGlyphTexture(extracted_glyph_texture),
+                            depth.cloned().unwrap_or_default(),
                         ),
                     )]);
                 }

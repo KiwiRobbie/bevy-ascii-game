@@ -43,7 +43,6 @@ fn main() {
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    fit_canvas_to_parent: true,
                     resolution: WindowResolution::default().with_scale_factor_override(1.0),
                     ..Default::default()
                 }),
@@ -65,12 +64,12 @@ fn main() {
     .add_systems(Startup, setup_system)
     .add_systems(Update, (font_load_system,));
 
-    #[cfg(debug_assertions)]
-    std::fs::write(
-        "render-graph.dot",
-        bevy_mod_debugdump::render_graph_dot(&app, &Default::default()),
-    )
-    .unwrap();
+    // #[cfg(debug_assertions)]
+    // std::fs::write(
+    //     "render-graph.dot",
+    //     bevy_mod_debugdump::render_graph_dot(&app, &Default::default()),
+    // )
+    // .unwrap();
 
     app.run();
 }
@@ -89,15 +88,14 @@ fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
+                clear_color: bevy::render::camera::ClearColorConfig::Custom(Color::BLACK),
                 hdr: true,
                 ..Default::default()
             },
-            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
-            camera_2d: Camera2d {
-                clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::Custom(
-                    Color::BLACK,
-                ),
-            },
+            camera_render_graph: CameraRenderGraph::new(
+                bevy::core_pipeline::core_2d::graph::Core2d,
+            ),
+            camera_2d: Camera2d {},
             ..Default::default()
         },
         BloomSettings {

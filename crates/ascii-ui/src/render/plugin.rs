@@ -65,7 +65,13 @@ fn apply_clipping(
                 for src_y in (t - clipping_end.y as usize)..(t - clipping_start.y as usize) {
                     let src_start_x = clipping_start.x as usize;
                     let src_end_x = clipping_end.x as usize;
-                    data.push(texture.source.data[src_y][src_start_x..src_end_x].to_string());
+                    data.push(
+                        texture.source.data[src_y]
+                            .chars()
+                            .skip(src_start_x)
+                            .take(src_end_x - src_start_x)
+                            .collect::<String>(),
+                    );
                 }
                 // TODO: Cache / speed up
                 commands.entity(entity).insert(GlyphSprite {

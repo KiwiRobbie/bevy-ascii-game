@@ -9,16 +9,16 @@ use bevy::{
     input::{
         gamepad::{GamepadButton, GamepadButtonType, Gamepads},
         keyboard::KeyCode,
-        Input,
+        ButtonInput,
     },
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
 use spatial_grid::grid::SpatialGrid;
 
 pub fn toggle_menu(
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<DebugMenuState>,
-    gamepad_button: Res<Input<GamepadButton>>,
+    gamepad_button: Res<ButtonInput<GamepadButton>>,
     gamepads: Res<Gamepads>,
     mut q_root: Query<&mut Root>,
 ) {
