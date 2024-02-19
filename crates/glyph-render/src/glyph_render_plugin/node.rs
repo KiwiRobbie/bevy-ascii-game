@@ -54,8 +54,6 @@ struct TextureQueryFilter {
     _target: With<TargetGlyphBuffer>,
 }
 
-// type RenderResourceFilter = (Or<(With<GlyphSprite>, With<GlyphAnimation>)>,);
-
 pub struct GlyphGenerationNode {
     q_buffers: QueryState<BufferQueryData>,
     q_textures: QueryState<TextureQueryData>,
