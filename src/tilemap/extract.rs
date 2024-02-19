@@ -68,15 +68,17 @@ pub fn extract_tilemaps(
 
             let chunk_start = (buffer_start - tilemap_offset)
                 .as_vec2()
-                .div(tilemap.chunk_size.as_vec2())
+                .div(tilemap.chunk_size.as_vec2() * tilemap.tile_size.as_vec2())
                 .floor()
                 .as_ivec2();
 
             let chunk_end = (buffer_end - tilemap_offset)
                 .as_vec2()
-                .div(tilemap.chunk_size.as_vec2())
+                .div(tilemap.chunk_size.as_vec2() * tilemap.tile_size.as_vec2())
                 .ceil()
                 .as_ivec2();
+
+            dbg!(chunk_start);
 
             for chunk_y in chunk_start.y..chunk_end.y {
                 for chunk_x in chunk_start.x..chunk_end.x {
@@ -118,7 +120,8 @@ pub fn extract_tilemaps(
 
                         let mut entity_commands = commands.spawn((
                             Position::from(
-                                tilemap_offset + chunk_position + tile_offset.as_ivec2(),
+                                tilemap_offset + chunk_position + tile_offset.as_ivec2()
+                                    - **buffer_position,
                             ),
                             tilemap_depth.cloned().unwrap_or_default(),
                             target.clone(),

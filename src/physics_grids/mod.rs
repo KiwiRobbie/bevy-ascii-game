@@ -20,7 +20,7 @@ use glyph_render::{
 
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::SpatialBundle,
+    position::{Position, SpatialBundle},
 };
 
 use self::resize::grid_resize_update;
@@ -85,7 +85,7 @@ fn create_physics_grids(
                 FontSize(32),
                 SpatialBundle::from(IVec2::ZERO),
                 SpatialGrid {
-                    size: UVec2 { x: 19, y: 40 },
+                    size: UVec2::new(19, 40),
                 },
                 FontAtlasUser,
             ))

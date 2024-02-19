@@ -8,6 +8,10 @@ use crate::remainder::Remainder;
 #[derive(Component, Default, Debug, Clone, Reflect, Deref, DerefMut)]
 pub struct Position(pub IVec2);
 
+impl Position {
+    pub const ZERO: Self = Self(IVec2::ZERO);
+}
+
 #[derive(Bundle, Default, Clone)]
 pub struct SpatialBundle {
     pub position: Position,

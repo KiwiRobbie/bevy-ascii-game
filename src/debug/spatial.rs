@@ -26,7 +26,7 @@ impl Plugin for SpatialDebugPlugin {
             (
                 debug_position_system.run_if(|enabled: Res<DebugPositions>| **enabled),
                 debug_collision_system.run_if(|enabled: Res<DebugCollisions>| **enabled),
-            ), // .before(position_update_transforms_system),
+            ),
         )
         .init_resource::<DebugCollisions>()
         .init_resource::<DebugPositions>();
