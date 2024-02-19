@@ -6,7 +6,7 @@ use bevy::{
         query::With,
         system::{Commands, Query, Res},
     },
-    input::{keyboard::KeyCode, Input},
+    input::{keyboard::KeyCode, ButtonInput},
 };
 
 use crate::player::PlayerMarker;
@@ -19,7 +19,7 @@ use super::{
 pub struct PlayerInputKeyboardMarker;
 
 fn player_keyboard_input_movement(
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut q_player_movement: Query<
         &mut PlayerInputMovement,
         (
@@ -32,16 +32,16 @@ fn player_keyboard_input_movement(
     let mut horizontal = 0.0;
     let mut vertical = 0.0;
 
-    if keyboard.pressed(KeyCode::Right) {
+    if keyboard.pressed(KeyCode::ArrowRight) {
         horizontal += 1.0;
     }
-    if keyboard.pressed(KeyCode::Left) {
+    if keyboard.pressed(KeyCode::ArrowLeft) {
         horizontal -= 1.0;
     }
-    if keyboard.pressed(KeyCode::Up) {
+    if keyboard.pressed(KeyCode::ArrowUp) {
         vertical += 1.0;
     }
-    if keyboard.pressed(KeyCode::Down) {
+    if keyboard.pressed(KeyCode::ArrowDown) {
         vertical -= 1.0;
     }
 
@@ -57,7 +57,7 @@ fn player_keyboard_input_movement(
 
 fn player_keyboard_input_buttons(
     mut commands: Commands,
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     q_players: Query<
         Entity,
         (
@@ -68,19 +68,19 @@ fn player_keyboard_input_buttons(
     >,
 ) {
     for entity in q_players.iter() {
-        if keyboard.pressed(KeyCode::C) {
+        if keyboard.pressed(KeyCode::KeyC) {
             commands.entity(entity).insert(PlayerInputJump);
         } else {
             commands.entity(entity).remove::<PlayerInputJump>();
         }
 
-        if keyboard.pressed(KeyCode::X) {
+        if keyboard.pressed(KeyCode::KeyX) {
             commands.entity(entity).insert(PlayerInputLunge);
         } else {
             commands.entity(entity).remove::<PlayerInputLunge>();
         }
 
-        if keyboard.pressed(KeyCode::R) {
+        if keyboard.pressed(KeyCode::KeyR) {
             commands.entity(entity).insert(PlayerInputReset);
         } else {
             commands.entity(entity).remove::<PlayerInputReset>();

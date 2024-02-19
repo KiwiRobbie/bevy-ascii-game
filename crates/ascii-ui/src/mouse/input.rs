@@ -7,7 +7,7 @@ use bevy::{
     input::{
         mouse::{MouseButton, MouseWheel},
         touch::{TouchInput, TouchPhase},
-        Input,
+        ButtonInput,
     },
     math::{Vec2, Vec3},
     prelude::{Deref, DerefMut},
@@ -22,7 +22,7 @@ pub struct MouseInput(pub Option<MouseInputFrame>);
 #[derive(Debug, Default)]
 pub struct MouseInputFrame {
     pub world_position: Option<Vec3>,
-    pub buttons: Option<Input<MouseButton>>,
+    pub buttons: Option<ButtonInput<MouseButton>>,
     pub scroll: Option<Vec2>,
 }
 
@@ -30,7 +30,7 @@ impl MouseInput {
     pub fn world_position(&self) -> Option<Vec3> {
         self.as_ref().and_then(|f| f.world_position)
     }
-    pub fn buttons(&self) -> Option<&Input<MouseButton>> {
+    pub fn buttons(&self) -> Option<&ButtonInput<MouseButton>> {
         self.as_ref().and_then(|f| f.buttons.as_ref())
     }
     pub fn scroll(&self) -> Option<Vec2> {
@@ -60,7 +60,7 @@ impl MouseInput {
 pub fn update_mouse_position(
     q_windows: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut ev_mouse_scroll: EventReader<MouseWheel>,
     mut mouse_input: ResMut<MouseInput>,
     mut ev_touch: EventReader<TouchInput>,

@@ -7,7 +7,7 @@ use bevy::{
     ecs::{
         component::Component,
         entity::Entity,
-        query::{ReadOnlyWorldQuery, With},
+        query::{QueryFilter, With},
         system::{Commands, Query, Res},
     },
     time::Time,
@@ -70,7 +70,7 @@ fn update_info_count(
     }
 }
 
-fn apply_count<F: ReadOnlyWorldQuery>(
+fn apply_count<F: QueryFilter>(
     text: (&mut Query<&mut Text>, Option<Entity>),
     label: &str,
     q_count: &Query<(), F>,

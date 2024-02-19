@@ -19,7 +19,7 @@ use bevy::{
     input::{
         gamepad::{GamepadButton, GamepadButtonType, Gamepads},
         keyboard::KeyCode,
-        Input,
+        ButtonInput,
     },
     tasks::IoTaskPool,
 };
@@ -47,9 +47,9 @@ use super::{
 };
 
 pub(super) fn toggle_menu(
-    keyboard: Res<Input<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<TilesetPanelState>,
-    gamepad_button: Res<Input<GamepadButton>>,
+    gamepad_button: Res<ButtonInput<GamepadButton>>,
     gamepads: Res<Gamepads>,
     mut q_root: Query<&mut Root>,
 ) {

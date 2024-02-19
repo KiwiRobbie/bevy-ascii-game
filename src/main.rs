@@ -1,10 +1,7 @@
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
-    core_pipeline::{
-        bloom::BloomSettings,
-        core_2d::{Camera2d, Camera2dBundle},
-    },
+    core_pipeline::{bloom::BloomSettings, core_2d::Camera2dBundle},
     ecs::{
         component::Component,
         entity::Entity,
@@ -13,7 +10,7 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::gamepad::{GamepadConnection, GamepadConnectionEvent},
-    log::{self},
+    log,
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
@@ -62,17 +59,12 @@ fn main() {
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    fit_canvas_to_parent: true,
                     resolution: WindowResolution::default().with_scale_factor_override(1.0),
                     present_mode: bevy::window::PresentMode::AutoNoVsync,
                     ..Default::default()
                 }),
                 ..Default::default()
             }),
-        // .set(LogPlugin {
-        //     filter: "wgpu=info".to_string(),
-        //     level: Level::DEBUG,
-        // }),
         PlayerPlugin,
         GlyphAnimationPlugin,
         GlyphAnimationGraphPlugin,
@@ -91,13 +83,6 @@ fn main() {
         Update,
         (keyboard_input_system, font_load_system, handle_gamepads),
     );
-
-    #[cfg(debug_assertions)]
-    std::fs::write(
-        "render-graph.dot",
-        bevy_mod_debugdump::render_graph_dot(&app, &Default::default()),
-    )
-    .unwrap();
 
     app.run();
 }
@@ -221,15 +206,13 @@ fn setup_system(
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
+                clear_color: bevy::render::camera::ClearColorConfig::Custom(Color::BLACK),
                 hdr: true,
                 ..Default::default()
             },
-            camera_render_graph: CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::NAME),
-            camera_2d: Camera2d {
-                clear_color: bevy::core_pipeline::clear_color::ClearColorConfig::Custom(
-                    Color::BLACK,
-                ),
-            },
+            camera_render_graph: CameraRenderGraph::new(
+                bevy::core_pipeline::core_2d::graph::Core2d,
+            ),
             ..Default::default()
         },
         BloomSettings {
@@ -243,7 +226,7 @@ struct KeyboardInputMarker;
 
 fn keyboard_input_system(
     mut ev_character: EventReader<ReceivedCharacter>,
-    q_glyph_sprite: Query<&GlyphSprite, &KeyboardInputMarker>,
+    q_glyph_sprite: Query<&GlyphSprite, With<KeyboardInputMarker>>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut position: Local<usize>,
 ) {
@@ -265,7 +248,7 @@ fn keyboard_input_system(
     for character in ev_character.read() {
         log::info!("{:?}", character);
         let mut data = glyph_texture.source.data.clone();
-        if character.char == '\u{8}' {
+        if character.char.chars().next() == Some('\u{8}') {
             *position = (*position + width * height - 1).rem_euclid(width * height);
             let (x, y) = get_pos(*position, width, height);
             data[y].replace_range(x..=x, "_");
