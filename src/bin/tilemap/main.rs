@@ -1,4 +1,4 @@
-use ascii_ui::mouse::input::{MouseInput, MouseInputFrame};
+use ascii_ui::mouse::input::MouseInput;
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::AssetServer,
@@ -12,16 +12,15 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
-        mouse::{MouseButton, MouseMotion, MouseWheel},
+        mouse::{MouseButton, MouseMotion},
         ButtonInput,
     },
-    math::{IVec2, UVec2, Vec2, Vec3},
+    math::{IVec2, UVec2, Vec2},
     render::{
         camera::{Camera, CameraRenderGraph},
         color::Color,
         texture::ImagePlugin,
     },
-    transform::components::Transform,
     window::{PrimaryWindow, Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };

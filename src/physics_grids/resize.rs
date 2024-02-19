@@ -31,17 +31,11 @@ pub(super) fn grid_resize_update(
     if let Some(e) = resize_reader.read().last() {
         log::info!("{:?}", e);
 
-        if let Ok((mut transform, mut grid, mut font_size, mut buffer)) =
+        if let Ok((mut transform, mut _grid, mut _font_size, mut _buffer)) =
             q_glyph_buffer.get_mut(game_grid)
         {
-            // let game_font = (e.width * 32.0 / 19.0 / 100.0) as u32;
-            // **font_size = game_font;
-            // grid.size = UVec2::new(font_size.advance(), font_size.line_spacing());
-
             *transform =
                 Transform::from_translation(-0.5 * Vec2::new(e.width, e.height).extend(0.0));
-
-            // buffer.size.y = (e.height / grid.size.y as f32) as u32;
         }
 
         if let Ok((mut transform, mut grid, mut font_size, mut buffer)) =

@@ -20,7 +20,7 @@ use glyph_render::{
 
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::{Position, SpatialBundle},
+    position::SpatialBundle,
 };
 
 use self::resize::grid_resize_update;
