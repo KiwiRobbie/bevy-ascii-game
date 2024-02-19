@@ -39,7 +39,8 @@ use glyph_render::{
     font::font_load_system,
     glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
-    glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
+    glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture},
+    glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
@@ -72,6 +73,7 @@ fn main() {
         TilesetPlugin,
         TilemapPlugin,
         PhysicsPlugin,
+        GlyphTexturePlugin,
         GlyphRenderPlugin,
         DebugPlugin,
         DebugMenuPlugin,
@@ -164,6 +166,31 @@ fn setup_system(
             },
             position: IVec2::new(10, 10).into(),
             ..Default::default()
+        },
+        FreeMarker,
+        Gravity::default(),
+        Velocity::default(),
+        GamePhysicsGridMarker,
+        Depth(0.5),
+    ));
+
+    commands.spawn((
+        GlyphSprite {
+            texture: server.load("art/dj/dj.art"),
+            offset: IVec2::ZERO,
+        },
+        ActorPhysicsBundle {
+            collider: Collider {
+                shape: CollisionShape::Aabb(Aabb {
+                    min: IVec2::new(0, 0),
+                    size: UVec2 { x: 30, y: 10 },
+                }),
+            },
+            position: IVec2::new(40, 10).into(),
+            ..Default::default()
+        },
+        GlyphSolidColor {
+            color: Color::rgba_u8(0xff, 0x61, 0x88, 0xff),
         },
         FreeMarker,
         Gravity::default(),

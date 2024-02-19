@@ -3,7 +3,7 @@ use bevy::ecs::{
     query::With,
     system::{Commands, Query},
 };
-use glyph_render::glyph_render_plugin::GlyphSprite;
+use glyph_render::glyph_sprite::GlyphSprite;
 
 use super::bundle::RenderWidgetMarker;
 

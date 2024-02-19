@@ -36,8 +36,8 @@ impl MouseInput {
     pub fn scroll(&self) -> Option<Vec2> {
         self.as_ref().and_then(|f| f.scroll)
     }
-    pub fn consume(&mut self) {
-        (**self) = None;
+    pub fn consume(&mut self) -> Option<MouseInputFrame> {
+        (**self).take()
     }
 
     pub fn pressed(&self, input: MouseButton) -> bool {

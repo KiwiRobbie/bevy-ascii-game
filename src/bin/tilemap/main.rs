@@ -1,3 +1,4 @@
+use ascii_ui::mouse::input::{MouseInput, MouseInputFrame};
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::AssetServer,
@@ -8,7 +9,7 @@ use bevy::{
     ecs::{
         event::EventReader,
         query::With,
-        system::{Commands, Local, Query, Res},
+        system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
         mouse::{MouseButton, MouseMotion, MouseWheel},
@@ -113,7 +114,8 @@ fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
 }
 
 fn zoom_system(
-    mut ev_scroll: EventReader<MouseWheel>,
+    // mut ev_scroll: EventReader<MouseWheel>,
+    mut mouse_input: ResMut<MouseInput>,
     mut size: Local<f32>,
     mut q_glyph_buffer: Query<
         (&mut FontSize, &mut SpatialGrid, &mut GlyphBuffer),
@@ -121,14 +123,21 @@ fn zoom_system(
     >,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let distance = ev_scroll
-        .read()
-        .map(|ev| match ev.unit {
-            bevy::input::mouse::MouseScrollUnit::Line => dbg!(16.0 * ev.y),
-            bevy::input::mouse::MouseScrollUnit::Pixel => dbg!(ev.y),
-        })
-        .sum::<f32>();
-    let factor = (distance / 100.0).exp();
+    // let distance = mouse_input.scroll().unwrap_or_default().y;
+    let distance = mouse_input
+        .consume()
+        .unwrap_or_default()
+        .scroll
+        .unwrap_or_default()
+        .y;
+    // let distance = ev_scroll
+    //     .read()
+    //     .map(|ev| match ev.unit {
+    //         bevy::input::mouse::MouseScrollUnit::Line => dbg!(16.0 * ev.y),
+    //         bevy::input::mouse::MouseScrollUnit::Pixel => dbg!(ev.y),
+    //     })
+    //     .sum::<f32>();
+    let factor = (distance / 16.0).exp();
     *size *= factor;
     dbg!(factor);
     *size = size.max(2.0).min(128.0);

@@ -6,7 +6,7 @@ use bevy::{
     },
     math::IVec2,
 };
-use glyph_render::glyph_render_plugin::{GlyphSprite, GlyphTexture};
+use glyph_render::{glyph_render_plugin::GlyphTexture, glyph_sprite::GlyphSprite};
 use spatial_grid::position::Position;
 
 use crate::{layout::positioned::Positioned, widgets::Texture};

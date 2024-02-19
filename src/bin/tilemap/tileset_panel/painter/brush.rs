@@ -21,7 +21,10 @@ use bevy_ascii_game::{
     tilemap::{asset::TilemapSource, chunk::TilemapChunk, component::Tilemap},
     tileset::asset::TilesetSource,
 };
-use glyph_render::glyph_render_plugin::{GlyphSolidColor, GlyphSprite, GlyphTexture};
+use glyph_render::{
+    glyph_render_plugin::{GlyphSolidColor, GlyphTexture},
+    glyph_sprite::GlyphSprite,
+};
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::{Position, SpatialBundle},

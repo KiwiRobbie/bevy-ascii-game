@@ -19,9 +19,9 @@ use crate::{
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationSource},
     glyph_render_plugin::{
-        ExtractedAtlas, GlyphSolidColor, GlyphSprite, GlyphSpriteMirrored, GlyphTexture,
-        GlyphTextureSource,
+        ExtractedAtlas, GlyphSolidColor, GlyphSpriteMirrored, GlyphTexture, GlyphTextureSource,
     },
+    glyph_sprite::GlyphSprite,
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 

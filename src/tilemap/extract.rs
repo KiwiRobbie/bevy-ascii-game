@@ -78,8 +78,6 @@ pub fn extract_tilemaps(
                 .ceil()
                 .as_ivec2();
 
-            dbg!(chunk_start);
-
             for chunk_y in chunk_start.y..chunk_end.y {
                 for chunk_x in chunk_start.x..chunk_end.x {
                     let chunk_position = IVec2::new(chunk_x, chunk_y)

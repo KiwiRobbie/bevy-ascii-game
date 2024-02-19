@@ -152,12 +152,6 @@ impl ExtractedGlyphTextureSource {
     }
 }
 
-#[derive(Component, Clone)]
-pub struct GlyphSprite {
-    pub texture: Handle<GlyphTexture>,
-    pub offset: IVec2,
-}
-
 #[derive(Component, Clone, ExtractComponent, Debug)]
 pub struct GlyphSolidColor {
     pub color: Color,
