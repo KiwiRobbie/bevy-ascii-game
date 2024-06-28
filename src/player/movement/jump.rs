@@ -1,4 +1,4 @@
-use crate::player::input::PlayerInputJump;
+use crate::player::input::player_inputs::JumpMarker;
 use bevy::{
     ecs::{
         component::Component,
@@ -32,7 +32,7 @@ pub fn player_jump_system(
         (Entity, &mut Velocity, &PlayerJumpVelocity),
         (
             MovementFilter,
-            With<PlayerInputJump>,
+            With<JumpMarker>,
             With<FreeGrounded>,
             With<FreeMarker>,
         ),

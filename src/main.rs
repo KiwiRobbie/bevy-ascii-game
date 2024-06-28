@@ -37,18 +37,14 @@ use bevy_ascii_game::{
 use glyph_render::{
     atlas::FontAtlasPlugin,
     font::font_load_system,
-    glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
+    glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
 };
 use grid_physics::{
-    actor::ActorPhysicsBundle,
     collision::{Aabb, Collider, CollisionShape},
-    free::FreeMarker,
-    gravity::Gravity,
     plugin::PhysicsPlugin,
     solid::SolidPhysicsBundle,
-    velocity::Velocity,
 };
 use spatial_grid::{depth::Depth, position::SpatialBundle};
 
@@ -145,32 +141,32 @@ fn setup_system(
         },
         GamePhysicsGridMarker,
     ));
-    commands.spawn((
-        GlyphAnimation {
-            source: server.load("anim/horse/states/gallop.anim.ron"),
-            frame: 0,
-        },
-        GlyphAnimationPlayer {
-            framerate: 10.0,
-            repeat: true,
-            frame_timer: 0.0,
-        },
-        ActorPhysicsBundle {
-            collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::new(0, 0),
-                    size: UVec2 { x: 30, y: 10 },
-                }),
-            },
-            position: IVec2::new(10, 10).into(),
-            ..Default::default()
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-        GamePhysicsGridMarker,
-        Depth(0.5),
-    ));
+    // commands.spawn((
+    //     GlyphAnimation {
+    //         source: server.load("anim/horse/states/mounted/gallop.anim.ron"),
+    //         frame: 0,
+    //     },
+    //     GlyphAnimationPlayer {
+    //         framerate: 10.0,
+    //         repeat: true,
+    //         frame_timer: 0.0,
+    //     },
+    //     ActorPhysicsBundle {
+    //         collider: Collider {
+    //             shape: CollisionShape::Aabb(Aabb {
+    //                 min: IVec2::new(0, 0),
+    //                 size: UVec2 { x: 30, y: 10 },
+    //             }),
+    //         },
+    //         position: IVec2::new(10, 10).into(),
+    //         ..Default::default()
+    //     },
+    //     FreeMarker,
+    //     Gravity::default(),
+    //     Velocity::default(),
+    //     GamePhysicsGridMarker,
+    //     Depth(0.5),
+    // ));
 
     // Keyboard display
     commands.spawn((

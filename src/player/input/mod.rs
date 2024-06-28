@@ -22,20 +22,35 @@ pub struct PlayerInputMarker;
 #[derive(Bundle, Default, Clone)]
 pub struct PlayerInputBundle {
     marker: PlayerInputMarker,
-    movement_input: PlayerInputMovement,
+    movement_input: player_inputs::Movement,
 }
 
-#[derive(Component, Default, Debug)]
-pub struct PlayerInputJump;
+pub mod player_inputs {
+    use bevy::{ecs::bundle::Bundle, ecs::component::Component};
 
-#[derive(Component, Default, Debug)]
-pub struct PlayerInputLunge;
+    #[derive(Bundle)]
+    pub struct MarkerResetBundle {
+        jump: JumpMarker,
+        lunge: LungeMarker,
+        interact: InteractMarker,
+        reset: ResetMarker,
+    }
 
-#[derive(Debug, Default, Component, Clone)]
-pub struct PlayerInputMovement {
-    pub horizontal: f32,
-    pub vertical: f32,
+    #[derive(Component, Default, Debug)]
+    pub struct JumpMarker;
+
+    #[derive(Component, Default, Debug)]
+    pub struct LungeMarker;
+
+    #[derive(Component, Default, Debug)]
+    pub struct InteractMarker;
+
+    #[derive(Debug, Default, Component, Clone)]
+    pub struct ResetMarker;
+
+    #[derive(Debug, Default, Component, Clone)]
+    pub struct Movement {
+        pub horizontal: f32,
+        pub vertical: f32,
+    }
 }
-
-#[derive(Debug, Default, Component, Clone)]
-pub struct PlayerInputReset;

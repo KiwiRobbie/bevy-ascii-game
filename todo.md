@@ -1,3 +1,29 @@
+# Combat 
+- Use movement keys combined with attack/parry to determine action.
+- VSCode like "chords" 
+- Close: Parry, Forward Attack
+- Remise, Back Attack 
+- Modifier key for upper/lower strikes
+
+
+A: Attack 
+P: Parry 
+I: In 
+O: Out 
+
+
+PIA: Close 
+OA:  Remise 
+
+Honor System? 
+
+
+# Horses 
+Horse fun, make ride horse 
+
+Player control switches between different entities (IE avatar vs horse), 
+component to track player control.
+
 # Simple tasks
 
 - Add z-sorting / ordering

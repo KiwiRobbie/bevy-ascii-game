@@ -3,6 +3,7 @@
 
 pub mod debug;
 pub mod debug_menu;
+pub mod mount;
 pub mod physics_grids;
 pub mod player;
 pub mod tilemap;

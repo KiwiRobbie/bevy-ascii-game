@@ -30,15 +30,12 @@ use spatial_grid::{
 use crate::physics_grids::GamePhysicsGridMarker;
 
 use super::{
-    input::{controller::PlayerInputController, PlayerInputReset},
+    input::{controller::PlayerInputController, player_inputs::ResetMarker},
     movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
     PlayerBundle,
 };
 
-pub fn player_reset_system(
-    mut commands: Commands,
-    q_player: Query<Entity, With<PlayerInputReset>>,
-) {
+pub fn player_reset_system(mut commands: Commands, q_player: Query<Entity, With<ResetMarker>>) {
     for player in q_player.iter() {
         commands.entity(player).insert((
             Position(IVec2::new(10, 10)),

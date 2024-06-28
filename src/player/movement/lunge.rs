@@ -10,7 +10,7 @@ use bevy::{
 };
 
 use crate::player::{
-    input::{PlayerInputLunge, PlayerInputMarker},
+    input::{player_inputs::LungeMarker, PlayerInputMarker},
     PlayerMarker,
 };
 use grid_physics::{
@@ -59,7 +59,7 @@ pub fn player_lunge_start_system(
         (
             MovementFilter,
             With<FreeMarker>,
-            With<PlayerInputLunge>,
+            With<LungeMarker>,
             Without<PlayerLungeCooldown>,
         ),
     >,
