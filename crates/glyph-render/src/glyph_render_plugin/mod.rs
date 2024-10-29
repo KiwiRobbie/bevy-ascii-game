@@ -10,7 +10,7 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
-use bytemuck::{cast_slice, cast_slice_mut, Pod, Zeroable};
+use bytemuck::{cast_slice_mut, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
@@ -270,14 +270,14 @@ fn prepare_buffers(
 
         let glyph_buffer_texture = gpu_glyph_texture.buffer_texture.clone();
 
-        let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
-        let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
+        // let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
+        // let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
 
-        let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
-            label: Some("Vertex buffer"),
-            contents: cast_slice(&[v_w, v_h]),
-            usage: BufferUsages::VERTEX,
-        });
+        // let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
+        //     label: Some("Vertex buffer"),
+        //     contents: cast_slice(&[v_w, v_h]),
+        //     usage: BufferUsages::VERTEX,
+        // });
 
         commands.entity(entity).insert((
             GlyphUniformBuffer(uniform_buffer),
@@ -288,7 +288,7 @@ fn prepare_buffers(
             },
             GlyphBufferData {
                 buffer: glyph_buffer_texture,
-                vertex,
+                // vertex,
             },
         ));
     }

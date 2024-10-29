@@ -1,13 +1,12 @@
 use bevy::{asset::Asset, math::UVec2, reflect::TypePath};
 
-#[derive(serde::Deserialize, Asset, TypePath, Clone)]
+#[derive(serde::Deserialize, Asset, TypePath)]
 pub struct GlyphAnimationMeta {
     pub name: String,
     pub size: (u32, u32),
 
-    #[serde(default)]
-    pub default_name: Option<String>,
-
+    // #[serde(default)]
+    // pub default_name: Option<String>,
     pub frames: Vec<(FrameMeta, MirroredFrame)>,
 }
 

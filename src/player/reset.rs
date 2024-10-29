@@ -64,8 +64,8 @@ pub fn create_player_with_gamepad(
         .insert(GamePhysicsGridMarker);
 }
 
-pub fn create_player<'w, 's, 'a>(
-    commands: &'a mut Commands<'w, 's>,
+pub fn create_player<'a>(
+    commands: &'a mut Commands,
     server: &Res<AssetServer>,
 ) -> bevy::ecs::system::EntityCommands<'a> {
     commands.spawn((

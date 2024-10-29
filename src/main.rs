@@ -247,7 +247,6 @@ fn keyboard_input_system(
     }
 
     for key in ev_keyboard.read() {
-        log::info!("{:?}", key);
         let mut data = glyph_texture.source.data.clone();
         match &key.logical_key {
             Key::Backspace => {
