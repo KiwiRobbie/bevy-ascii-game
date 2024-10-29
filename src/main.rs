@@ -45,9 +45,13 @@ use glyph_render::{
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
 use grid_physics::{
+    actor::ActorPhysicsBundle,
     collision::{Aabb, Collider},
+    free::FreeMarker,
+    gravity::Gravity,
     plugin::PhysicsPlugin,
     solid::SolidPhysicsBundle,
+    velocity::Velocity,
 };
 use spatial_grid::{depth::Depth, position::SpatialBundle};
 
@@ -180,16 +184,17 @@ fn setup_system(
         },
         ActorPhysicsBundle {
             collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::new(0, 0),
+                shape: Aabb {
+                    start: IVec2::new(0, 0),
                     size: UVec2 { x: 30, y: 10 },
-                }),
+                }
+                .into(),
             },
             position: IVec2::new(40, 10).into(),
             ..Default::default()
         },
         GlyphSolidColor {
-            color: Color::rgba_u8(0xff, 0x61, 0x88, 0xff),
+            color: Color::srgba_u8(0xff, 0x61, 0x88, 0xff),
         },
         FreeMarker,
         Gravity::default(),
