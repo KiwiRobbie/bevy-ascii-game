@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy_ecs = "0.13.2"
-bevy_derive = "0.13.2"
-bevy_math = "0.13.2"
-bevy_reflect = "0.13.2"
-bevy_utils = "0.13.2"
-bevy_transform = "0.13.2"
+bevy_ecs = "0.14.2"
+bevy_derive = "0.14.2"
+bevy_math = "0.14.2"
+bevy_reflect = "0.14.2"
+bevy_utils = "0.14.2"
+bevy_transform = "0.14.2"
 
 [lib]
 

@@ -1,6 +1,7 @@
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
+    color::{Color, Hsla},
     core_pipeline::{bloom::BloomSettings, core_2d::Camera2dBundle},
     ecs::{
         component::Component,
@@ -9,15 +10,17 @@ use bevy::{
         query::With,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::gamepad::{GamepadConnection, GamepadConnectionEvent},
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent},
+        keyboard::{Key, KeyboardInput},
+    },
     log,
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
-        color::Color,
         texture::ImagePlugin,
     },
-    window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
+    window::{Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
 
@@ -42,7 +45,7 @@ use glyph_render::{
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
 };
 use grid_physics::{
-    collision::{Aabb, Collider, CompositeCollisionShape},
+    collision::{Aabb, Collider},
     plugin::PhysicsPlugin,
     solid::SolidPhysicsBundle,
 };
@@ -119,12 +122,13 @@ fn setup_system(
     commands.spawn((
         Tilemap(server.load("tilemaps/output.tilemap.ron")),
         GlyphSolidColor {
-            color: Color::Hsla {
+            color: Hsla {
                 hue: 0.0,
                 saturation: 0.0,
                 lightness: 0.2,
                 alpha: 1.0,
-            },
+            }
+            .into(),
         },
         SolidPhysicsBundle {
             position: SpatialBundle::from(IVec2::new(20, 10)),
@@ -137,7 +141,7 @@ fn setup_system(
     create_player(&mut commands, &server).insert((
         PlayerInputKeyboardMarker,
         GlyphSolidColor {
-            color: Color::hsl(0.0, 1.0, 0.6).as_rgba_linear() * 10.0,
+            color: Color::LinearRgba(Color::hsl(0.0, 1.0, 0.6).to_linear() * 10.0),
         },
         GamePhysicsGridMarker,
     ));
@@ -222,7 +226,7 @@ fn setup_system(
 struct KeyboardInputMarker;
 
 fn keyboard_input_system(
-    mut ev_character: EventReader<ReceivedCharacter>,
+    mut ev_keyboard: EventReader<KeyboardInput>,
     q_glyph_sprite: Query<&GlyphSprite, With<KeyboardInputMarker>>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut position: Local<usize>,
@@ -242,22 +246,26 @@ fn keyboard_input_system(
         )
     }
 
-    for character in ev_character.read() {
-        log::info!("{:?}", character);
+    for key in ev_keyboard.read() {
+        log::info!("{:?}", key);
         let mut data = glyph_texture.source.data.clone();
-        if character.char.chars().next() == Some('\u{8}') {
-            *position = (*position + width * height - 1).rem_euclid(width * height);
-            let (x, y) = get_pos(*position, width, height);
-            data[y].replace_range(x..=x, "_");
-            let (x, y) = get_pos(*position + 1, width, height);
-            data[y].replace_range(x..=x, " ");
-        } else {
-            let (x, y) = get_pos(*position, width, height);
-            data[y].replace_range(x..=x, character.char.to_string().as_str());
-            let (x, y) = get_pos(*position + 1, width, height);
-            data[y].replace_range(x..=x, "_");
+        match &key.logical_key {
+            Key::Backspace => {
+                *position = (*position + width * height - 1).rem_euclid(width * height);
+                let (x, y) = get_pos(*position, width, height);
+                data[y].replace_range(x..=x, "_");
+                let (x, y) = get_pos(*position + 1, width, height);
+                data[y].replace_range(x..=x, " ");
+            }
+            Key::Character(key) => {
+                let (x, y) = get_pos(*position, width, height);
+                data[y].replace_range(x..=x, key.as_str());
+                let (x, y) = get_pos(*position + 1, width, height);
+                data[y].replace_range(x..=x, "_");
 
-            *position = (*position + 1).rem_euclid(width * height);
+                *position = (*position + 1).rem_euclid(width * height);
+            }
+            _ => {}
         }
         *glyph_texture = GlyphTexture::new(data);
     }

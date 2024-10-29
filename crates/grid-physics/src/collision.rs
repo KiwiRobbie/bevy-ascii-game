@@ -1,5 +1,3 @@
-use std::collections::linked_list::Iter;
-
 use bevy_ecs::{component::Component, entity::Entity};
 use bevy_math::{IVec2, UVec2};
 use spatial_grid::direction::Direction;
@@ -120,7 +118,7 @@ impl Overlaps<&HalfPlane> for HalfPlane {
         }
     }
 
-    fn overlap_distance(&self, other: &Self, direction: Direction) -> Option<i32> {
+    fn overlap_distance(&self, _other: &Self, _direction: Direction) -> Option<i32> {
         None
     }
 }
@@ -144,10 +142,10 @@ impl HalfPlane {
     }
     pub fn normal(&self) -> Direction {
         match self {
-            HalfPlane::NegX { x } => Direction::NegX,
-            HalfPlane::PosX { x } => Direction::PosX,
-            HalfPlane::NegY { y } => Direction::NegY,
-            HalfPlane::PosY { y } => Direction::PosY,
+            HalfPlane::NegX { x: _ } => Direction::NegX,
+            HalfPlane::PosX { x: _ } => Direction::PosX,
+            HalfPlane::NegY { y: _ } => Direction::NegY,
+            HalfPlane::PosY { y: _ } => Direction::PosY,
         }
     }
 }

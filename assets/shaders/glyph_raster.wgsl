@@ -87,7 +87,7 @@ fn vertex(input: InstanceInput) -> VertexOutput {
     let pos: vec2<f32> = vec2<f32>(location * grid_size + offset + corner * vec2<i32>(i32(size.x), -i32(size.y)));
 
     var out: VertexOutput;
-    out.position = view.view_proj * model.model * vec4<f32>(f32(pos.x), f32(pos.y), 0.0, 1.0);
+    out.position = view.clip_from_world * model.model * vec4<f32>(f32(pos.x), f32(pos.y), 0.0, 1.0);
     out.uv = vec2<f32>(start + size * vec2<u32>(u32(corner.x), u32(corner.y))) / vec2<f32>(textureDimensions(atlas_texture).xy);
     out.color = vec4<f32>(glpyh_color, 1.0);
     return out;

@@ -8,7 +8,6 @@ use bevy::{
     input::gamepad::Gamepad,
     math::{IVec2, UVec2, Vec2},
     prelude::Component,
-    render::color::Color,
 };
 
 use glyph_render::{

@@ -1,12 +1,12 @@
 use bevy::{
     app::{Plugin, PostUpdate},
+    color::palettes::css::{BLUE, GREEN, RED},
     ecs::{
         schedule::IntoSystemConfigs,
         system::{Query, Res, Resource},
     },
     gizmos::gizmos::Gizmos,
     prelude::{Deref, DerefMut},
-    render::color::Color,
     transform::components::Transform,
 };
 
@@ -61,7 +61,7 @@ fn debug_collision_system(
             .iter()
             .filter_map(|shape| match shape {
                 grid_physics::collision::CollisionShape::Aabb(aabb) => Some(aabb),
-                grid_physics::collision::CollisionShape::HalfPlane(half_plane) => None,
+                grid_physics::collision::CollisionShape::HalfPlane(_) => None,
             })
         {
             let min = (**position + shape.start).as_vec2() * grid.size.as_vec2()
@@ -71,9 +71,9 @@ fn debug_collision_system(
             let center = min + 0.5 * size;
 
             if solid.is_some() {
-                gizmos.rect_2d(center, 0.0, size, Color::GREEN);
+                gizmos.rect_2d(center, 0.0, size, GREEN);
             } else if actor.is_some() {
-                gizmos.rect_2d(center, 0.0, size, Color::RED);
+                gizmos.rect_2d(center, 0.0, size, RED);
             }
         }
     }
@@ -96,18 +96,18 @@ fn debug_position_system(
         let position = **position * grid.size.as_ivec2();
         let position = position.as_vec2() + transform.translation.truncate();
 
-        gizmos.circle_2d(position, 5.0, Color::BLUE);
+        gizmos.circle_2d(position, 5.0, BLUE);
 
         let position = if let Some(remainder) = remainder {
             let remainder = **remainder * grid.size.as_vec2();
-            gizmos.circle_2d(position + remainder, 2.0, Color::RED);
+            gizmos.circle_2d(position + remainder, 2.0, RED);
             position + remainder
         } else {
             position
         };
 
         if let Some(velocity) = velocity {
-            gizmos.line_2d(position, position + **velocity, Color::GREEN);
+            gizmos.line_2d(position, position + **velocity, GREEN);
         }
     }
 }

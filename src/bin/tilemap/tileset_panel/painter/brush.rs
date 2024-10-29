@@ -4,6 +4,7 @@ use ascii_ui::mouse::{input::MouseInput, TriggeredMarker};
 use bevy::{
     app::{Plugin, Startup, Update},
     asset::Assets,
+    color::palettes::css::GRAY,
     ecs::{
         component::Component,
         entity::Entity,
@@ -13,7 +14,6 @@ use bevy::{
     input::mouse::MouseButton,
     math::{IVec2, UVec2, Vec4Swizzles},
     prelude::Deref,
-    render::color::Color,
     transform::components::GlobalTransform,
 };
 use bevy_ascii_game::{
@@ -42,7 +42,7 @@ pub fn setup(mut commands: Commands) {
         Brush,
         SpatialBundle::default(),
         GamePhysicsGridMarker,
-        GlyphSolidColor { color: Color::GRAY },
+        GlyphSolidColor { color: GRAY.into() },
     ));
 }
 

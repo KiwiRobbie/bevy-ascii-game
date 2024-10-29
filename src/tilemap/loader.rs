@@ -1,9 +1,12 @@
 use std::path::PathBuf;
 
 use bevy::{
-    asset::{io::Reader, AssetLoader, AsyncReadExt, Handle},
+    asset::{
+        io::{Reader, VecReader},
+        AssetLoader, AsyncReadExt, Handle,
+    },
     math::{IVec2, UVec2},
-    utils::hashbrown::HashMap,
+    utils::{hashbrown::HashMap, ConditionalSendFuture},
 };
 
 use crate::tileset::asset::TilesetSource;
@@ -29,7 +32,7 @@ impl AssetLoader for TilemapLoader {
         reader: &'a mut Reader,
         _settings: &'a Self::Settings,
         load_context: &'a mut bevy::asset::LoadContext,
-    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+    ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;
@@ -38,7 +41,10 @@ impl AssetLoader for TilemapLoader {
             let mut tilesets = Vec::new();
             for tileset in meta.tilesets.iter() {
                 let value: TilesetSource = load_context
-                    .load_direct(tileset)
+                    .loader()
+                    .direct()
+                    .untyped()
+                    .load(tileset)
                     .await
                     .unwrap()
                     .take()
@@ -60,11 +66,8 @@ impl AssetLoader for TilemapLoader {
 
                 let chunk = ChunkLoader
                     .load(
-                        &mut load_context
-                            .read_asset_bytes(path)
-                            .await
-                            .unwrap()
-                            .as_slice(),
+                        &mut VecReader::new(load_context.read_asset_bytes(path).await.unwrap()),
+                        // .as_slice(),
                         &ChunkSettings {
                             size: Some(meta.chunk_size.into()),
                         },
@@ -116,7 +119,7 @@ impl AssetLoader for ChunkLoader {
         reader: &'a mut Reader,
         settings: &'a Self::Settings,
         _load_context: &'a mut bevy::asset::LoadContext,
-    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+    ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;

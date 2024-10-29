@@ -12,7 +12,6 @@ use bevy::{
         InputSystem,
     },
     math::{IVec2, Vec2, Vec4Swizzles},
-    render::color::Color,
     transform::components::GlobalTransform,
 };
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
@@ -110,7 +109,7 @@ pub fn mouse_interaction(
                 .entity(*entity)
                 .insert(ActiveMarker)
                 .insert(GlyphSolidColor {
-                    color: Color::ORANGE,
+                    color: bevy::color::palettes::css::ORANGE.into(),
                 });
             if mouse_input
                 .buttons()

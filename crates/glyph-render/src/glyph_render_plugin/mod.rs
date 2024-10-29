@@ -59,7 +59,7 @@ impl Plugin for GlyphRenderPlugin {
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
                 (
-                    bevy::core_pipeline::core_2d::graph::Node2d::MainPass,
+                    bevy::core_pipeline::core_2d::graph::Node2d::StartMainPass,
                     GlyphGeneration,
                     bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
                 ),
@@ -136,8 +136,9 @@ impl ExtractedGlyphTextureSource {
                     .unwrap_or(&if c == '·' { u16::MAX - 1 } else { u16::MAX })
                     .to_le_bytes();
 
-                data[index + 4..index + 16]
-                    .copy_from_slice(cast_slice_mut(&mut color.as_rgba_f32()[0..3]));
+                data[index + 4..index + 16].copy_from_slice(cast_slice_mut(
+                    &mut color.to_srgba().to_f32_array_no_alpha(),
+                ));
 
                 data[index + 0] = glyph_id[0];
                 data[index + 1] = glyph_id[1];
@@ -252,8 +253,8 @@ fn prepare_buffers(
     for (entity, color, global_transform, gpu_glyph_texture, grid) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: color
-                .map(|color| color.color.rgba_to_vec4())
-                .unwrap_or(Color::WHITE.rgba_to_vec4()),
+                .map(|color| color.color.to_srgba().to_vec4())
+                .unwrap_or(Color::WHITE.to_srgba().to_vec4()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
             advance: grid.size.x,

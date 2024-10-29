@@ -2,6 +2,7 @@
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::AssetServer,
+    color::palettes::css::BLACK,
     core_pipeline::{
         bloom::BloomSettings,
         core_2d::{Camera2d, Camera2dBundle},
@@ -10,7 +11,6 @@ use bevy::{
     math::IVec2,
     render::{
         camera::{Camera, CameraRenderGraph},
-        color::Color,
         texture::ImagePlugin,
     },
     window::{Window, WindowPlugin, WindowResolution},
@@ -88,7 +88,7 @@ fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
-                clear_color: bevy::render::camera::ClearColorConfig::Custom(Color::BLACK),
+                clear_color: bevy::render::camera::ClearColorConfig::Custom(BLACK.into()),
                 hdr: true,
                 ..Default::default()
             },

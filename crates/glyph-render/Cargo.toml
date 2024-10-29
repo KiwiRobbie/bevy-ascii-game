@@ -9,12 +9,12 @@ edition = "2021"
 anyhow = "1.0.79"
 bytemuck = "1.14.0"
 swash = "0.1.8"
-wgpu = { version = "0.19.1", default-features = false, features = ["webgl"] }
+# wgpu = { version = "0.19.1", default-features = false, features = ["webgl"] }
 serde = "1.0.195"
 ron = "0.8.1"
 text-util = { path = "../text-util" }
 spatial-grid = { path = "../spatial-grid" }
-bevy = { version = "0.13.2", default-features = false, features = [] }
+bevy = { version = "0.14.2", default-features = false, features = [] }
 
 
 [lib]

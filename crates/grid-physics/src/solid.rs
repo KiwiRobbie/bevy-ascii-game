@@ -18,7 +18,7 @@ use crate::collision::CollisionShape;
 
 use super::{
     actor::{Actor, FilterActors},
-    collision::{Aabb, Collider},
+    collision::Collider,
     movement::Movement,
 };
 

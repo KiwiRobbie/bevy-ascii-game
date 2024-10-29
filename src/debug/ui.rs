@@ -1,6 +1,7 @@
 use ascii_ui::{layout::positioned::Positioned, mouse::ActiveMarker};
 use bevy::{
     app::{Plugin, Update},
+    color::palettes::css::ORANGE,
     ecs::{
         query::With,
         schedule::IntoSystemConfigs,
@@ -9,7 +10,6 @@ use bevy::{
     gizmos::gizmos::Gizmos,
     math::Vec2,
     prelude::{Deref, DerefMut},
-    render::color::Color,
     transform::components::Transform,
 };
 use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
@@ -29,7 +29,7 @@ fn debug_active(
         let size = positioned.size.as_vec2() * grid.size.as_vec2() * Vec2::new(1.0, -1.0);
         let center = offset + 0.5 * size;
 
-        gizmos.rect_2d(center, 0.0, size, Color::ORANGE);
+        gizmos.rect_2d(center, 0.0, size, ORANGE);
     }
 }
 
