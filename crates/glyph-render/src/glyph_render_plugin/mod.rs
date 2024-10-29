@@ -59,7 +59,7 @@ impl Plugin for GlyphRenderPlugin {
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
                 (
-                    bevy::core_pipeline::core_2d::graph::Node2d::StartMainPass,
+                    bevy::core_pipeline::core_2d::graph::Node2d::EndMainPass,
                     GlyphGeneration,
                     bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
                 ),

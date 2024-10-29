@@ -34,13 +34,13 @@ struct BufferQueryData {
 }
 
 #[derive(QueryFilter)]
-struct BufferQueryFilter {
-    _glyph_model_uniforms: With<GlyphModelUniformBuffer>,
-    _glyph_uniform_buffer: With<GlyphUniformBuffer>,
-    _glyph_texture_info: With<GlyphTextureInfo>,
-    _buffer_data: With<GlyphBufferData>,
-    _atlas_data: With<AtlasGpuData>,
-}
+struct BufferQueryFilter(
+    With<GlyphModelUniformBuffer>,
+    With<GlyphUniformBuffer>,
+    With<GlyphTextureInfo>,
+    With<GlyphBufferData>,
+    With<AtlasGpuData>,
+);
 
 #[derive(QueryData)]
 struct TextureQueryData {
@@ -50,11 +50,11 @@ struct TextureQueryData {
 }
 
 #[derive(QueryFilter)]
-struct TextureQueryFilter {
-    _render_uniforms: With<GlyphRenderUniformBuffer>,
-    _glyph_texture: With<GpuGlyphTexture>,
-    _target: With<TargetGlyphBuffer>,
-}
+struct TextureQueryFilter(
+    With<GlyphRenderUniformBuffer>,
+    With<GpuGlyphTexture>,
+    With<TargetGlyphBuffer>,
+);
 
 pub struct GlyphGenerationNode {
     q_buffers: QueryState<BufferQueryData>,

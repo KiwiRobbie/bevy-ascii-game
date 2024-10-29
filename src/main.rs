@@ -14,7 +14,6 @@ use bevy::{
         gamepad::{GamepadConnection, GamepadConnectionEvent},
         keyboard::{Key, KeyboardInput},
     },
-    log,
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
