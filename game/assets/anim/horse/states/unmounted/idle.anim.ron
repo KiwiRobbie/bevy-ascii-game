@@ -1,0 +1,13 @@
+(
+    name: "horse_unmounted_idle",
+    size: (32, 9),
+    frames: [
+        (
+            (
+                asset: "art/horse/unmounted/idle.art",
+                start: Frame(0, 0),
+            ),
+            Auto(0,0),
+        ),
+    ],
+)
