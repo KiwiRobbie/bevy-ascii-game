@@ -55,8 +55,16 @@ fn debug_collision_system(
             continue;
         };
 
-        for shape in collider.shape.colliders() {
-            let min = (**position + shape.min).as_vec2() * grid.size.as_vec2()
+        for shape in collider
+            .shape
+            .shapes
+            .iter()
+            .filter_map(|shape| match shape {
+                grid_physics::collision::CollisionShape::Aabb(aabb) => Some(aabb),
+                grid_physics::collision::CollisionShape::HalfPlane(half_plane) => None,
+            })
+        {
+            let min = (**position + shape.start).as_vec2() * grid.size.as_vec2()
                 + transform.translation.truncate();
             let size = shape.size.as_vec2() * grid.size.as_vec2();
 

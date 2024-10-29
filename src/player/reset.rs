@@ -16,7 +16,7 @@ use glyph_render::{
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
-    collision::{Aabb, Collider, CollisionShape},
+    collision::{Aabb, Collider, CompositeCollisionShape},
     free::FreeMarker,
     gravity::Gravity,
     velocity::Velocity,
@@ -76,10 +76,11 @@ pub fn create_player<'w, 's, 'a>(
                     ..Default::default()
                 },
                 collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::ZERO,
+                    shape: Aabb {
+                        start: IVec2::ZERO,
                         size: UVec2 { x: 6, y: 5 },
-                    }),
+                    }
+                    .into(),
                 },
 
                 ..Default::default()

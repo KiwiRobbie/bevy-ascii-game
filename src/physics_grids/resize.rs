@@ -42,18 +42,21 @@ pub(super) fn grid_resize_update(
                 Transform::from_translation(-0.5 * Vec2::new(e.width, e.height).extend(0.0));
 
             buffer.size.y = (e.height / grid.size.y as f32) as u32;
+            dbg!(buffer.size);
         }
 
         if let Ok((mut transform, mut grid, mut font_size, mut buffer)) =
             q_glyph_buffer.get_mut(ui_grid)
         {
-            let ui_font = (e.width * 32.0 / 19.0 / 200.0) as u32;
+            let ui_font = ((e.width * 32.0 / 19.0 / 200.0) as u32).max(8);
             **font_size = ui_font;
             grid.size = UVec2::new(font_size.advance(), font_size.line_spacing());
+            dbg!(grid.size);
             *transform =
                 Transform::from_translation(-0.5 * Vec2::new(e.width, e.height).extend(0.0));
             buffer.size.x = (e.width / grid.size.x as f32) as u32;
             buffer.size.y = (e.height / grid.size.y as f32) as u32;
+            dbg!(buffer.size);
         }
     }
 }

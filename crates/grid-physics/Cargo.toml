@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy_ecs = "0.13.0"
-bevy_derive = "0.13.0"
-bevy_math = "0.13.0"
-bevy_reflect = "0.13.0"
-bevy_app = "0.13.0"
-bevy_time = "0.13.0"
-bevy_transform = "0.13.0"
+bevy_ecs = "0.13.2"
+bevy_derive = "0.13.2"
+bevy_math = "0.13.2"
+bevy_reflect = "0.13.2"
+bevy_app = "0.13.2"
+bevy_time = "0.13.2"
+bevy_transform = "0.13.2"
 spatial-grid = { path = "../spatial-grid" }
 
 

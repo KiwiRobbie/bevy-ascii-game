@@ -42,7 +42,7 @@ use glyph_render::{
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphSprite, GlyphTexture},
 };
 use grid_physics::{
-    collision::{Aabb, Collider, CollisionShape},
+    collision::{Aabb, Collider, CompositeCollisionShape},
     plugin::PhysicsPlugin,
     solid::SolidPhysicsBundle,
 };
@@ -189,10 +189,11 @@ fn setup_system(
         SolidPhysicsBundle {
             position: IVec2::new(0, 0).into(),
             collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::ZERO,
+                shape: Aabb {
+                    start: IVec2::ZERO,
                     size: UVec2 { x: 100, y: 2 },
-                }),
+                }
+                .into(),
             },
             ..Default::default()
         },

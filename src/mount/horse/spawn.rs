@@ -18,7 +18,7 @@ use glyph_render::{
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
-    collision::{Aabb, Collider, CollisionShape},
+    collision::{Aabb, Collider, CompositeCollisionShape},
     free::FreeMarker,
     gravity::Gravity,
     velocity::Velocity,
