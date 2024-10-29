@@ -1,0 +1,11 @@
+(
+    display_name: "Cave Tileset",
+    id: "cave",
+    size: (8, 5),
+    assets: [
+        (
+            asset: "art/cave/cave.art",
+            tiles: All("0"),
+        )
+    ]
+)

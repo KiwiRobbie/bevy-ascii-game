@@ -4,12 +4,13 @@ use std::sync::Arc;
 
 use bevy::{
     asset::Assets,
+    color::Color,
     ecs::{
         entity::Entity,
         system::{Commands, Query, Res, ResMut},
     },
     math::IVec2,
-    render::{color::Color, Extract},
+    render::Extract,
     transform::components::GlobalTransform,
 };
 use spatial_grid::{depth::Depth, grid::SpatialGrid, position::Position};
@@ -98,7 +99,7 @@ pub fn extract_glyph_buffers(
                         ),
                     )]);
                 } else if let Some(glyph_sprite) = sprite {
-                    let Some(texture) = glyph_textures.get(glyph_sprite.texture.clone()) else {
+                    let Some(texture) = glyph_textures.get(&glyph_sprite.texture) else {
                         continue;
                     };
 
@@ -139,7 +140,7 @@ fn extract_animation_frame<'a>(
     glyph_animation: &'a GlyphAnimation,
     mirrored: bool,
 ) -> Option<(&'a Arc<GlyphTextureSource>, IVec2)> {
-    let source = glyph_animations.get(glyph_animation.source.clone())?;
+    let source = glyph_animations.get(&glyph_animation.source)?;
     let (data, mirrored_data) = source.frames.get(glyph_animation.frame as usize)?;
 
     if mirrored {

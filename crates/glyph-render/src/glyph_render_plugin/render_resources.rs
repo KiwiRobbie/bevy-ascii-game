@@ -1,7 +1,7 @@
 use bevy::{
     ecs::component::Component,
     prelude::{Deref, DerefMut},
-    render::render_resource::{Buffer, Texture, UniformBuffer},
+    render::render_resource::{Texture, UniformBuffer},
 };
 
 use super::GlyphUniforms;
@@ -15,5 +15,5 @@ pub struct GlyphStorageTexture(pub Texture);
 #[derive(Component)]
 pub struct GlyphBufferData {
     pub buffer: Texture,
-    pub vertex: Buffer,
+    // pub vertex: Buffer,
 }

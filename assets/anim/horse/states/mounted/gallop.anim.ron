@@ -1,0 +1,14 @@
+(
+    name: "horse_gallop",
+    size: (32, 12),
+    frames: [
+        (
+            (
+                asset: "art/horse/mounted/gallop.art",
+                start: Frame(0, 0),
+                frame_count: Y(6),
+            ),
+            Auto(0,0),
+        ),
+    ],
+)

@@ -14,9 +14,11 @@ use spatial_grid::{
     remainder::Remainder,
 };
 
+use crate::collision::CollisionShape;
+
 use super::{
     actor::{Actor, FilterActors},
-    collision::{Aabb, Collider},
+    collision::Collider,
     movement::Movement,
 };
 
@@ -56,10 +58,8 @@ pub fn solid_move_system(
             solid_remainder.x -= movement.x as f32;
             solid_position.x += movement.x;
 
-            let solid_aabbs: Vec<Aabb> = solid_collision
-                .shape
-                .colliders_at(**solid_position)
-                .collect();
+            let solid_aabbs: Vec<CollisionShape> =
+                solid_collision.shape.iter_at(**solid_position).collect();
 
             for (actor, mut actor_position, mut actor_remainder, actor_collision) in
                 q_actors.iter_mut()
@@ -68,7 +68,7 @@ pub fn solid_move_system(
                     **actor_position,
                     &solid_aabbs,
                     if movement.x > 0 {
-                        Direction::X
+                        Direction::PosX
                     } else {
                         Direction::NegX
                     },
@@ -108,10 +108,8 @@ pub fn solid_move_system(
 
         // Update collision cache entry
         {
-            let solid_aabbs: Vec<Aabb> = solid_collision
-                .shape
-                .colliders_at(**solid_position)
-                .collect();
+            let solid_aabbs: Vec<CollisionShape> =
+                solid_collision.shape.iter_at(**solid_position).collect();
             solid_collision_cache.collisions.insert(solid, solid_aabbs);
         }
     }
@@ -130,7 +128,7 @@ pub struct SolidPhysicsBundle {
 
 #[derive(Resource, Debug, Default)]
 pub struct SolidCollisionCache {
-    pub collisions: EntityHashMap<Vec<Aabb>>,
+    pub collisions: EntityHashMap<Vec<CollisionShape>>,
 }
 
 pub fn update_collision_cache(
@@ -141,6 +139,6 @@ pub fn update_collision_cache(
     for (solid, position, collider) in q_solids.iter() {
         solid_collision_cache
             .collisions
-            .insert(solid, collider.shape.colliders_at(**position).collect());
+            .insert(solid, collider.shape.iter_at(**position).collect());
     }
 }

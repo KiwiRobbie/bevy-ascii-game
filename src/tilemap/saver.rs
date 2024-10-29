@@ -4,7 +4,10 @@ use super::{
     loader::{ChunkLoader, ChunkSettings},
 };
 use super::{loader::TilemapLoader, meta::TilemapMeta};
-use bevy::asset::{saver::AssetSaver, AssetLoader, AsyncWriteExt};
+use bevy::{
+    asset::{saver::AssetSaver, AssetLoader, AsyncWriteExt},
+    utils::ConditionalSendFuture,
+};
 
 #[derive(Default)]
 pub struct TilemapSaver;
@@ -20,9 +23,8 @@ impl AssetSaver for TilemapSaver {
         writer: &'a mut bevy::asset::io::Writer,
         asset: bevy::asset::saver::SavedAsset<'a, Self::Asset>,
         _settings: &'a Self::Settings,
-    ) -> bevy::utils::BoxedFuture<
-        'a,
-        Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
+    ) -> impl ConditionalSendFuture<
+        Output = Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {
         Box::pin(async move {
             let mut chunks = vec![];
@@ -65,9 +67,8 @@ impl AssetSaver for ChunkSaver {
         writer: &'a mut bevy::asset::io::Writer,
         asset: bevy::asset::saver::SavedAsset<'a, Self::Asset>,
         settings: &'a Self::Settings,
-    ) -> bevy::utils::BoxedFuture<
-        'a,
-        Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
+    ) -> impl ConditionalSendFuture<
+        Output = Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {
         Box::pin(async move {
             let data = asset

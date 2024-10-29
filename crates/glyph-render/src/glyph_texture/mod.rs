@@ -2,6 +2,7 @@ use std::{sync::Arc, sync::Weak};
 
 use bevy::{
     app::Plugin,
+    color::Color,
     ecs::{
         component::Component,
         schedule::IntoSystemConfigs,
@@ -9,7 +10,10 @@ use bevy::{
     },
     prelude::Deref,
     render::{
-        color::Color,
+        render_resource::{
+            Extent3d, TextureDataOrder, TextureDescriptor, TextureDimension, TextureFormat,
+            TextureUsages,
+        },
         renderer::{RenderDevice, RenderQueue},
         Render, RenderSet,
     },
@@ -17,7 +21,6 @@ use bevy::{
 };
 use bytemuck::cast_slice;
 use swash::FontRef;
-use wgpu::{util::TextureDataOrder, Extent3d, TextureDescriptor, TextureFormat, TextureUsages};
 
 use crate::{
     atlas::FontAtlasSource,
@@ -49,10 +52,11 @@ impl std::hash::Hash for ExtractedTextureKey {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         state.write_usize(Weak::as_ptr(&self.data) as usize);
         state.write_usize(Weak::as_ptr(&self.atlas) as usize);
-        state.write_u32(self.color.r().to_bits());
-        state.write_u32(self.color.g().to_bits());
-        state.write_u32(self.color.b().to_bits());
-        state.write_u32(self.color.a().to_bits());
+        let col = self.color.to_srgba();
+        state.write_u32(col.red.to_bits());
+        state.write_u32(col.green.to_bits());
+        state.write_u32(col.blue.to_bits());
+        state.write_u32(col.alpha.to_bits());
     }
 }
 impl ExtractedTextureKey {
@@ -202,8 +206,8 @@ impl PreparedGlyphTextureCache {
                             },
                             mip_level_count: 1,
                             sample_count: 1,
-                            dimension: wgpu::TextureDimension::D2,
-                            format: wgpu::TextureFormat::Rgba32Uint,
+                            dimension: TextureDimension::D2,
+                            format: TextureFormat::Rgba32Uint,
                             usage: TextureUsages::TEXTURE_BINDING,
                             view_formats: &[],
                         },
@@ -297,7 +301,7 @@ impl PreparedAtlasCache {
                 },
                 mip_level_count: 1,
                 sample_count: 1,
-                dimension: bevy::render::render_resource::TextureDimension::D2,
+                dimension: TextureDimension::D2,
                 format: TextureFormat::Rgba8Unorm,
                 usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_SRC,
                 view_formats: &[TextureFormat::Rgba8Unorm],

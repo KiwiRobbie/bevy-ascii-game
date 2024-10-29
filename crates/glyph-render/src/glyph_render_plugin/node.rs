@@ -6,11 +6,13 @@ use bevy::{
     },
     render::{
         render_graph,
-        render_resource::{BindGroupEntries, PipelineCache},
+        render_resource::{
+            BindGroupEntries, LoadOp, Operations, PipelineCache, RenderPassColorAttachment,
+            RenderPassDescriptor, StoreOp, TextureViewDescriptor,
+        },
         view::{ViewTarget, ViewUniforms},
     },
 };
-use wgpu::{RenderPassColorAttachment, RenderPassDescriptor};
 
 use crate::glyph_buffer::TargetGlyphBuffer;
 
@@ -32,13 +34,13 @@ struct BufferQueryData {
 }
 
 #[derive(QueryFilter)]
-struct BufferQueryFilter {
-    _glyph_model_uniforms: With<GlyphModelUniformBuffer>,
-    _glyph_uniform_buffer: With<GlyphUniformBuffer>,
-    _glyph_texture_info: With<GlyphTextureInfo>,
-    _buffer_data: With<GlyphBufferData>,
-    _atlas_data: With<AtlasGpuData>,
-}
+struct BufferQueryFilter(
+    With<GlyphModelUniformBuffer>,
+    With<GlyphUniformBuffer>,
+    With<GlyphTextureInfo>,
+    With<GlyphBufferData>,
+    With<AtlasGpuData>,
+);
 
 #[derive(QueryData)]
 struct TextureQueryData {
@@ -48,11 +50,11 @@ struct TextureQueryData {
 }
 
 #[derive(QueryFilter)]
-struct TextureQueryFilter {
-    _render_uniforms: With<GlyphRenderUniformBuffer>,
-    _glyph_texture: With<GpuGlyphTexture>,
-    _target: With<TargetGlyphBuffer>,
-}
+struct TextureQueryFilter(
+    With<GlyphRenderUniformBuffer>,
+    With<GpuGlyphTexture>,
+    With<TargetGlyphBuffer>,
+);
 
 pub struct GlyphGenerationNode {
     q_buffers: QueryState<BufferQueryData>,
@@ -115,10 +117,11 @@ impl render_graph::Node for GlyphGenerationNode {
         world: &World,
     ) -> Result<(), render_graph::NodeRunError> {
         let view_entity = graph.get_view_entity().expect("Missing View Entity");
-        let target = self
-            .q_view
-            .get_manual(world, view_entity)
-            .expect("Missing ViewTarget");
+        let Ok(target) = self.q_view.get_manual(world, view_entity) else {
+            bevy::log::warn!("Missing ViewTarget");
+            return Ok(());
+        };
+        // .expect("Missing ViewTarget");
 
         let pipeline_cache = world.resource::<PipelineCache>();
         let glyph_pipeline_data = world.get_resource::<GlyphPipelineData>().unwrap();
@@ -126,14 +129,14 @@ impl render_graph::Node for GlyphGenerationNode {
         let Some(render_pipeline) =
             pipeline_cache.get_render_pipeline(glyph_pipeline_data.glyph_render_pipeline_id)
         else {
-            dbg!("Early return!");
+            dbg!("Glyph Render Plugin: No glyph render pipeline");
             return Ok(());
         };
 
         let Some(raster_pipeline) =
             pipeline_cache.get_render_pipeline(glyph_pipeline_data.glyph_raster_pipeline_id)
         else {
-            dbg!("Early return!");
+            dbg!("Glyph Render Plugin: No glyph raster pipeline");
             return Ok(());
         };
 
@@ -144,9 +147,9 @@ impl render_graph::Node for GlyphGenerationNode {
             color_attachments: &[Some(RenderPassColorAttachment {
                 view: target.main_texture_view(),
                 resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
-                    store: wgpu::StoreOp::Store,
+                ops: Operations {
+                    load: LoadOp::Load,
+                    store: StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
@@ -173,9 +176,9 @@ impl render_graph::Node for GlyphGenerationNode {
                     color_attachments: &[Some(RenderPassColorAttachment {
                         view: &view,
                         resolve_target: None,
-                        ops: wgpu::Operations {
-                            load: wgpu::LoadOp::Load,
-                            store: wgpu::StoreOp::Store,
+                        ops: Operations {
+                            load: LoadOp::Load,
+                            store: StoreOp::Store,
                         },
                     })],
                     depth_stencil_attachment: None,
@@ -201,7 +204,7 @@ impl render_graph::Node for GlyphGenerationNode {
                             render_uniforms.binding().unwrap(),
                             &glyph_texture
                                 .buffer_texture
-                                .create_view(&wgpu::TextureViewDescriptor::default()),
+                                .create_view(&TextureViewDescriptor::default()),
                         )),
                     );
 
@@ -229,13 +232,13 @@ impl render_graph::Node for GlyphGenerationNode {
                         glyph_model_uniforms.binding().unwrap(),
                         &atlas_data
                             .data
-                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                            .create_view(&TextureViewDescriptor::default()),
                         &atlas_data
                             .uvs
-                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                            .create_view(&TextureViewDescriptor::default()),
                         &buffer_data
                             .buffer
-                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                            .create_view(&TextureViewDescriptor::default()),
                     )),
                 );
 

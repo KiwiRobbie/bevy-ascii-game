@@ -1,5 +1,6 @@
 use bevy::{
     asset::AssetServer,
+    color::Color,
     ecs::{
         entity::Entity,
         query::With,
@@ -7,7 +8,6 @@ use bevy::{
     },
     input::gamepad::Gamepad,
     math::{IVec2, UVec2, Vec2},
-    render::color::Color,
 };
 
 use glyph_render::{
@@ -16,7 +16,7 @@ use glyph_render::{
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
-    collision::{Aabb, Collider, CollisionShape},
+    collision::{Aabb, Collider},
     free::FreeMarker,
     gravity::Gravity,
     velocity::Velocity,
@@ -30,15 +30,12 @@ use spatial_grid::{
 use crate::physics_grids::GamePhysicsGridMarker;
 
 use super::{
-    input::{controller::PlayerInputController, PlayerInputReset},
+    input::{controller::PlayerInputController, player_inputs::ResetMarker},
     movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
     PlayerBundle,
 };
 
-pub fn player_reset_system(
-    mut commands: Commands,
-    q_player: Query<Entity, With<PlayerInputReset>>,
-) {
+pub fn player_reset_system(mut commands: Commands, q_player: Query<Entity, With<ResetMarker>>) {
     for player in q_player.iter() {
         commands.entity(player).insert((
             Position(IVec2::new(10, 10)),
@@ -59,15 +56,16 @@ pub fn create_player_with_gamepad(
     create_player(commands, server)
         .insert(PlayerInputController(gamepad))
         .insert(GlyphSolidColor {
-            color: Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).as_rgba_linear()
-                * 10.0,
+            color: Color::LinearRgba(
+                Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).to_linear() * 10.0,
+            ),
         })
         .insert(TargetGlyphBuffer(glyph_buffer))
         .insert(GamePhysicsGridMarker);
 }
 
-pub fn create_player<'w, 's, 'a>(
-    commands: &'a mut Commands<'w, 's>,
+pub fn create_player<'a>(
+    commands: &'a mut Commands,
     server: &Res<AssetServer>,
 ) -> bevy::ecs::system::EntityCommands<'a> {
     commands.spawn((
@@ -79,10 +77,11 @@ pub fn create_player<'w, 's, 'a>(
                     ..Default::default()
                 },
                 collider: Collider {
-                    shape: CollisionShape::Aabb(Aabb {
-                        min: IVec2::ZERO,
+                    shape: Aabb {
+                        start: IVec2::ZERO,
                         size: UVec2 { x: 6, y: 5 },
-                    }),
+                    }
+                    .into(),
                 },
 
                 ..Default::default()

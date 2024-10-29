@@ -1,6 +1,7 @@
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
+    color::{Color, Hsla},
     core_pipeline::{bloom::BloomSettings, core_2d::Camera2dBundle},
     ecs::{
         component::Component,
@@ -9,15 +10,16 @@ use bevy::{
         query::With,
         system::{Commands, Local, Query, Res, ResMut},
     },
-    input::gamepad::{GamepadConnection, GamepadConnectionEvent},
-    log,
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent},
+        keyboard::{Key, KeyboardInput},
+    },
     math::{IVec2, UVec2},
     render::{
         camera::{Camera, CameraRenderGraph},
-        color::Color,
         texture::ImagePlugin,
     },
-    window::{ReceivedCharacter, Window, WindowPlugin, WindowResolution},
+    window::{Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
 
@@ -37,19 +39,15 @@ use bevy_ascii_game::{
 use glyph_render::{
     atlas::FontAtlasPlugin,
     font::font_load_system,
-    glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
+    glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture},
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
 use grid_physics::{
-    actor::ActorPhysicsBundle,
-    collision::{Aabb, Collider, CollisionShape},
-    free::FreeMarker,
-    gravity::Gravity,
+    collision::{Aabb, Collider},
     plugin::PhysicsPlugin,
     solid::SolidPhysicsBundle,
-    velocity::Velocity,
 };
 use spatial_grid::{depth::Depth, position::SpatialBundle};
 
@@ -125,12 +123,13 @@ fn setup_system(
     commands.spawn((
         Tilemap(server.load("tilemaps/output.tilemap.ron")),
         GlyphSolidColor {
-            color: Color::Hsla {
+            color: Hsla {
                 hue: 0.0,
                 saturation: 0.0,
                 lightness: 0.2,
                 alpha: 1.0,
-            },
+            }
+            .into(),
         },
         SolidPhysicsBundle {
             position: SpatialBundle::from(IVec2::new(20, 10)),
@@ -143,36 +142,36 @@ fn setup_system(
     create_player(&mut commands, &server).insert((
         PlayerInputKeyboardMarker,
         GlyphSolidColor {
-            color: Color::hsl(0.0, 1.0, 0.6).as_rgba_linear() * 10.0,
+            color: Color::LinearRgba(Color::hsl(0.0, 1.0, 0.6).to_linear() * 10.0),
         },
         GamePhysicsGridMarker,
     ));
-    commands.spawn((
-        GlyphAnimation {
-            source: server.load("anim/horse/states/gallop.anim.ron"),
-            frame: 0,
-        },
-        GlyphAnimationPlayer {
-            framerate: 10.0,
-            repeat: true,
-            frame_timer: 0.0,
-        },
-        ActorPhysicsBundle {
-            collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::new(0, 0),
-                    size: UVec2 { x: 30, y: 10 },
-                }),
-            },
-            position: IVec2::new(10, 10).into(),
-            ..Default::default()
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-        GamePhysicsGridMarker,
-        Depth(0.5),
-    ));
+    // commands.spawn((
+    //     GlyphAnimation {
+    //         source: server.load("anim/horse/states/mounted/gallop.anim.ron"),
+    //         frame: 0,
+    //     },
+    //     GlyphAnimationPlayer {
+    //         framerate: 10.0,
+    //         repeat: true,
+    //         frame_timer: 0.0,
+    //     },
+    //     ActorPhysicsBundle {
+    //         collider: Collider {
+    //             shape: CollisionShape::Aabb(Aabb {
+    //                 min: IVec2::new(0, 0),
+    //                 size: UVec2 { x: 30, y: 10 },
+    //             }),
+    //         },
+    //         position: IVec2::new(10, 10).into(),
+    //         ..Default::default()
+    //     },
+    //     FreeMarker,
+    //     Gravity::default(),
+    //     Velocity::default(),
+    //     GamePhysicsGridMarker,
+    //     Depth(0.5),
+    // ));
 
     commands.spawn((
         GlyphSprite {
@@ -220,10 +219,11 @@ fn setup_system(
         SolidPhysicsBundle {
             position: IVec2::new(0, 0).into(),
             collider: Collider {
-                shape: CollisionShape::Aabb(Aabb {
-                    min: IVec2::ZERO,
+                shape: Aabb {
+                    start: IVec2::ZERO,
                     size: UVec2 { x: 100, y: 2 },
-                }),
+                }
+                .into(),
             },
             ..Default::default()
         },
@@ -252,7 +252,7 @@ fn setup_system(
 struct KeyboardInputMarker;
 
 fn keyboard_input_system(
-    mut ev_character: EventReader<ReceivedCharacter>,
+    mut ev_keyboard: EventReader<KeyboardInput>,
     q_glyph_sprite: Query<&GlyphSprite, With<KeyboardInputMarker>>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut position: Local<usize>,
@@ -272,22 +272,25 @@ fn keyboard_input_system(
         )
     }
 
-    for character in ev_character.read() {
-        log::info!("{:?}", character);
+    for key in ev_keyboard.read() {
         let mut data = glyph_texture.source.data.clone();
-        if character.char.chars().next() == Some('\u{8}') {
-            *position = (*position + width * height - 1).rem_euclid(width * height);
-            let (x, y) = get_pos(*position, width, height);
-            data[y].replace_range(x..=x, "_");
-            let (x, y) = get_pos(*position + 1, width, height);
-            data[y].replace_range(x..=x, " ");
-        } else {
-            let (x, y) = get_pos(*position, width, height);
-            data[y].replace_range(x..=x, character.char.to_string().as_str());
-            let (x, y) = get_pos(*position + 1, width, height);
-            data[y].replace_range(x..=x, "_");
+        match &key.logical_key {
+            Key::Backspace => {
+                *position = (*position + width * height - 1).rem_euclid(width * height);
+                let (x, y) = get_pos(*position, width, height);
+                data[y].replace_range(x..=x, "_");
+                let (x, y) = get_pos(*position + 1, width, height);
+                data[y].replace_range(x..=x, " ");
+            }
+            Key::Character(key) => {
+                let (x, y) = get_pos(*position, width, height);
+                data[y].replace_range(x..=x, key.as_str());
+                let (x, y) = get_pos(*position + 1, width, height);
+                data[y].replace_range(x..=x, "_");
 
-            *position = (*position + 1).rem_euclid(width * height);
+                *position = (*position + 1).rem_euclid(width * height);
+            }
+            _ => {}
         }
         *glyph_texture = GlyphTexture::new(data);
     }

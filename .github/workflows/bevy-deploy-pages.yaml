@@ -1,0 +1,58 @@
+name: bevy-deploy-pages
+  
+on:
+  push:
+    branches: [ "web" ]
+  pull_request:
+    branches: [ "web" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: hecrj/setup-rust-action@v2
+      with:
+        rust-version: nightly
+        targets: wasm32-unknown-unknown
+    
+    - uses: actions/checkout@master
+    
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-all-crates: true
+
+    - name: Build WASM
+      run: cargo build --release --target wasm32-unknown-unknown
+
+    - name: Install Bindgen
+      run:  cargo install wasm-bindgen-cli     
+    
+    - name: Clear Old Assets
+      run: rm -rf web/game/assets web/editor/assets
+
+    - name: Copy Game Assets
+      run: cp -r assets web/game/assets 
+
+    - name: Copy Editor Assets
+      run: cp -r assets web/editor/assets 
+
+    - name: Generate WASM bindings
+      run: wasm-bindgen --out-name bevy-ascii-game --out-dir web/game --target web target/wasm32-unknown-unknown/release/bevy-ascii-game.wasm
+
+    - name: Generate WASM bindings
+      run: wasm-bindgen --out-name tilemap --out-dir web/editor --target web target/wasm32-unknown-unknown/release/tilemap.wasm
+
+    - name: Deploy to pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: web
+        branch: github-pages
+

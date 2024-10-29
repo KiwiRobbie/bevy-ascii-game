@@ -2,9 +2,10 @@ use std::ops::Div;
 
 use bevy::{
     asset::Assets,
+    color::Color,
     ecs::system::{Commands, Query, Res, ResMut},
     math::{IVec2, UVec2},
-    render::{color::Color, Extract},
+    render::Extract,
 };
 use glyph_render::{
     atlas::FontAtlasCache,

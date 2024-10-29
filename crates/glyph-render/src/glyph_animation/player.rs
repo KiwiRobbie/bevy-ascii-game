@@ -23,7 +23,7 @@ pub fn loop_animation_player(
 ) {
     for (mut animation, mut player) in q_players.iter_mut() {
         player.frame_timer += time.delta_seconds() * player.framerate;
-        let Some(animation_source) = glyph_animations.get(animation.source.clone()) else {
+        let Some(animation_source) = glyph_animations.get(&animation.source) else {
             continue;
         };
         if player.frame_timer > 1.0 {

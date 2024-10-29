@@ -50,7 +50,7 @@ pub fn animation_graph_player(
     for (entity, graph, mut current, animation, settings) in q_players.iter_mut() {
         if let Some(mut animation) = animation {
             current.frame_timer += time.delta_seconds() * settings.framerate;
-            let Some(animation_source) = glyph_animations.get(animation.source.clone()) else {
+            let Some(animation_source) = glyph_animations.get(&animation.source) else {
                 continue;
             };
             if current.frame_timer > 1.0 {
@@ -62,7 +62,7 @@ pub fn animation_graph_player(
             }
         }
 
-        let Some(graph_source) = glyph_animation_graphs.get(graph.source.clone()) else {
+        let Some(graph_source) = glyph_animation_graphs.get(&graph.source) else {
             continue;
         };
         let new_animation_component =
@@ -95,7 +95,7 @@ pub fn animation_graph_traverse(
     glyph_animation_graphs: Res<Assets<GlyphAnimationGraphSource>>,
 ) {
     for (graph, mut current, target) in q_players.iter_mut() {
-        let Some(graph_source) = glyph_animation_graphs.get(graph.source.clone()) else {
+        let Some(graph_source) = glyph_animation_graphs.get(&graph.source) else {
             continue;
         };
         let target = *graph_source.state_names.get(&**target).unwrap();

@@ -5,7 +5,10 @@ use bevy::{
     asset::{io::Reader, Asset, AssetLoader, AsyncReadExt, Handle},
     ecs::component::Component,
     reflect::TypePath,
-    utils::hashbrown::{HashMap, HashSet},
+    utils::{
+        hashbrown::{HashMap, HashSet},
+        ConditionalSendFuture,
+    },
 };
 use serde::Deserialize;
 
@@ -32,7 +35,7 @@ impl AssetLoader for GlyphAnimationGraphAssetLoader {
         reader: &'a mut Reader,
         _settings: &'a Self::Settings,
         load_context: &'a mut bevy::asset::LoadContext,
-    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+    ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;

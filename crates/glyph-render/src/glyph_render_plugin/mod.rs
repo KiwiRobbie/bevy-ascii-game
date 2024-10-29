@@ -10,7 +10,7 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
-use bytemuck::{cast_slice, cast_slice_mut, Pod, Zeroable};
+use bytemuck::{cast_slice_mut, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
@@ -59,7 +59,7 @@ impl Plugin for GlyphRenderPlugin {
             .add_render_graph_edges(
                 MAIN_GRAPH_2D,
                 (
-                    bevy::core_pipeline::core_2d::graph::Node2d::MainPass,
+                    bevy::core_pipeline::core_2d::graph::Node2d::EndMainPass,
                     GlyphGeneration,
                     bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
                 ),
@@ -136,8 +136,9 @@ impl ExtractedGlyphTextureSource {
                     .unwrap_or(&if c == '·' { u16::MAX - 1 } else { u16::MAX })
                     .to_le_bytes();
 
-                data[index + 4..index + 16]
-                    .copy_from_slice(cast_slice_mut(&mut color.as_rgba_f32()[0..3]));
+                data[index + 4..index + 16].copy_from_slice(cast_slice_mut(
+                    &mut color.to_srgba().to_f32_array_no_alpha(),
+                ));
 
                 data[index + 0] = glyph_id[0];
                 data[index + 1] = glyph_id[1];
@@ -246,8 +247,8 @@ fn prepare_buffers(
     for (entity, color, global_transform, gpu_glyph_texture, grid) in query.iter() {
         let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
             color: color
-                .map(|color| color.color.rgba_to_vec4())
-                .unwrap_or(Color::WHITE.rgba_to_vec4()),
+                .map(|color| color.color.to_srgba().to_vec4())
+                .unwrap_or(Color::WHITE.to_srgba().to_vec4()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
             advance: grid.size.x,
@@ -263,14 +264,14 @@ fn prepare_buffers(
 
         let glyph_buffer_texture = gpu_glyph_texture.buffer_texture.clone();
 
-        let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
-        let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
+        // let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
+        // let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
 
-        let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
-            label: Some("Vertex buffer"),
-            contents: cast_slice(&[v_w, v_h]),
-            usage: BufferUsages::VERTEX,
-        });
+        // let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
+        //     label: Some("Vertex buffer"),
+        //     contents: cast_slice(&[v_w, v_h]),
+        //     usage: BufferUsages::VERTEX,
+        // });
 
         commands.entity(entity).insert((
             GlyphUniformBuffer(uniform_buffer),
@@ -281,7 +282,7 @@ fn prepare_buffers(
             },
             GlyphBufferData {
                 buffer: glyph_buffer_texture,
-                vertex,
+                // vertex,
             },
         ));
     }

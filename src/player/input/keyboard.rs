@@ -11,9 +11,7 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 
-use super::{
-    PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement, PlayerInputReset,
-};
+use super::{player_inputs, PlayerInputMarker};
 
 #[derive(Debug, Component, Clone)]
 pub struct PlayerInputKeyboardMarker;
@@ -21,7 +19,7 @@ pub struct PlayerInputKeyboardMarker;
 fn player_keyboard_input_movement(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut q_player_movement: Query<
-        &mut PlayerInputMovement,
+        &mut player_inputs::Movement,
         (
             With<PlayerMarker>,
             With<PlayerInputMarker>,
@@ -45,7 +43,7 @@ fn player_keyboard_input_movement(
         vertical -= 1.0;
     }
 
-    let input_movement = PlayerInputMovement {
+    let input_movement = player_inputs::Movement {
         horizontal,
         vertical,
     };
@@ -68,22 +66,21 @@ fn player_keyboard_input_buttons(
     >,
 ) {
     for entity in q_players.iter() {
+        let mut commands = commands.entity(entity);
+
+        commands.remove::<player_inputs::MarkerResetBundle>();
+
         if keyboard.pressed(KeyCode::KeyC) {
-            commands.entity(entity).insert(PlayerInputJump);
-        } else {
-            commands.entity(entity).remove::<PlayerInputJump>();
+            commands.insert(player_inputs::JumpMarker);
         }
-
         if keyboard.pressed(KeyCode::KeyX) {
-            commands.entity(entity).insert(PlayerInputLunge);
-        } else {
-            commands.entity(entity).remove::<PlayerInputLunge>();
+            commands.insert(player_inputs::LungeMarker);
         }
-
         if keyboard.pressed(KeyCode::KeyR) {
-            commands.entity(entity).insert(PlayerInputReset);
-        } else {
-            commands.entity(entity).remove::<PlayerInputReset>();
+            commands.insert(player_inputs::ResetMarker);
+        }
+        if keyboard.pressed(KeyCode::KeyF) {
+            commands.insert(player_inputs::InteractMarker);
         }
     }
 }

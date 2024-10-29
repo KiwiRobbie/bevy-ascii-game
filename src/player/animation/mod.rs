@@ -7,14 +7,14 @@ use bevy::ecs::{
 use glyph_render::glyph_animation_graph::player::GlyphAnimationGraphTarget;
 use grid_physics::free::FreeGrounded;
 
-use super::{input::PlayerInputMovement, movement::lunge::PlayerLunging, PlayerMarker};
+use super::{input::player_inputs::Movement, movement::lunge::PlayerLunging, PlayerMarker};
 
 pub fn set_animation_target(
     mut commands: Commands,
     q_players: Query<
         (
             Entity,
-            &PlayerInputMovement,
+            &Movement,
             Option<&FreeGrounded>,
             Option<&PlayerLunging>,
         ),

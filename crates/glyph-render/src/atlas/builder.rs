@@ -123,7 +123,7 @@ impl<'a> AtlasBuilder<'a> {
         let mut data: Vec<u8> = [0xff, 0x00, 0x00, 0x00]
             .into_iter()
             .cycle()
-            .take((self.size * self.size * 4) as usize)
+            .take((CHANNELS as u32 * self.size * self.size) as usize)
             .collect::<Vec<_>>();
 
         let mut items: Vec<AtlasItem> = Vec::with_capacity(self.rendered.len());

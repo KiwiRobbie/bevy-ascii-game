@@ -6,64 +6,61 @@ use super::solid::SolidCollisionCache;
 
 #[derive(Component, Default, Clone)]
 pub struct Collider {
-    pub shape: CollisionShape,
+    pub shape: CompositeCollisionShape,
 }
 
 #[derive(Debug, Clone)]
 pub enum CollisionShape {
     Aabb(Aabb),
-    Composite(Box<[CollisionShape]>),
+    HalfPlane(HalfPlane),
 }
 
-impl CollisionShape {
-    pub fn colliders<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Aabb> + 'a> {
-        match self {
-            Self::Aabb(aabb) => Box::new(std::iter::once(aabb)),
-            Self::Composite(colliders) => {
-                Box::new(colliders.iter().flat_map(|collider| collider.colliders()))
-            }
+impl Overlaps<&CollisionShape> for CollisionShape {
+    fn overlaps(&self, other: &CollisionShape) -> bool {
+        match (self, other) {
+            (CollisionShape::Aabb(a), CollisionShape::Aabb(b)) => a.overlaps(b),
+            (CollisionShape::Aabb(a), CollisionShape::HalfPlane(b)) => a.overlaps(b),
+            (CollisionShape::HalfPlane(a), CollisionShape::Aabb(b)) => a.overlaps(b),
+            (CollisionShape::HalfPlane(a), CollisionShape::HalfPlane(b)) => a.overlaps(b),
         }
     }
 
-    pub fn colliders_at<'a>(&'a self, offset: IVec2) -> Box<dyn Iterator<Item = Aabb> + 'a> {
-        Box::new(self.colliders().map(move |aabb| Aabb {
-            min: aabb.min + offset,
-            size: aabb.size,
-        }))
+    fn overlap_distance(&self, other: &CollisionShape, direction: Direction) -> Option<i32> {
+        match (self, other) {
+            (CollisionShape::Aabb(a), CollisionShape::Aabb(b)) => a.overlap_distance(b, direction),
+            (CollisionShape::Aabb(a), CollisionShape::HalfPlane(b)) => {
+                a.overlap_distance(b, direction)
+            }
+            (CollisionShape::HalfPlane(a), CollisionShape::Aabb(b)) => {
+                a.overlap_distance(b, direction)
+            }
+            (CollisionShape::HalfPlane(a), CollisionShape::HalfPlane(b)) => {
+                a.overlap_distance(b, direction)
+            }
+        }
     }
 }
 
-impl Default for CollisionShape {
-    fn default() -> Self {
-        Self::Composite(Box::new([]))
-    }
+pub trait Overlaps<T> {
+    fn overlaps(&self, other: T) -> bool;
+    fn overlap_distance(&self, other: T, direction: Direction) -> Option<i32>;
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct Aabb {
-    pub min: IVec2,
-    pub size: UVec2,
-}
-
-impl Aabb {
-    pub fn contains(&self, point: IVec2) -> bool {
-        self.min.cmple(point).all() && point.cmplt(self.min + self.size.as_ivec2()).all()
-    }
-
-    pub fn overlaps(&self, other: &Self) -> bool {
-        let other_ends_before = self.min.cmpge(other.min + other.size.as_ivec2());
-        let other_starts_after = (self.min + self.size.as_ivec2()).cmple(other.min);
+impl Overlaps<&Aabb> for Aabb {
+    fn overlaps(&self, other: &Aabb) -> bool {
+        let other_ends_before = self.start.cmpge(other.start + other.size.as_ivec2());
+        let other_starts_after = (self.start + self.size.as_ivec2()).cmple(other.start);
         let outside = other_ends_before | other_starts_after;
         !(outside.any())
     }
 
-    pub fn overlap_distance(&self, other: &Self, direction: Direction) -> Option<i32> {
+    fn overlap_distance(&self, other: &Self, direction: Direction) -> Option<i32> {
         if self.overlaps(other) {
             Some(match direction {
-                Direction::X => other.min.x + other.size.x as i32 - self.min.x,
-                Direction::Y => self.min.y + self.size.y as i32 - other.min.y,
-                Direction::NegX => self.min.x + self.size.x as i32 - other.min.x,
-                Direction::NegY => self.min.y - other.min.y - other.size.y as i32,
+                Direction::PosX => other.start.x + other.size.x as i32 - self.start.x,
+                Direction::PosY => self.start.y + self.size.y as i32 - other.start.y,
+                Direction::NegX => self.start.x + self.size.x as i32 - other.start.x,
+                Direction::NegY => self.start.y - other.start.y - other.size.y as i32,
             })
         } else {
             None
@@ -71,11 +68,136 @@ impl Aabb {
     }
 }
 
+impl Overlaps<&HalfPlane> for Aabb {
+    fn overlaps(&self, other: &HalfPlane) -> bool {
+        let end = self.start + self.size.as_ivec2();
+        match other {
+            HalfPlane::NegX { x } => self.start.x <= *x,
+            HalfPlane::NegY { y } => self.start.y <= *y,
+            HalfPlane::PosX { x } => end.x > *x,
+            HalfPlane::PosY { y } => end.y > *y,
+        }
+    }
+    fn overlap_distance(&self, other: &HalfPlane, direction: Direction) -> Option<i32> {
+        match other.normal().compare(&direction) {
+            spatial_grid::direction::DirectionCompare::Equal => {}
+            spatial_grid::direction::DirectionCompare::Perpendicular => return None,
+            spatial_grid::direction::DirectionCompare::Opposite => {}
+        }
+
+        return None;
+        // match other {
+        //     HalfPlane::NegX { x } => self.start.x <= *x,
+        //     HalfPlane::NegY { y } => self.start.y <= *y,
+        //     HalfPlane::PosX { x } => end.x > *x,
+        //     HalfPlane::PosY { y } => end.y > *y,
+        // }
+    }
+}
+
+impl Overlaps<&Aabb> for HalfPlane {
+    fn overlaps(&self, other: &Aabb) -> bool {
+        other.overlaps(self)
+    }
+    fn overlap_distance(&self, other: &Aabb, direction: Direction) -> Option<i32> {
+        Aabb::overlap_distance(&other, self, direction)
+    }
+}
+
+impl Overlaps<&HalfPlane> for HalfPlane {
+    fn overlaps(&self, other: &HalfPlane) -> bool {
+        match (self, other) {
+            // Opposite directions might overlap
+            (HalfPlane::NegX { x: a }, HalfPlane::PosX { x: b }) => a >= b,
+            (HalfPlane::PosX { x: a }, HalfPlane::NegX { x: b }) => a <= b,
+            (HalfPlane::NegY { y: a }, HalfPlane::PosY { y: b }) => a >= b,
+            (HalfPlane::PosY { y: a }, HalfPlane::NegY { y: b }) => a <= b,
+
+            // Same or perpendicular directions will overlap
+            _ => true,
+        }
+    }
+
+    fn overlap_distance(&self, _other: &Self, _direction: Direction) -> Option<i32> {
+        None
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum HalfPlane {
+    NegX { x: i32 },
+    PosX { x: i32 },
+    NegY { y: i32 },
+    PosY { y: i32 },
+}
+
+impl HalfPlane {
+    pub fn translate(&self, offset: IVec2) -> Self {
+        match self {
+            Self::NegX { x } => Self::NegX { x: x + offset.x },
+            Self::PosX { x } => Self::PosX { x: x + offset.x },
+            Self::NegY { y } => Self::NegY { y: y + offset.y },
+            Self::PosY { y } => Self::PosY { y: y + offset.y },
+        }
+    }
+    pub fn normal(&self) -> Direction {
+        match self {
+            HalfPlane::NegX { x: _ } => Direction::NegX,
+            HalfPlane::PosX { x: _ } => Direction::PosX,
+            HalfPlane::NegY { y: _ } => Direction::NegY,
+            HalfPlane::PosY { y: _ } => Direction::PosY,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CompositeCollisionShape {
+    pub shapes: Box<[CollisionShape]>,
+}
+
+impl CompositeCollisionShape {
+    pub fn iter_at<'a>(&'a self, offset: IVec2) -> Box<dyn Iterator<Item = CollisionShape> + 'a> {
+        Box::new(self.shapes.iter().map(move |shape| match shape {
+            CollisionShape::Aabb(aabb) => CollisionShape::Aabb(aabb.translate(offset)),
+            CollisionShape::HalfPlane(half_plane) => {
+                CollisionShape::HalfPlane(half_plane.translate(offset))
+            }
+        }))
+    }
+}
+
+impl Default for CompositeCollisionShape {
+    fn default() -> Self {
+        Self {
+            shapes: Box::new([]),
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct Aabb {
+    pub start: IVec2,
+    pub size: UVec2,
+}
+
+impl Aabb {
+    pub fn contains(&self, point: IVec2) -> bool {
+        self.start.cmple(point).all() && point.cmplt(self.start + self.size.as_ivec2()).all()
+    }
+
+    pub fn translate(&self, offset: IVec2) -> Self {
+        Self {
+            start: self.start + offset,
+            size: self.size,
+        }
+    }
+}
+
 impl Collider {
     pub fn overlaps(&self, self_pos: IVec2, other: &SolidCollisionCache) -> Option<Entity> {
-        let self_colliders = self.shape.colliders_at(self_pos);
+        let self_colliders = self.shape.iter_at(self_pos);
 
-        for actor_aabb in self_colliders.into_iter() {
+        for actor_aabb in self_colliders {
             for (solid, solid_aabb) in other
                 .collisions
                 .iter()
@@ -92,12 +214,12 @@ impl Collider {
     pub fn overlap_distance(
         &self,
         self_pos: IVec2,
-        other: &[Aabb],
+        other: &[CollisionShape],
         direction: Direction,
     ) -> Option<i32> {
         let mut overlap = None;
 
-        let self_colliders = self.shape.colliders_at(self_pos);
+        let self_colliders = self.shape.iter_at(self_pos);
         for a in self_colliders.into_iter() {
             for b in other.iter() {
                 if let Some(new_distance) = a.overlap_distance(b, direction) {
@@ -112,5 +234,20 @@ impl Collider {
             }
         }
         overlap
+    }
+}
+
+impl From<CollisionShape> for CompositeCollisionShape {
+    fn from(value: CollisionShape) -> Self {
+        Self {
+            shapes: Box::new([value]),
+        }
+    }
+}
+impl From<Aabb> for CompositeCollisionShape {
+    fn from(value: Aabb) -> Self {
+        Self {
+            shapes: Box::new([CollisionShape::Aabb(value)]),
+        }
     }
 }

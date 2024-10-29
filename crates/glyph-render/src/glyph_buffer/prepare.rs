@@ -9,12 +9,14 @@ use bevy::{
     },
     math::UVec2,
     render::{
-        render_resource::UniformBuffer,
+        render_resource::{
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+            UniformBuffer,
+        },
         renderer::{RenderDevice, RenderQueue},
     },
 };
 use spatial_grid::{depth::Depth, position::Position};
-use wgpu::{Extent3d, TextureUsages};
 
 use crate::{
     glyph_render_plugin::{
@@ -41,7 +43,7 @@ pub fn prepare_glyph_buffers(
     mut prepare_glyph_texture_cache: ResMut<PreparedGlyphTextureCache>,
 ) {
     for (buffer_entity, buffer) in q_glyph_buffer.iter() {
-        let buffer_texture = render_device.create_texture(&wgpu::TextureDescriptor {
+        let buffer_texture = render_device.create_texture(&TextureDescriptor {
             label: Some("glyph buffer data"),
             size: Extent3d {
                 depth_or_array_layers: 1,
@@ -50,9 +52,9 @@ pub fn prepare_glyph_buffers(
             },
             mip_level_count: 1,
             sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba32Uint,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Rgba32Uint,
+            usage: TextureUsages::TEXTURE_BINDING | TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[],
         });
 

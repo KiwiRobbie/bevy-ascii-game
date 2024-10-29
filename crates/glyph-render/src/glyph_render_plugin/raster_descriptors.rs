@@ -1,8 +1,8 @@
-use bevy::render::{render_resource::ShaderSize, view::ViewUniform};
-use wgpu::{
+use bevy::render::render_resource::{
     BindGroupLayoutEntry, BindingType, BufferBindingType, BufferSize, ShaderStages,
-    TextureViewDimension,
+    TextureSampleType, TextureViewDimension,
 };
+use bevy::render::{render_resource::ShaderSize, view::ViewUniform};
 
 use super::{GlyphModelUniform, GlyphRenderUniforms, GlyphUniforms};
 
@@ -47,7 +47,7 @@ pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
             visibility: ShaderStages::VERTEX_FRAGMENT,
             ty: BindingType::Texture {
                 multisampled: false,
-                sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                sample_type: TextureSampleType::Float { filterable: false },
                 view_dimension: TextureViewDimension::D2,
             },
             count: None,
@@ -58,7 +58,7 @@ pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
             visibility: ShaderStages::VERTEX_FRAGMENT,
             ty: BindingType::Texture {
                 multisampled: false,
-                sample_type: wgpu::TextureSampleType::Uint,
+                sample_type: TextureSampleType::Uint,
                 view_dimension: TextureViewDimension::D2,
             },
             count: None,
@@ -69,7 +69,7 @@ pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
             visibility: ShaderStages::VERTEX_FRAGMENT,
             ty: BindingType::Texture {
                 multisampled: false,
-                sample_type: wgpu::TextureSampleType::Uint,
+                sample_type: TextureSampleType::Uint,
                 view_dimension: TextureViewDimension::D2,
             },
             count: None,
@@ -93,7 +93,7 @@ pub fn render_bind_group_layout() -> [BindGroupLayoutEntry; 2] {
             visibility: ShaderStages::VERTEX_FRAGMENT,
             ty: BindingType::Texture {
                 multisampled: false,
-                sample_type: wgpu::TextureSampleType::Uint,
+                sample_type: TextureSampleType::Uint,
                 view_dimension: TextureViewDimension::D2,
             },
             count: None,

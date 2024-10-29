@@ -14,9 +14,7 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 
-use super::{
-    PlayerInputJump, PlayerInputLunge, PlayerInputMarker, PlayerInputMovement, PlayerInputReset,
-};
+use super::{player_inputs, PlayerInputMarker};
 
 #[derive(Debug, Component)]
 pub struct PlayerInputController(pub Gamepad);
@@ -24,7 +22,7 @@ pub struct PlayerInputController(pub Gamepad);
 fn player_controller_input_movement(
     axis: Res<Axis<GamepadAxis>>,
     mut q_player_movement: Query<
-        (&mut PlayerInputMovement, &PlayerInputController),
+        (&mut player_inputs::Movement, &PlayerInputController),
         (With<PlayerMarker>, With<PlayerInputMarker>),
     >,
 ) {
@@ -42,7 +40,7 @@ fn player_controller_input_movement(
             })
             .unwrap_or(0.0);
 
-        *movement = PlayerInputMovement {
+        *movement = player_inputs::Movement {
             horizontal,
             vertical,
         };
@@ -58,31 +56,29 @@ fn player_controller_input_buttons(
     >,
 ) {
     for (entity, PlayerInputController(gamepad)) in q_players.iter() {
+        commands
+            .entity(entity)
+            .remove::<player_inputs::MarkerResetBundle>();
+
         if buttons.pressed(GamepadButton {
             gamepad: *gamepad,
             button_type: GamepadButtonType::South,
         }) {
-            commands.entity(entity).insert(PlayerInputJump);
-        } else {
-            commands.entity(entity).remove::<PlayerInputJump>();
+            commands.entity(entity).insert(player_inputs::JumpMarker);
         }
 
         if buttons.pressed(GamepadButton {
             gamepad: *gamepad,
             button_type: GamepadButtonType::West,
         }) {
-            commands.entity(entity).insert(PlayerInputLunge);
-        } else {
-            commands.entity(entity).remove::<PlayerInputLunge>();
+            commands.entity(entity).insert(player_inputs::LungeMarker);
         }
 
         if buttons.pressed(GamepadButton {
             gamepad: *gamepad,
             button_type: GamepadButtonType::Start,
         }) {
-            commands.entity(entity).insert(PlayerInputReset);
-        } else {
-            commands.entity(entity).remove::<PlayerInputReset>();
+            commands.entity(entity).insert(player_inputs::ResetMarker);
         }
     }
 }

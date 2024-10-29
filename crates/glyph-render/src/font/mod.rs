@@ -11,6 +11,7 @@ use bevy::{
     },
     prelude::{Deref, DerefMut},
     reflect::TypePath,
+    utils::ConditionalSendFuture,
 };
 use swash::{CacheKey, FontRef};
 
@@ -114,7 +115,7 @@ impl AssetLoader for CustomFontLoader {
         mut reader: &'a mut bevy::asset::io::Reader,
         _settings: &'a Self::Settings,
         load_context: &'a mut bevy::asset::LoadContext,
-    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+    ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
             bevy::asset::AsyncReadExt::read_to_end(&mut reader, &mut bytes).await?;

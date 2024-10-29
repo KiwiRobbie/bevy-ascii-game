@@ -1,0 +1,63 @@
+(
+    states: [
+        (
+            name: "idle",
+            animation: "anim/player/states/idle.anim.ron",
+        ),
+        (
+            name: "running",
+            animation: "anim/player/states/running.anim.ron",
+        ),
+        (
+            name: "air_idle",
+            animation: "anim/player/states/air_idle.anim.ron",
+        ),
+        (
+            name: "air_strafe",
+            animation: "anim/player/states/air_strafe.anim.ron",
+        ),
+        (
+            name: "lunging",
+            animation: "anim/player/states/lunging.anim.ron",
+        ),
+    ],
+    transitions: [
+        (from: "idle", to: "running"),
+        (from: "running", to: "idle"),
+        (
+            from: "air_idle",
+            to: "air_strafe",
+        ),
+        (
+            from: "air_strafe",
+            to: "air_idle",
+        ),
+        (from: "idle", to: "air_idle",             animation: "anim/player/transitional/landing.anim.ron",
+),
+        (from: "air_idle", to: "idle",             animation: "anim/player/transitional/landing.anim.ron",
+),
+        (
+            from: "running",
+            to: "air_strafe",
+        ),
+        (
+            from: "air_strafe",
+            to: "running",
+        ),
+        (
+            from: "lunging",
+            to: "air_strafe",
+        ),
+        (from: "lunging", to: "running"),
+        (
+            from: "air_strafe",
+            to: "lunging",
+            animation: "anim/player/transitional/lunging.anim.ron",
+        ),
+        (
+            from: "running",
+            to: "lunging",
+            animation: "anim/player/transitional/lunging.anim.ron",
+        ),
+    ],
+)

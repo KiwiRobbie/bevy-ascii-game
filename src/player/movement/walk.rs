@@ -1,5 +1,5 @@
 use super::{direction::PlayerDirection, MovementFilter};
-use crate::player::input::PlayerInputMovement;
+use crate::player::input::player_inputs;
 use bevy::{
     ecs::{
         component::Component,
@@ -20,7 +20,7 @@ pub fn player_walk_system(
             &mut Movement,
             &mut Velocity,
             &mut PlayerDirection,
-            &PlayerInputMovement,
+            &player_inputs::Movement,
             &PlayerWalkSpeed,
             Option<&FreeGrounded>,
         ),
