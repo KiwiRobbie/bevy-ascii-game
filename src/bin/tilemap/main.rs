@@ -2,11 +2,8 @@ use ascii_ui::mouse::input::MouseInput;
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::AssetServer,
-    color::palettes::css::BLACK,
-    core_pipeline::{
-        bloom::BloomSettings,
-        core_2d::{Camera2d, Camera2dBundle},
-    },
+    color::Color,
+    core_pipeline::{bloom::Bloom, core_2d::Camera2d},
     ecs::{
         event::EventReader,
         query::With,
@@ -17,6 +14,7 @@ use bevy::{
         ButtonInput,
     },
     math::{IVec2, UVec2, Vec2},
+    prelude::ClearColorConfig,
     render::{
         camera::{Camera, CameraRenderGraph},
         texture::ImagePlugin,
@@ -94,21 +92,14 @@ fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
         .insert(GamePhysicsGridMarker);
 
     commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                clear_color: bevy::render::camera::ClearColorConfig::Custom(BLACK.into()),
-                hdr: true,
-                ..Default::default()
-            },
-            camera_render_graph: CameraRenderGraph::new(
-                bevy::core_pipeline::core_2d::graph::Core2d,
-            ),
-            camera_2d: Camera2d {},
+        Camera2d,
+        Camera {
+            clear_color: ClearColorConfig::Custom(Color::BLACK),
+            hdr: true,
             ..Default::default()
         },
-        BloomSettings {
-            ..Default::default()
-        },
+        CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::Core2d),
+        Bloom::default(),
     ));
 }
 

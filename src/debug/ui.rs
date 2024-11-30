@@ -29,7 +29,7 @@ fn debug_active(
         let size = positioned.size.as_vec2() * grid.size.as_vec2() * Vec2::new(1.0, -1.0);
         let center = offset + 0.5 * size;
 
-        gizmos.rect_2d(center, 0.0, size, ORANGE);
+        gizmos.rect_2d(center, size, ORANGE);
     }
 }
 

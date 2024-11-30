@@ -8,7 +8,9 @@ edition = "2021"
 [dependencies]
 spatial-grid = { path = "../spatial-grid" }
 glyph-render = { path = "../glyph-render" }
-bevy = { version = "0.14.2", default-features = false, features = [] }
+bevy = { version = "0.15.0", default-features = false, features = [
+    "bevy_window",
+] }
 
 
 [lib]

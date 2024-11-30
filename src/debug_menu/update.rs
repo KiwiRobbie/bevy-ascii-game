@@ -6,11 +6,8 @@ use bevy::{
         query::With,
         system::{Query, Res, ResMut},
     },
-    input::{
-        gamepad::{GamepadButton, GamepadButtonType, Gamepads},
-        keyboard::KeyCode,
-        ButtonInput,
-    },
+    input::{gamepad::GamepadButton, keyboard::KeyCode, ButtonInput},
+    prelude::Gamepad,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
 use spatial_grid::grid::SpatialGrid;
@@ -18,18 +15,14 @@ use spatial_grid::grid::SpatialGrid;
 pub fn toggle_menu(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<DebugMenuState>,
-    gamepad_button: Res<ButtonInput<GamepadButton>>,
-    gamepads: Res<Gamepads>,
+    gamepads: Query<&Gamepad>,
     mut q_root: Query<&mut Root>,
 ) {
     if keyboard.just_pressed(KeyCode::F3) {
         state.enabled = !state.enabled;
     }
     for gamepad in gamepads.iter() {
-        if gamepad_button.just_pressed(GamepadButton {
-            gamepad,
-            button_type: GamepadButtonType::Select,
-        }) {
+        if gamepad.just_pressed(GamepadButton::Select) {
             state.enabled = !state.enabled;
         }
     }

@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use anyhow::Ok;
-use bevy::asset::{AssetLoader, AsyncReadExt};
+use bevy::asset::AssetLoader;
 
-use crate::glyph_render_plugin::{GlyphTexture, GlyphTextureSource};
+use crate::glyph_render_plugin::GlyphTexture;
 
 pub(super) struct GlyphTextureLoader;
 
@@ -15,13 +13,12 @@ impl AssetLoader for GlyphTextureLoader {
     fn extensions(&self) -> &[&str] {
         &["art"]
     }
-
-    fn load<'a>(
-        &'a self,
-        reader: &'a mut bevy::asset::io::Reader,
-        _settings: &'a Self::Settings,
-        _load_context: &'a mut bevy::asset::LoadContext,
-    ) -> bevy::utils::BoxedFuture<'a, Result<Self::Asset, Self::Error>> {
+    fn load(
+        &self,
+        reader: &mut dyn bevy::asset::io::Reader,
+        _settings: &Self::Settings,
+        _load_context: &mut bevy::asset::LoadContext,
+    ) -> impl bevy::utils::ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async {
             let mut bytes = Vec::new();
             reader.read_to_end(&mut bytes).await?;

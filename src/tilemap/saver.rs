@@ -5,7 +5,11 @@ use super::{
 };
 use super::{loader::TilemapLoader, meta::TilemapMeta};
 use bevy::{
-    asset::{saver::AssetSaver, AssetLoader, AsyncWriteExt},
+    asset::{
+        io::Writer,
+        saver::{AssetSaver, SavedAsset},
+        AssetLoader, AsyncWriteExt,
+    },
     utils::ConditionalSendFuture,
 };
 
@@ -18,11 +22,11 @@ impl AssetSaver for TilemapSaver {
     type Error = anyhow::Error;
     type Settings = ();
 
-    fn save<'a>(
-        &'a self,
-        writer: &'a mut bevy::asset::io::Writer,
-        asset: bevy::asset::saver::SavedAsset<'a, Self::Asset>,
-        _settings: &'a Self::Settings,
+    fn save(
+        &self,
+        writer: &mut Writer,
+        asset: SavedAsset<'_, Self::Asset>,
+        _settings: &Self::Settings,
     ) -> impl ConditionalSendFuture<
         Output = Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {
@@ -62,11 +66,11 @@ impl AssetSaver for ChunkSaver {
     type Error = anyhow::Error;
     type Settings = ChunkSettings;
 
-    fn save<'a>(
-        &'a self,
-        writer: &'a mut bevy::asset::io::Writer,
-        asset: bevy::asset::saver::SavedAsset<'a, Self::Asset>,
-        settings: &'a Self::Settings,
+    fn save(
+        &self,
+        writer: &mut Writer,
+        asset: SavedAsset<'_, Self::Asset>,
+        settings: &Self::Settings,
     ) -> impl ConditionalSendFuture<
         Output = Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>,
     > {

@@ -91,7 +91,7 @@ pub fn player_lunge_update_system(
     time: Res<Time>,
 ) {
     for (entity, mut lunging, mut movement, obstructed, settings) in q_player_lunging.iter_mut() {
-        lunging.timer -= time.delta_seconds();
+        lunging.timer -= time.delta_secs();
         let obstructed = if let Some(obstructed) = obstructed {
             lunging.direction.x > 0.0 && obstructed.x.is_some()
                 || lunging.direction.y > 0.0 && obstructed.y.is_some()
@@ -115,7 +115,7 @@ pub fn player_lunge_update_system(
                 .remove::<PlayerLunging>();
         }
 
-        movement.add(lunging.direction * lunging.speed * time.delta_seconds());
+        movement.add(lunging.direction * lunging.speed * time.delta_secs());
     }
 }
 
@@ -126,7 +126,7 @@ pub fn player_lunge_cooldown_update(
 ) {
     for (entity, mut cooldown, grounded) in q_player_cooldown.iter_mut() {
         if cooldown.timer > 0.0 {
-            cooldown.timer -= time.delta_seconds();
+            cooldown.timer -= time.delta_secs();
         }
         if cooldown.timer <= 0.0 && grounded.is_some() {
             commands.entity(entity).remove::<PlayerLungeCooldown>();

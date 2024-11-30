@@ -103,7 +103,7 @@ pub fn update_mouse_position(
                 .single()
                 .cursor_position()
                 .or(tap_pos)
-                .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+                .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
                 .map(|ray| ray.origin)
             {
                 frame.world_position = Some(position);

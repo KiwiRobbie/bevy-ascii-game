@@ -3,12 +3,9 @@ use std::sync::Arc;
 use ascii_ui::mouse::input::MouseInput;
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
-    asset::{AssetServer, Assets, Handle},
-    color::palettes::css::{BLACK, RED},
-    core_pipeline::{
-        bloom::BloomSettings,
-        core_2d::{Camera2d, Camera2dBundle},
-    },
+    asset::{AssetServer, Assets},
+    color::{palettes::css::RED, Color},
+    core_pipeline::{bloom::Bloom, core_2d::Camera2d},
     ecs::{
         event::EventReader,
         query::With,
@@ -20,7 +17,7 @@ use bevy::{
         ButtonInput,
     },
     math::{IVec2, UVec2, Vec2},
-    prelude::{Component, Resource, Without},
+    prelude::{ClearColorConfig, Component, Without},
     render::{
         camera::{Camera, CameraRenderGraph},
         texture::ImagePlugin,
@@ -47,7 +44,6 @@ use glyph_render::{
     glyph_sprite::GlyphSprite,
 };
 use grid_physics::{plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
-use smol_str::SmolStr;
 use spatial_grid::{
     depth::Depth,
     grid::SpatialGrid,
@@ -121,21 +117,14 @@ fn setup_system(
         .insert(GamePhysicsGridMarker);
 
     commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                clear_color: bevy::render::camera::ClearColorConfig::Custom(BLACK.into()),
-                hdr: true,
-                ..Default::default()
-            },
-            camera_render_graph: CameraRenderGraph::new(
-                bevy::core_pipeline::core_2d::graph::Core2d,
-            ),
-            camera_2d: Camera2d {},
+        Camera2d,
+        Camera {
+            clear_color: ClearColorConfig::Custom(Color::BLACK),
+            hdr: true,
             ..Default::default()
         },
-        BloomSettings {
-            ..Default::default()
-        },
+        CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::Core2d),
+        Bloom::default(),
     ));
 
     commands
@@ -234,29 +223,29 @@ fn mouse_pan_system(
     }
 }
 
-#[derive(Resource)]
-pub struct EditorSprite(Handle<GlyphTexture>);
+// #[derive(Resource)]
+// pub struct EditorSprite(Handle<GlyphTexture>);
 
-fn keyboard_typing_system(
-    mut evr_kbd: EventReader<KeyboardInput>,
-    mut q_sprite: Query<&mut GlyphSprite>,
-    q_cursor: Query<&Position, With<EditorCursorMarker>>,
-    res_texture: Res<EditorSprite>,
-    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-) {
-    for ev in evr_kbd.read() {
-        match &ev.logical_key {
-            Key::Character(ch) => {
-                if let Some(editor_texture) = glyph_textures.get_mut(&res_texture.0) {
-                    let mut data = editor_texture.source.data.clone();
-                    // let end = ch.len().min(data[0].len());
-                    // data.splice(0..end, "a".to_string());
-                }
-            }
-            _ => {}
-        };
-    }
-}
+// fn keyboard_typing_system(
+//     mut evr_kbd: EventReader<KeyboardInput>,
+//     mut q_sprite: Query<&mut GlyphSprite>,
+//     q_cursor: Query<&Position, With<EditorCursorMarker>>,
+//     res_texture: Res<EditorSprite>,
+//     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+// ) {
+//     for ev in evr_kbd.read() {
+//         match &ev.logical_key {
+//             Key::Character(ch) => {
+//                 if let Some(editor_texture) = glyph_textures.get_mut(&res_texture.0) {
+//                     let mut data = editor_texture.source.data.clone();
+//                     // let end = ch.len().min(data[0].len());
+//                     // data.splice(0..end, "a".to_string());
+//                 }
+//             }
+//             _ => {}
+//         };
+//     }
+// }
 
 fn keyboard_pan_system(
     mut evr_kbd: EventReader<KeyboardInput>,

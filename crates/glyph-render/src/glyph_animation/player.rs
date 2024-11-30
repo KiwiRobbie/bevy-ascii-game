@@ -22,7 +22,7 @@ pub fn loop_animation_player(
     glyph_animations: Res<Assets<GlyphAnimationSource>>,
 ) {
     for (mut animation, mut player) in q_players.iter_mut() {
-        player.frame_timer += time.delta_seconds() * player.framerate;
+        player.frame_timer += time.delta_secs() * player.framerate;
         let Some(animation_source) = glyph_animations.get(&animation.source) else {
             continue;
         };

@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use bevy::{
-    asset::{Asset, AssetEvent, AssetLoader, AssetServer, Handle},
+    asset::{io::Reader, Asset, AssetEvent, AssetLoader, AssetServer, Handle, LoadContext},
     ecs::{
         component::Component,
         entity::Entity,
@@ -110,15 +110,15 @@ impl AssetLoader for CustomFontLoader {
     fn extensions(&self) -> &[&str] {
         &["ttf"]
     }
-    fn load<'a>(
-        &'a self,
-        mut reader: &'a mut bevy::asset::io::Reader,
-        _settings: &'a Self::Settings,
-        load_context: &'a mut bevy::asset::LoadContext,
+    fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext,
     ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
-            bevy::asset::AsyncReadExt::read_to_end(&mut reader, &mut bytes).await?;
+            bevy::asset::AsyncReadExt::read_to_end(reader, &mut bytes).await?;
             match CustomFontSource::from_bytes(&bytes, 0) {
                 Some(asset) => Ok(asset),
                 None => Err(anyhow!(format!(

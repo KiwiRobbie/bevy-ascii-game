@@ -4,7 +4,7 @@ use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets},
     color::{Color, Hsla},
-    core_pipeline::{bloom::BloomSettings, core_2d::Camera2dBundle},
+    core_pipeline::bloom::Bloom,
     ecs::{
         component::Component,
         entity::Entity,
@@ -17,8 +17,9 @@ use bevy::{
         keyboard::{Key, KeyboardInput},
     },
     math::{IVec2, UVec2},
+    prelude::Camera2d,
     render::{
-        camera::{Camera, CameraRenderGraph},
+        camera::{Camera, CameraRenderGraph, ClearColorConfig},
         texture::ImagePlugin,
     },
     window::{Window, WindowPlugin, WindowResolution},
@@ -101,8 +102,12 @@ fn handle_gamepads(
     q_main_glyph_buffer: Query<Entity, With<PrimaryGlyphBufferMarker>>,
 ) {
     for ev in ev_gamepad.read() {
-        match ev.connection {
-            GamepadConnection::Connected(_) => {
+        match &ev.connection {
+            GamepadConnection::Connected {
+                name: _,
+                vendor_id: _,
+                product_id: _,
+            } => {
                 create_player_with_gamepad(
                     &mut commands,
                     &server,
@@ -112,7 +117,7 @@ fn handle_gamepads(
             }
             GamepadConnection::Disconnected => {
                 for (player, PlayerInputController(gamepad)) in q_players.iter() {
-                    if gamepad.id == ev.gamepad.id {
+                    if *gamepad == ev.gamepad {
                         commands.entity(player).despawn();
                     }
                 }
@@ -239,22 +244,15 @@ fn setup_system(
         },
         GamePhysicsGridMarker,
     ));
-
     commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                clear_color: bevy::render::camera::ClearColorConfig::Custom(Color::BLACK),
-                hdr: true,
-                ..Default::default()
-            },
-            camera_render_graph: CameraRenderGraph::new(
-                bevy::core_pipeline::core_2d::graph::Core2d,
-            ),
+        Camera2d,
+        Camera {
+            clear_color: ClearColorConfig::Custom(Color::BLACK),
+            hdr: true,
             ..Default::default()
         },
-        BloomSettings {
-            ..Default::default()
-        },
+        CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::Core2d),
+        Bloom::default(),
     ));
 }
 

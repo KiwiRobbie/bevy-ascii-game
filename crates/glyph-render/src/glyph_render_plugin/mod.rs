@@ -9,6 +9,7 @@ use bevy::{
         renderer::{RenderDevice, RenderQueue},
         Render, RenderApp, RenderSet,
     },
+    utils::hashbrown::HashMap,
 };
 use bytemuck::{cast_slice_mut, Pod, Zeroable};
 pub use node::GlyphGenerationNode;
@@ -63,11 +64,34 @@ impl Plugin for GlyphRenderPlugin {
                     GlyphGeneration,
                     bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
                 ),
-            );
+            )
+            .add_systems(Render, debug);
     }
     fn finish(&self, app: &mut App) {
         app.sub_app_mut(RenderApp)
             .init_resource::<GlyphPipelineData>();
+    }
+}
+
+fn debug(world: &World) {
+    let mut component_counts: HashMap<&str, usize> = HashMap::new();
+
+    for entity in world.iter_entities() {
+        for component in entity.archetype().components() {
+            let info = world.components().get_info(component).unwrap();
+            let name = info.name();
+
+            if let Some(count) = component_counts.get_mut(name) {
+                *count += 1;
+            } else {
+                component_counts.insert(name, 0);
+            }
+        }
+    }
+    let mut component_counts: Vec<(&str, usize)> = component_counts.into_iter().collect();
+    component_counts.sort_by(|a, b| a.1.cmp(&b.1));
+    for (component, count) in component_counts.into_iter() {
+        println!("{}: {}", component, count);
     }
 }
 
@@ -230,7 +254,7 @@ impl ExtractedGlyphTextureSource {
 
         for (source_index, c) in texture.data.iter().copied().enumerate() {
             let x = source_index % texture.width;
-            let y = (texture.height - source_index / texture.width - 1);
+            let y = texture.height - source_index / texture.width - 1;
             let position = x + texture.width * y;
             let index: usize = 16 * position;
 
@@ -444,6 +468,7 @@ impl FromWorld for GlyphPipelineData {
                 },
                 depth_stencil: None,
                 multisample: Default::default(),
+                zero_initialize_workgroup_memory: false,
             };
 
             let cache = render_world.resource::<PipelineCache>();
@@ -494,6 +519,7 @@ impl FromWorld for GlyphPipelineData {
                 },
                 depth_stencil: None,
                 multisample: Default::default(),
+                zero_initialize_workgroup_memory: false,
             };
 
             let cache = render_world.resource::<PipelineCache>();

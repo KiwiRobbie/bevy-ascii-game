@@ -4,6 +4,7 @@ use bevy::{
         query::{QueryData, QueryFilter, QueryState, With},
         world::{FromWorld, World},
     },
+    log::{info, info_span},
     render::{
         render_graph,
         render_resource::{
@@ -121,7 +122,6 @@ impl render_graph::Node for GlyphGenerationNode {
             bevy::log::warn!("Missing ViewTarget");
             return Ok(());
         };
-        // .expect("Missing ViewTarget");
 
         let pipeline_cache = world.resource::<PipelineCache>();
         let glyph_pipeline_data = world.get_resource::<GlyphPipelineData>().unwrap();
@@ -155,19 +155,29 @@ impl render_graph::Node for GlyphGenerationNode {
             depth_stencil_attachment: None,
         };
 
-        for BufferQueryDataItem {
-            buffer_entity,
-            glyph_model_uniforms,
-            glyph_uniform_buffer,
-            glyph_texture_info,
-            buffer_data,
-            atlas_data,
-        } in self
+        for (
+            i,
+            BufferQueryDataItem {
+                buffer_entity,
+                glyph_model_uniforms,
+                glyph_uniform_buffer,
+                glyph_texture_info,
+                buffer_data,
+                atlas_data,
+            },
+        ) in self
             .buffer_entities
             .iter()
             .map(|e| self.q_buffers.get_manual(world, *e).unwrap())
+            .enumerate()
         {
+            let _span = bevy::prelude::info_span!(
+                "BufferQueryDataItem",
+                name = format!("BufferQueryDataItem {}", i)
+            )
+            .entered();
             {
+                let _span = bevy::prelude::info_span!("render_to_buffers",).entered();
                 let view = buffer_data.buffer.create_view(&Default::default());
                 let glyph_render_render_pass_descriptor = RenderPassDescriptor {
                     label: Some("glyph render pass"),
@@ -184,8 +194,9 @@ impl render_graph::Node for GlyphGenerationNode {
                     depth_stencil_attachment: None,
                 };
 
-                let mut bind_groups = vec![];
+                let render_device = render_context.render_device();
                 // Render textures to buffers
+                let mut bind_groups = vec![];
                 for TextureQueryDataItem {
                     render_uniforms,
                     glyph_texture,
@@ -196,7 +207,8 @@ impl render_graph::Node for GlyphGenerationNode {
                     .flat_map(|e| self.q_textures.get_manual(world, *e))
                     .filter(|item| **item.target == buffer_entity)
                 {
-                    let render_device = render_context.render_device();
+                    let _span = bevy::prelude::info_span!("create_bind_group",).entered();
+
                     let bind_group = render_device.create_bind_group(
                         Some("render bind group".into()),
                         &glyph_pipeline_data.glyph_render_bind_group_layout,
@@ -210,18 +222,27 @@ impl render_graph::Node for GlyphGenerationNode {
 
                     bind_groups.push(bind_group);
                 }
-                let mut render_pass = render_context
-                    .command_encoder()
-                    .begin_render_pass(&glyph_render_render_pass_descriptor);
 
-                for bind_group in bind_groups.iter() {
-                    render_pass.set_bind_group(0, bind_group, &[]);
-                    render_pass.set_pipeline(&render_pipeline);
-                    render_pass.draw(0..6, 0..1);
+                info!("bind_groups: {}", bind_groups.len());
+
+                {
+                    let _span = bevy::prelude::info_span!("render_pass",).entered();
+                    let mut render_pass = render_context
+                        .command_encoder()
+                        .begin_render_pass(&glyph_render_render_pass_descriptor);
+
+                    for bind_group in bind_groups.iter() {
+                        let _span = bevy::prelude::info_span!("draw_call",).entered();
+                        render_pass.set_bind_group(0, bind_group, &[]);
+                        render_pass.set_pipeline(&render_pipeline);
+                        render_pass.draw(0..6, 0..1);
+                    }
                 }
             }
 
             {
+                let _span = bevy::prelude::info_span!("rasterise buffer",).entered();
+
                 let render_device = render_context.render_device();
                 let bind_group = render_device.create_bind_group(
                     Some("raster bind group".into()),
@@ -242,17 +263,20 @@ impl render_graph::Node for GlyphGenerationNode {
                     )),
                 );
 
-                let mut render_pass = render_context
-                    .command_encoder()
-                    .begin_render_pass(&glyph_raster_render_pass_descriptor);
+                {
+                    let _span = bevy::prelude::info_span!("render_pass",).entered();
+                    let mut render_pass = render_context
+                        .command_encoder()
+                        .begin_render_pass(&glyph_raster_render_pass_descriptor);
 
-                render_pass.set_bind_group(0, &bind_group, &[]);
-                render_pass.set_pipeline(raster_pipeline);
+                    render_pass.set_bind_group(0, &bind_group, &[]);
+                    render_pass.set_pipeline(raster_pipeline);
 
-                render_pass.draw(
-                    0..6,
-                    0..glyph_texture_info.width * glyph_texture_info.height,
-                );
+                    render_pass.draw(
+                        0..6,
+                        0..glyph_texture_info.width * glyph_texture_info.height,
+                    );
+                }
             }
         }
         Ok(())

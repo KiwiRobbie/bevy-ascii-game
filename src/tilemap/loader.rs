@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use bevy::{
     asset::{
         io::{Reader, VecReader},
-        AssetLoader, AsyncReadExt, Handle,
+        AssetLoader, Handle, LoadContext,
     },
     math::{IVec2, UVec2},
     utils::{hashbrown::HashMap, ConditionalSendFuture},
@@ -27,11 +27,11 @@ impl AssetLoader for TilemapLoader {
         &["tilemap.ron"]
     }
 
-    fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader,
-        _settings: &'a Self::Settings,
-        load_context: &'a mut bevy::asset::LoadContext,
+    fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext,
     ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
@@ -40,15 +40,19 @@ impl AssetLoader for TilemapLoader {
 
             let mut tilesets = Vec::new();
             for tileset in meta.tilesets.iter() {
-                let value: TilesetSource = load_context
-                    .loader()
-                    .direct()
-                    .untyped()
-                    .load(tileset)
-                    .await
-                    .unwrap()
-                    .take()
-                    .unwrap();
+                let loaded_asset: bevy::asset::LoadedAsset<TilesetSource> =
+                    load_context.loader().immediate().load(tileset).await?;
+                let value: TilesetSource = loaded_asset.get().clone();
+                // let value: TilesetSource = load_context
+                //     .loader()
+                //     .direct()
+                //     .untyped()
+                //     .load(tileset)
+                //     .await
+                //     .unwrap()
+                //     .take()
+                //     .unwrap();
+
                 tilesets.push(value);
             }
 
@@ -114,11 +118,11 @@ impl AssetLoader for ChunkLoader {
     fn extensions(&self) -> &[&str] {
         &["chunk.bin"]
     }
-    fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader,
-        settings: &'a Self::Settings,
-        _load_context: &'a mut bevy::asset::LoadContext,
+    fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        _load_context: &mut LoadContext,
     ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();

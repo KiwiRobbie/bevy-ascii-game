@@ -4,12 +4,10 @@ use bevy::{
         component::Component,
         entity::Entity,
         query::With,
-        system::{Commands, Query, Res},
+        system::{Commands, Query},
     },
-    input::{
-        gamepad::{Gamepad, GamepadAxis, GamepadAxisType, GamepadButton, GamepadButtonType},
-        Axis, ButtonInput,
-    },
+    input::gamepad::GamepadButton,
+    prelude::Gamepad,
 };
 
 use crate::player::PlayerMarker;
@@ -17,28 +15,21 @@ use crate::player::PlayerMarker;
 use super::{player_inputs, PlayerInputMarker};
 
 #[derive(Debug, Component)]
-pub struct PlayerInputController(pub Gamepad);
+pub struct PlayerInputController(pub Entity);
 
 fn player_controller_input_movement(
-    axis: Res<Axis<GamepadAxis>>,
+    q_gamepads: Query<&Gamepad>,
     mut q_player_movement: Query<
         (&mut player_inputs::Movement, &PlayerInputController),
         (With<PlayerMarker>, With<PlayerInputMarker>),
     >,
 ) {
-    for (mut movement, PlayerInputController(gamepad)) in q_player_movement.iter_mut() {
-        let horizontal = axis
-            .get(GamepadAxis {
-                gamepad: *gamepad,
-                axis_type: GamepadAxisType::LeftStickX,
-            })
-            .unwrap_or(0.0);
-        let vertical = axis
-            .get(GamepadAxis {
-                gamepad: *gamepad,
-                axis_type: GamepadAxisType::LeftStickY,
-            })
-            .unwrap_or(0.0);
+    for (mut movement, PlayerInputController(gamepad_entity)) in q_player_movement.iter_mut() {
+        let Ok(gamepad) = q_gamepads.get(*gamepad_entity) else {
+            continue;
+        };
+        let horizontal = gamepad.left_stick().x;
+        let vertical = gamepad.left_stick().y;
 
         *movement = player_inputs::Movement {
             horizontal,
@@ -48,36 +39,30 @@ fn player_controller_input_movement(
 }
 
 fn player_controller_input_buttons(
+    q_gamepads: Query<&Gamepad>,
     mut commands: Commands,
-    buttons: Res<ButtonInput<GamepadButton>>,
     q_players: Query<
         (Entity, &PlayerInputController),
         (With<PlayerMarker>, With<PlayerInputMarker>),
     >,
 ) {
-    for (entity, PlayerInputController(gamepad)) in q_players.iter() {
+    for (entity, PlayerInputController(gamepad_entity)) in q_players.iter() {
+        let Ok(gamepad) = q_gamepads.get(*gamepad_entity) else {
+            continue;
+        };
         commands
             .entity(entity)
             .remove::<player_inputs::MarkerResetBundle>();
 
-        if buttons.pressed(GamepadButton {
-            gamepad: *gamepad,
-            button_type: GamepadButtonType::South,
-        }) {
+        if gamepad.pressed(GamepadButton::South) {
             commands.entity(entity).insert(player_inputs::JumpMarker);
         }
 
-        if buttons.pressed(GamepadButton {
-            gamepad: *gamepad,
-            button_type: GamepadButtonType::West,
-        }) {
+        if gamepad.pressed(GamepadButton::West) {
             commands.entity(entity).insert(player_inputs::LungeMarker);
         }
 
-        if buttons.pressed(GamepadButton {
-            gamepad: *gamepad,
-            button_type: GamepadButtonType::Start,
-        }) {
+        if gamepad.pressed(GamepadButton::Start) {
             commands.entity(entity).insert(player_inputs::ResetMarker);
         }
     }

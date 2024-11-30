@@ -124,7 +124,7 @@ pub fn extract_tilemaps(
                             ),
                             tilemap_depth.cloned().unwrap_or_default(),
                             target.clone(),
-                            ExtractedGlyphTexture(extracted_glyph_texture),
+                            // ExtractedGlyphTexture(extracted_glyph_texture),
                         ));
                         if let Some(color) = solid_color {
                             entity_commands.insert(color.clone());

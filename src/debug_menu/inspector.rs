@@ -1,5 +1,3 @@
-use std::any::{Any, TypeId};
-
 use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
     widgets,
@@ -18,8 +16,10 @@ use bevy::{
     math::{IVec2, UVec2, Vec2},
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
+// use ::Downcast;
 use grid_physics::velocity::Velocity;
 use spatial_grid::position::Position;
+use std::any::{Any, TypeId};
 
 use crate::player::{
     input::keyboard::PlayerInputKeyboardMarker, movement::jump::PlayerJumpVelocity,
@@ -173,7 +173,7 @@ pub fn inspector_fetch_system(
                                 {
                                     field_widgets.push(WidgetBuilderFn::entity((ui_for
                                         .fn_readonly)(
-                                        field.as_any(),
+                                        field.try_as_reflect().unwrap().as_any(),
                                         &mut commands,
                                     )));
                                 }
@@ -187,8 +187,10 @@ pub fn inspector_fetch_system(
                                 if let Some(ui_for) =
                                     type_registry.get_type_data::<EcsUiFor>(field.type_id())
                                 {
-                                    inspector_widgets
-                                        .push((ui_for.fn_readonly)(field.as_any(), &mut commands));
+                                    inspector_widgets.push((ui_for.fn_readonly)(
+                                        field.try_as_reflect().unwrap().as_any(),
+                                        &mut commands,
+                                    ));
                                 }
                             }
                         }

@@ -40,7 +40,7 @@ impl Plugin for RenderPlugin {
 fn apply_clipping(
     mut commands: Commands,
     q_clipped: Query<(Entity, &ClipRegion, &Position, &GlyphSprite)>,
-    mut textures: ResMut<Assets<GlyphTexture>>,
+    textures: ResMut<Assets<GlyphTexture>>,
 ) {
     for (entity, clip, pos, sprite) in q_clipped.iter() {
         let clip = clip.to_world_coord();

@@ -71,9 +71,9 @@ fn debug_collision_system(
             let center = min + 0.5 * size;
 
             if solid.is_some() {
-                gizmos.rect_2d(center, 0.0, size, GREEN);
+                gizmos.rect_2d(center, size, GREEN);
             } else if actor.is_some() {
-                gizmos.rect_2d(center, 0.0, size, RED);
+                gizmos.rect_2d(center, size, RED);
             }
         }
     }

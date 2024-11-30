@@ -1,18 +1,15 @@
 use bevy::{
     asset::AssetServer,
-    color::Color,
     ecs::{
         entity::Entity,
         query::With,
         system::{Commands, Query, Res},
     },
-    input::gamepad::Gamepad,
     math::{IVec2, UVec2, Vec2},
 };
 
 use glyph_render::{
     glyph_animation_graph::bundle::GlyphAnimationGraphBundle, glyph_buffer::TargetGlyphBuffer,
-    glyph_render_plugin::GlyphSolidColor,
 };
 use grid_physics::{
     actor::ActorPhysicsBundle,
@@ -50,16 +47,16 @@ pub fn player_reset_system(mut commands: Commands, q_player: Query<Entity, With<
 pub fn create_player_with_gamepad(
     commands: &mut Commands<'_, '_>,
     server: &Res<'_, AssetServer>,
-    gamepad: Gamepad,
+    gamepad: Entity,
     glyph_buffer: Entity,
 ) {
     create_player(commands, server)
         .insert(PlayerInputController(gamepad))
-        .insert(GlyphSolidColor {
-            color: Color::LinearRgba(
-                Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).to_linear() * 10.0,
-            ),
-        })
+        // .insert(GlyphSolidColor {
+        //     color: Color::LinearRgba(
+        //         Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).to_linear() * 10.0,
+        //     ),
+        // })
         .insert(TargetGlyphBuffer(glyph_buffer))
         .insert(GamePhysicsGridMarker);
 }

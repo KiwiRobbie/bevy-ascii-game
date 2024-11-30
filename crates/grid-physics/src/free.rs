@@ -44,7 +44,7 @@ pub(super) fn apply_velocity_to_free(
     time: Res<Time>,
 ) {
     for (mut actor_movement, actor_velocity) in q_free_actors.iter_mut() {
-        actor_movement.add(**actor_velocity * time.delta_seconds());
+        actor_movement.add(**actor_velocity * time.delta_secs());
     }
 }
 
@@ -54,8 +54,7 @@ pub(super) fn apply_gravity_to_free(
     time: Res<Time>,
 ) {
     for (mut actor_velocity, actor_gravity) in q_free_actors.iter_mut() {
-        actor_velocity.y +=
-            res_gravity.acceleration * actor_gravity.multiplier * time.delta_seconds();
+        actor_velocity.y += res_gravity.acceleration * actor_gravity.multiplier * time.delta_secs();
     }
 }
 

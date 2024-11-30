@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use anyhow::Context;
 use bevy::{
-    asset::{io::Reader, Asset, AssetLoader, AsyncReadExt, Handle},
+    asset::{io::Reader, Asset, AssetLoader, Handle, LoadContext},
     ecs::component::Component,
     reflect::TypePath,
     utils::{
@@ -30,11 +30,11 @@ impl AssetLoader for GlyphAnimationGraphAssetLoader {
         &["agraph.ron"]
     }
 
-    fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader,
-        _settings: &'a Self::Settings,
-        load_context: &'a mut bevy::asset::LoadContext,
+    fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext,
     ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
         Box::pin(async move {
             let mut bytes = Vec::new();
