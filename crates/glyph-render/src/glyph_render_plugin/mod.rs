@@ -64,8 +64,8 @@ impl Plugin for GlyphRenderPlugin {
                     GlyphGeneration,
                     bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
                 ),
-            )
-            .add_systems(Render, debug);
+            );
+        // .add_systems(Render, debug);
     }
     fn finish(&self, app: &mut App) {
         app.sub_app_mut(RenderApp)
@@ -73,27 +73,27 @@ impl Plugin for GlyphRenderPlugin {
     }
 }
 
-fn debug(world: &World) {
-    let mut component_counts: HashMap<&str, usize> = HashMap::new();
+// fn debug(world: &World) {
+//     let mut component_counts: HashMap<&str, usize> = HashMap::new();
 
-    for entity in world.iter_entities() {
-        for component in entity.archetype().components() {
-            let info = world.components().get_info(component).unwrap();
-            let name = info.name();
+//     for entity in world.iter_entities() {
+//         for component in entity.archetype().components() {
+//             let info = world.components().get_info(component).unwrap();
+//             let name = info.name();
 
-            if let Some(count) = component_counts.get_mut(name) {
-                *count += 1;
-            } else {
-                component_counts.insert(name, 0);
-            }
-        }
-    }
-    let mut component_counts: Vec<(&str, usize)> = component_counts.into_iter().collect();
-    component_counts.sort_by(|a, b| a.1.cmp(&b.1));
-    for (component, count) in component_counts.into_iter() {
-        println!("{}: {}", component, count);
-    }
-}
+//             if let Some(count) = component_counts.get_mut(name) {
+//                 *count += 1;
+//             } else {
+//                 component_counts.insert(name, 0);
+//             }
+//         }
+//     }
+//     let mut component_counts: Vec<(&str, usize)> = component_counts.into_iter().collect();
+//     component_counts.sort_by(|a, b| a.1.cmp(&b.1));
+//     for (component, count) in component_counts.into_iter() {
+//         println!("{}: {}", component, count);
+//     }
+// }
 
 #[derive(Clone, ShaderType)]
 pub struct GlyphUniforms {

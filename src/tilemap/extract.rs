@@ -5,6 +5,7 @@ use bevy::{
     color::Color,
     ecs::system::{Commands, Query, Res, ResMut},
     math::{IVec2, UVec2},
+    prelude::{Component, Entity, With},
     render::Extract,
 };
 use glyph_render::{
@@ -24,8 +25,12 @@ use super::{
     component::Tilemap,
 };
 
+#[derive(Component)]
+pub struct ExtractedTileMapTileMarker;
+
 pub fn extract_tilemaps(
     mut commands: Commands,
+    q_existing_tiles: Query<Entity, With<ExtractedTileMapTileMarker>>,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,
     q_glyph_buffer: Extract<Query<(&Position, &GlyphBuffer, &CustomFont, &FontSize)>>,
@@ -43,6 +48,10 @@ pub fn extract_tilemaps(
     chunks: Extract<Res<Assets<TilemapChunk>>>,
     mut extracted_glyph_cache: ResMut<ExtractedGlyphTextureCache>,
 ) {
+    for entity in q_existing_tiles.iter() {
+        commands.entity(entity).despawn();
+    }
+
     for (buffer_position, buffer, font, font_size) in q_glyph_buffer.iter() {
         let Some(font) = fonts.get(font.id()) else {
             continue;
@@ -104,8 +113,8 @@ pub fn extract_tilemaps(
                             continue;
                         };
                         let tile_offset = UVec2::new(
-                            (index as u32).rem_euclid(tilemap.chunk_size.x),
-                            (index as u32).div_euclid(tilemap.chunk_size.x),
+                            (index as u32) % tilemap.chunk_size.x,
+                            (index as u32) / tilemap.chunk_size.x,
                         ) * tileset.tile_size;
 
                         let data = &tileset.tiles[tile.1 as usize];
@@ -124,7 +133,8 @@ pub fn extract_tilemaps(
                             ),
                             tilemap_depth.cloned().unwrap_or_default(),
                             target.clone(),
-                            // ExtractedGlyphTexture(extracted_glyph_texture),
+                            ExtractedTileMapTileMarker,
+                            ExtractedGlyphTexture(extracted_glyph_texture),
                         ));
                         if let Some(color) = solid_color {
                             entity_commands.insert(color.clone());

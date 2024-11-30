@@ -176,6 +176,7 @@ impl render_graph::Node for GlyphGenerationNode {
                 name = format!("BufferQueryDataItem {}", i)
             )
             .entered();
+
             {
                 let _span = bevy::prelude::info_span!("render_to_buffers",).entered();
                 let view = buffer_data.buffer.create_view(&Default::default());
@@ -222,8 +223,6 @@ impl render_graph::Node for GlyphGenerationNode {
 
                     bind_groups.push(bind_group);
                 }
-
-                info!("bind_groups: {}", bind_groups.len());
 
                 {
                     let _span = bevy::prelude::info_span!("render_pass",).entered();
