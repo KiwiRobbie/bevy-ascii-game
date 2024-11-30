@@ -139,7 +139,7 @@ fn zoom_system(
     let factor = (distance / 16.0).exp();
     *size *= factor;
     dbg!(factor);
-    *size = size.max(2.0).min(128.0);
+    *size = size.clamp(2.0, 128.0);
 
     dbg!(&size);
     let window = window.get_single().unwrap();

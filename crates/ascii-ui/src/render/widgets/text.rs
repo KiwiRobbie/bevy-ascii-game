@@ -20,7 +20,7 @@ pub fn text_render(
         commands.entity(entity).insert((
             Position(positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32),
             GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::new(vec![text.text.clone()])),
+                texture: glyph_textures.add(GlyphTexture::from(vec![text.text.clone()])),
                 offset: IVec2::ZERO,
             },
             Depth(0.0),

@@ -82,7 +82,32 @@ pub struct GlyphUniforms {
 
 #[derive(Debug, Clone)]
 pub struct GlyphTextureSource {
-    pub data: Vec<String>,
+    pub width: usize,
+    pub height: usize,
+    pub data: Box<[char]>,
+}
+
+impl GlyphTextureSource {
+    pub fn new(width: usize, height: usize, data: Box<[char]>) -> Self {
+        assert_eq!(data.len(), width * height);
+        Self {
+            data,
+            width,
+            height,
+        }
+    }
+    pub fn new_iter<I: IntoIterator<Item = char>>(width: usize, height: usize, iter: I) -> Self {
+        let data = iter
+            .into_iter()
+            .take(width * height)
+            .collect::<Box<[char]>>();
+        assert_eq!(data.len(), width * height);
+        Self {
+            data,
+            width,
+            height,
+        }
+    }
 }
 
 #[derive(Asset, TypePath, Clone)]
@@ -91,16 +116,58 @@ pub struct GlyphTexture {
 }
 
 impl GlyphTexture {
-    pub fn new(data: Vec<String>) -> Self {
-        Self {
-            source: Arc::new(GlyphTextureSource { data }),
-        }
+    pub fn new(source: Arc<GlyphTextureSource>) -> Self {
+        Self { source: source }
     }
-
     pub fn size(&self) -> UVec2 {
         UVec2 {
-            x: self.source.as_ref().data[0].len() as u32,
-            y: self.source.as_ref().data.len() as u32,
+            x: self.source.width as u32,
+            y: self.source.height as u32,
+        }
+    }
+}
+
+impl From<GlyphTextureSource> for GlyphTexture {
+    fn from(value: GlyphTextureSource) -> Self {
+        Self {
+            source: Arc::new(value),
+        }
+    }
+}
+
+impl From<&Vec<String>> for GlyphTextureSource {
+    fn from(from: &Vec<String>) -> Self {
+        let height = from.len();
+        let width = from[0].len();
+
+        let mut data: Box<[char]> = vec!['\0'; width * height].into_boxed_slice();
+        let mut index = 0;
+        for row in from.into_iter() {
+            for ch in row.chars() {
+                data[index] = ch;
+                index += 1;
+            }
+        }
+
+        Self {
+            width,
+            height,
+            data,
+        }
+    }
+}
+
+impl From<&Vec<String>> for GlyphTexture {
+    fn from(from: &Vec<String>) -> Self {
+        Self {
+            source: Arc::new(from.into()),
+        }
+    }
+}
+impl From<Vec<String>> for GlyphTexture {
+    fn from(from: Vec<String>) -> Self {
+        Self {
+            source: Arc::new((&from).into()),
         }
     }
 }
@@ -149,6 +216,42 @@ impl ExtractedGlyphTextureSource {
             data,
             width: width as u32,
             height: height as u32,
+        }
+    }
+
+    pub fn from_texture_data(
+        texture: &GlyphTextureSource,
+        atlas: &FontAtlasSource,
+        font: FontRef,
+        color: Color,
+    ) -> Self {
+        let mut data: Box<[u8]> = vec![0; 4 * 4 * texture.width * texture.height].into();
+        let charmap = font.charmap();
+
+        for (source_index, c) in texture.data.iter().copied().enumerate() {
+            let x = source_index % texture.width;
+            let y = (texture.height - source_index / texture.width - 1);
+            let position = x + texture.width * y;
+            let index: usize = 16 * position;
+
+            let glyph_id = atlas
+                .local_index
+                .get(&charmap.map(c))
+                .unwrap_or(&if c == '·' { u16::MAX - 1 } else { u16::MAX })
+                .to_le_bytes();
+
+            data[index + 4..index + 16].copy_from_slice(cast_slice_mut(
+                &mut color.to_srgba().to_f32_array_no_alpha(),
+            ));
+
+            data[index + 0] = glyph_id[0];
+            data[index + 1] = glyph_id[1];
+        }
+
+        Self {
+            data,
+            width: texture.width as u32,
+            height: texture.height as u32,
         }
     }
 }

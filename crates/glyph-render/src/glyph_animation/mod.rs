@@ -30,7 +30,7 @@ pub struct GlyphAnimationFrame {
 impl GlyphAnimationFrame {
     pub fn new(data: Vec<String>, offset: IVec2) -> Self {
         Self {
-            source: Arc::new(GlyphTextureSource { data }),
+            source: Arc::new((&data).into()),
             offset,
         }
     }

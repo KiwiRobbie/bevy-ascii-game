@@ -22,7 +22,7 @@ pub fn border_render(
         commands.entity(entity).insert((
             Position(position),
             GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::new(data)),
+                texture: glyph_textures.add(GlyphTexture::from(data)),
                 offset: IVec2::ZERO,
             },
         ));

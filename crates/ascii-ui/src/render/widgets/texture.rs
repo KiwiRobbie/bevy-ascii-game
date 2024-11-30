@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bevy::{
     asset::Assets,
     ecs::{
@@ -6,7 +8,10 @@ use bevy::{
     },
     math::IVec2,
 };
-use glyph_render::{glyph_render_plugin::GlyphTexture, glyph_sprite::GlyphSprite};
+use glyph_render::{
+    glyph_render_plugin::{GlyphTexture, GlyphTextureSource},
+    glyph_sprite::GlyphSprite,
+};
 use spatial_grid::position::Position;
 
 use crate::{layout::positioned::Positioned, widgets::Texture};
@@ -20,7 +25,11 @@ pub fn texture_render(
         commands.entity(entity).insert((
             Position(positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32),
             GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::new(text.data.clone())),
+                texture: glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
+                    text.size.x as usize,
+                    text.size.y as usize,
+                    text.data.clone(),
+                )))),
                 offset: IVec2::ZERO,
             },
         ));

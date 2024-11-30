@@ -64,7 +64,7 @@ pub fn prepare_glyph_buffers(
         {
             let mut uniform_buffer = UniformBuffer::from(GlyphRenderUniforms {
                 position: **position,
-                size: UVec2::new(texture.width, texture.height),
+                size: UVec2::new(texture.width as u32, texture.height as u32),
                 target_size: buffer.size,
                 depth: **depth,
                 padding: Default::default(),

@@ -147,8 +147,8 @@ impl ExtractedGlyphTextureCache {
             self,
             key,
             || {
-                Arc::new(ExtractedGlyphTextureSource::from_text_data(
-                    &data.data, atlas, font, color,
+                Arc::new(ExtractedGlyphTextureSource::from_texture_data(
+                    &data, atlas, font, color,
                 ))
             },
         )

@@ -29,6 +29,7 @@ glyph-render = { path = "crates/glyph-render" }
 text-util = { path = "crates/text-util" }
 spatial-grid = { path = "crates/spatial-grid" }
 async-fs = "2.1.1"
+smol_str = "0.2.2"
 
 [lib]
 

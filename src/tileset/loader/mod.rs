@@ -100,7 +100,7 @@ impl AssetLoader for TilesetLoader {
                                 let label = format!("{}-{}-{}", name, tile_x, tile_y);
                                 tile_ids.insert(label.clone(), tiles.len());
                                 tile_labels.push(label);
-                                tiles.push(Arc::new(GlyphTextureSource { data: tile }));
+                                tiles.push(Arc::new(GlyphTextureSource::from(&tile)));
 
                                 tile_x += 1;
                             }

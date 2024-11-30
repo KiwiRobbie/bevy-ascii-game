@@ -59,25 +59,28 @@ fn apply_clipping(
             if clipping_start.cmpgt(IVec2::ZERO).any()
                 || clipping_end.cmplt(texture.size().as_ivec2()).any()
             {
-                let mut data = Vec::new();
+                // let mut data = Vec::new();
 
-                let t = texture.source.data.len() as usize;
-                for src_y in (t - clipping_end.y as usize)..(t - clipping_start.y as usize) {
-                    let src_start_x = clipping_start.x as usize;
-                    let src_end_x = clipping_end.x as usize;
-                    data.push(
-                        texture.source.data[src_y]
-                            .chars()
-                            .skip(src_start_x)
-                            .take(src_end_x - src_start_x)
-                            .collect::<String>(),
-                    );
-                }
-                // TODO: Cache / speed up
-                commands.entity(entity).insert(GlyphSprite {
-                    offset: sprite.offset + clipping_start,
-                    texture: textures.add(GlyphTexture::new(data)),
-                });
+                // let t = texture.source.data.len() as usize;
+                // for src_y in (t - clipping_end.y as usize)..(t - clipping_start.y as usize) {
+                //     let src_start_x = clipping_start.x as usize;
+                //     let src_end_x = clipping_end.x as usize;
+                //     data.push(
+                //         texture
+                //             .source
+                //             .data
+                //             .iter()
+                //             .skip(src_y * texture.source.width)
+                //             .skip(src_start_x)
+                //             .take(src_end_x - src_start_x)
+                //             .collect::<String>(),
+                //     );
+                // }
+                // // TODO: Cache / speed up
+                // commands.entity(entity).insert(GlyphSprite {
+                //     offset: sprite.offset + clipping_start,
+                //     texture: textures.add(GlyphTexture::new(data)),
+                // });
             }
         }
     }

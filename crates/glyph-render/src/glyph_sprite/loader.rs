@@ -33,9 +33,7 @@ impl AssetLoader for GlyphTextureLoader {
                 })
                 .collect::<Vec<_>>();
 
-            Ok(GlyphTexture {
-                source: Arc::new(GlyphTextureSource { data }),
-            })
+            Ok(data.into())
         })
     }
 }

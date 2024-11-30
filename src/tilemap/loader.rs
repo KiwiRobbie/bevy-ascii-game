@@ -125,9 +125,18 @@ impl AssetLoader for ChunkLoader {
             reader.read_to_end(&mut bytes).await?;
 
             let data = bytes
-                .array_chunks::<4>()
-                .array_chunks::<2>()
-                .map(|[tileset, tile]| (u32::from_le_bytes(*tileset), u32::from_le_bytes(*tile)))
+                .chunks_exact(8)
+                .map(|chunks| {
+                    let mut tileset_bytes = [0u8; 4];
+                    let mut tile_bytes = [0u8; 4];
+                    tileset_bytes.copy_from_slice(&chunks[0..4]);
+                    tile_bytes.copy_from_slice(&chunks[4..8]);
+
+                    (
+                        u32::from_le_bytes(tileset_bytes),
+                        u32::from_le_bytes(tile_bytes),
+                    )
+                })
                 .collect::<Box<[(u32, u32)]>>();
 
             if let Some(size) = settings.size {

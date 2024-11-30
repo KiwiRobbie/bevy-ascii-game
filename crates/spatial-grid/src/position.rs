@@ -1,6 +1,6 @@
 use bevy_derive::{Deref, DerefMut};
-use bevy_ecs::{bundle::Bundle, component::Component};
-use bevy_math::IVec2;
+use bevy_ecs::{bundle::Bundle, component::Component, world::Mut};
+use bevy_math::{IVec2, Vec2};
 use bevy_reflect::Reflect;
 
 use crate::remainder::Remainder;
@@ -18,8 +18,35 @@ pub struct SpatialBundle {
     pub remainder: Remainder,
 }
 
-impl<V: Into<IVec2>> From<V> for SpatialBundle {
-    fn from(value: V) -> Self {
+impl SpatialBundle {
+    pub fn offset(&mut self, delta: Vec2) {
+        *self.remainder += delta;
+        let delta = self.remainder.round();
+        *self.remainder -= delta;
+        *self.position += delta.as_ivec2();
+    }
+}
+pub trait SpatialTraits {
+    fn offset(&mut self, delta: Vec2);
+}
+impl SpatialTraits for (&mut Position, &mut Remainder) {
+    fn offset(&mut self, delta: Vec2) {
+        **self.1 += delta;
+        let delta = self.1.round();
+        **self.1 -= delta;
+        **self.0 += delta.as_ivec2();
+    }
+}
+impl<'a> SpatialTraits for (Mut<'a, Position>, Mut<'a, Remainder>) {
+    fn offset(&mut self, delta: Vec2) {
+        **self.1 += delta;
+        let delta = self.1.round();
+        **self.1 -= delta;
+        **self.0 += delta.as_ivec2();
+    }
+}
+impl From<IVec2> for SpatialBundle {
+    fn from(value: IVec2) -> Self {
         Self {
             position: Position(value.into()),
             ..Default::default()

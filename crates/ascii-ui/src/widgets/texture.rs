@@ -16,10 +16,10 @@ use crate::{
     widget_builder::WidgetBuilderFn,
 };
 
-#[derive(Component, Debug, Clone, Reflect, Default)]
-#[reflect(Component)]
+#[derive(Component, Debug, Clone, Default)]
+// #[reflect(Component)]
 pub struct Texture {
-    pub data: Vec<String>,
+    pub data: Box<[char]>,
     pub size: UVec2,
 }
 #[derive(Debug, Default)]
@@ -46,7 +46,7 @@ impl WidgetLayoutLogic for TextureLogic {
 }
 
 impl Texture {
-    pub fn build<'a>(data: Vec<String>, size: UVec2) -> WidgetBuilderFn<'a> {
+    pub fn build<'a>(data: Box<[char]>, size: UVec2) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             commands
                 .spawn((

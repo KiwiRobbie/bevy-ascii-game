@@ -20,7 +20,7 @@ pub fn divider_render(
         commands.entity(entity).insert((
             Position(positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32),
             GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::new(vec![divider
+                texture: glyph_textures.add(GlyphTexture::from(vec![divider
                     .character
                     .to_string()
                     .repeat(positioned.size.x as usize)])),
