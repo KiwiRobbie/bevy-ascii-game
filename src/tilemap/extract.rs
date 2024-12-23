@@ -15,7 +15,7 @@ use glyph_render::{
     glyph_render_plugin::GlyphSolidColor,
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
-use spatial_grid::{depth::Depth, position::Position};
+use spatial_grid::{depth::Depth, global_position::GlobalPosition};
 
 use crate::tileset::asset::TilesetSource;
 
@@ -36,7 +36,7 @@ pub(crate) fn extract_tilemaps(
     q_extracted_glyph_buffer: Extract<
         Query<(
             RenderEntity,
-            &Position,
+            &GlobalPosition,
             &GlyphBuffer,
             &CustomFont,
             &FontSize,
@@ -44,7 +44,7 @@ pub(crate) fn extract_tilemaps(
     >,
     q_tilemaps: Extract<
         Query<(
-            &Position,
+            &GlobalPosition,
             Option<&Depth>,
             &Tilemap,
             Option<&GlyphSolidColor>,
@@ -135,7 +135,7 @@ pub(crate) fn extract_tilemaps(
                         );
 
                         let mut entity_commands = commands.spawn((
-                            Position::from(
+                            GlobalPosition::from(
                                 tilemap_offset + chunk_position + tile_offset.as_ivec2()
                                     - **buffer_position,
                             ),

@@ -1,13 +1,7 @@
-// Extract from textures
-
 use std::sync::Arc;
 
 use bevy::{
-    ecs::{
-        entity::Entity,
-        system::{Commands, Query, Res, ResMut},
-    },
-    math::UVec2,
+    prelude::*,
     render::{
         render_resource::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
@@ -16,7 +10,7 @@ use bevy::{
         renderer::{RenderDevice, RenderQueue},
     },
 };
-use spatial_grid::{depth::Depth, position::Position};
+use spatial_grid::{depth::Depth, global_position::GlobalPosition};
 
 use crate::{
     glyph_render_plugin::{
@@ -35,7 +29,7 @@ pub(crate) fn prepare_glyph_buffers(
     q_textures: Query<(
         Entity,
         &TargetGlyphBuffer,
-        &Position,
+        &GlobalPosition,
         &Depth,
         &ExtractedGlyphTexture,
         Option<&GlyphSolidColor>,

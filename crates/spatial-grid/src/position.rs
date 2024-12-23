@@ -6,6 +6,7 @@ use bevy_reflect::Reflect;
 use crate::remainder::Remainder;
 
 #[derive(Component, Default, Debug, Clone, Copy, Reflect, Deref, DerefMut)]
+#[require(crate::global_position::GlobalPosition)]
 pub struct Position(pub IVec2);
 
 impl Position {

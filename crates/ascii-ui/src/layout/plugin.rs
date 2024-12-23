@@ -1,6 +1,7 @@
 use bevy::{
     app::{Plugin, PostUpdate},
     ecs::schedule::{apply_deferred, IntoSystemConfigs},
+    prelude::TransformSystem,
 };
 
 use super::build_layout::{build_layout, clear_layout, propagate_data_positions};
@@ -17,7 +18,8 @@ impl Plugin for LayoutPlugin {
                 apply_deferred,
                 propagate_data_positions,
             )
-                .chain(),
+                .chain()
+                .before(TransformSystem::TransformPropagate),
         );
     }
 }

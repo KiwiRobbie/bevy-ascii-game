@@ -30,6 +30,8 @@ text-util = { path = "crates/text-util" }
 spatial-grid = { path = "crates/spatial-grid" }
 async-fs = "2.1.1"
 smol_str = "0.2.2"
+bevy_rand = { version = "0.8", features = ["rand_chacha", "wyrand"] }
+rand_core = "0.6.4"
 
 [lib]
 

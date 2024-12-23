@@ -165,7 +165,7 @@ pub(crate) fn grid_translate(
 }
 
 fn damp(a: Vec2, b: Vec2, lambda: f32, dt: f32) -> Vec2 {
-    return Vec2::lerp(a, b, 1.0 - (-lambda * dt).exp());
+    Vec2::lerp(a, b, 1.0 - (-lambda * dt).exp())
 }
 
 pub struct PhysicsGridPlugin;

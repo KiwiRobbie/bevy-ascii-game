@@ -7,7 +7,7 @@ use bevy::{
     core_pipeline::bloom::Bloom,
     ecs::{
         component::Component,
-        entity::Entity,
+        entity::{Entity, MapEntities},
         event::EventReader,
         query::With,
         system::{Commands, Local, Query, Res, ResMut},
@@ -17,10 +17,9 @@ use bevy::{
         keyboard::{Key, KeyboardInput},
     },
     math::{IVec2, UVec2},
-    prelude::Camera2d,
+    prelude::{Camera2d, *},
     render::{
         camera::{Camera, CameraRenderGraph, ClearColorConfig},
-        sync_world::SyncWorldPlugin,
         texture::ImagePlugin,
     },
     window::{Window, WindowPlugin},
@@ -31,7 +30,9 @@ use bevy_ascii_game::{
     debug::DebugPlugin,
     debug_menu::plugin::DebugMenuPlugin,
     mount::{horse::spawn::create_horse, HorsePlugin},
-    physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
+    physics_grids::{
+        GamePhysicsGrid, GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker,
+    },
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
         reset::{create_player, create_player_with_gamepad},
@@ -41,6 +42,10 @@ use bevy_ascii_game::{
     tileset::plugin::TilesetPlugin,
     widgets::UiSectionsPlugin,
 };
+use bevy_rand::{
+    plugin::EntropyPlugin,
+    prelude::{GlobalEntropy, WyRand},
+};
 use glyph_render::{
     atlas::FontAtlasPlugin,
     font::font_load_system,
@@ -49,8 +54,11 @@ use glyph_render::{
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture, GlyphTextureSource},
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
-use grid_physics::{collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
-use spatial_grid::{depth::Depth, position::SpatialBundle};
+use grid_physics::{
+    actor::ActorPhysicsBundle, collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle,
+};
+use rand_core::RngCore;
+use spatial_grid::{depth::Depth, position::SpatialBundle, PositionPropagationPlugin};
 
 fn main() {
     let mut app = App::new();
@@ -64,22 +72,23 @@ fn main() {
                 }),
                 ..Default::default()
             }),
-        PlayerPlugin,
-        HorsePlugin,
-        GlyphAnimationPlugin,
-        GlyphAnimationGraphPlugin,
-        FontAtlasPlugin,
-        TilesetPlugin,
-        TilemapPlugin,
-        PhysicsPlugin,
-        GlyphTexturePlugin,
-        GlyphRenderPlugin,
+        (PhysicsPlugin, PhysicsGridPlugin, PositionPropagationPlugin),
+        (PlayerPlugin, HorsePlugin),
+        (
+            GlyphTexturePlugin,
+            GlyphRenderPlugin,
+            GlyphAnimationPlugin,
+            GlyphAnimationGraphPlugin,
+            FontAtlasPlugin,
+        ),
+        (TilesetPlugin, TilemapPlugin),
         DebugPlugin,
         DebugMenuPlugin,
-        PhysicsGridPlugin,
         UiSectionsPlugin,
+        EntropyPlugin::<WyRand>::default(),
     ))
-    .add_systems(Startup, setup_system)
+    .add_systems(Startup, (setup_system))
+    .add_systems(PostStartup, late_setup_system)
     .add_systems(
         Update,
         (keyboard_input_system, font_load_system, handle_gamepads),
@@ -120,10 +129,85 @@ fn handle_gamepads(
     }
 }
 
+fn late_setup_system(
+    mut commands: Commands,
+    server: Res<AssetServer>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+    grid: Res<GamePhysicsGrid>,
+    mut rng: ResMut<GlobalEntropy<WyRand>>,
+) {
+    // commands
+    //     .spawn((
+    //         GlyphSprite {
+    //             texture: server.load("art/dj/dj.art"),
+    //             offset: IVec2::ZERO,
+    //         },
+    //         ActorPhysicsBundle {
+    //             collider: Aabb {
+    //                 start: IVec2::new(0, 0),
+    //                 size: UVec2::new(50, 10),
+    //             }
+    //             .into(),
+    //             position: IVec2::new(40, 10).into(),
+    //             ..Default::default()
+    //         },
+    //         GlyphSolidColor {
+    //             color: Color::srgba_u8(0xff, 0x61, 0x88, 0xff),
+    //         },
+    //         GamePhysicsGridMarker,
+    //         Depth(0.5),
+    //     ))
+    //     .set_parent(grid.unwrap());
+
+    let width = 100usize;
+    let height = 50usize;
+
+    let mut data = vec![' '; width * height];
+    let chars = [' ', '.', '-', '~'];
+
+    let mut value: usize = 0;
+    let mut index: usize = 0;
+    while index < width * height {
+        data[index] = chars[value];
+        if rng.next_u32() % 3 == 0 {
+            value = value.saturating_add(1).clamp(0, 3);
+        } else {
+            value = value.saturating_sub(1).clamp(0, 3);
+        }
+
+        if value == 0 {
+            index += rng.next_u32() as usize % 10;
+        } else {
+            index += 1;
+        }
+    }
+
+    let texture = GlyphTexture::new(Arc::new(GlyphTextureSource {
+        data: data.into(),
+        width,
+        height,
+    }));
+    commands
+        .spawn((
+            GlyphSprite {
+                texture: glyph_textures.add(texture),
+                offset: IVec2::ZERO,
+            },
+            SpatialBundle::default(),
+            GlyphSolidColor {
+                color: Hsva::new(214., 0.83, 0.32, 1.).into(),
+            },
+            GamePhysicsGridMarker,
+            Depth(-100.0),
+        ))
+        .set_parent(grid.unwrap());
+}
+
 fn setup_system(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+    grid: Res<GamePhysicsGrid>,
 ) {
     commands.spawn((
         Tilemap(server.load("tilemaps/bridge_base.tilemap.ron")),
@@ -143,7 +227,7 @@ fn setup_system(
             color: Hsla::new(0., 0., 0.25, 1.).into(),
         },
         SolidPhysicsBundle {
-            position: IVec2::new(12, 8).into(),
+            position: IVec2::new(12, -1).into(),
             ..Default::default()
         },
         GamePhysicsGridMarker,

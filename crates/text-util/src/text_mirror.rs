@@ -12,7 +12,6 @@ pub(crate) fn mirror_lines_with(lines: &[String], map: HashMap<char, char>) -> V
         *line = line.chars().map(|c| *map.get(&c).unwrap_or(&c)).collect();
     }
 
-    dbg!(&mirrored_lines);
     return mirrored_lines;
 }
 

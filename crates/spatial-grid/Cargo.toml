@@ -10,6 +10,8 @@ bevy_math = "0.15.0"
 bevy_reflect = "0.15.0"
 bevy_utils = "0.15.0"
 bevy_transform = "0.15.0"
+bevy_hierarchy = "0.15.0"
+bevy_app = "0.15.0"
 
 [lib]
 

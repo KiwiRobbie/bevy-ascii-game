@@ -37,7 +37,6 @@ pub(crate) fn player_walk_system(
         if grounded {
             velocity.x = horizontal * settings.speed;
             velocity.y = 0.;
-        } else {
         }
     }
 }

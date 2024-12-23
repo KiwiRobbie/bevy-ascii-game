@@ -12,7 +12,7 @@ use bevy::{
 };
 use bytemuck::{cast_slice_mut, Pod, Zeroable};
 pub(crate) use node::GlyphGenerationNode;
-use spatial_grid::{depth::Depth, grid::SpatialGrid};
+use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
 
 use crate::{
@@ -65,7 +65,6 @@ impl Plugin for GlyphRenderPlugin {
                     bevy::core_pipeline::core_2d::graph::Node2d::Bloom,
                 ),
             );
-        // .add_systems(Render, debug);
     }
     fn finish(&self, app: &mut App) {
         app.sub_app_mut(RenderApp)
@@ -119,7 +118,7 @@ pub struct GlyphTexture {
 
 impl GlyphTexture {
     pub fn new(source: Arc<GlyphTextureSource>) -> Self {
-        Self { source: source }
+        Self { source }
     }
     pub fn size(&self) -> UVec2 {
         UVec2 {
@@ -145,7 +144,6 @@ impl From<&Vec<String>> for GlyphTextureSource {
         let mut data: Box<[char]> = vec!['\0'; width * height].into_boxed_slice();
         let mut index = 0;
         for row in from.into_iter() {
-            // assert_eq!(row.chars().count(), width);
             for ch in row.chars() {
                 data[index] = ch;
                 index += 1;

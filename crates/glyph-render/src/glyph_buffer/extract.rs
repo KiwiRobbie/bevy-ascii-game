@@ -3,21 +3,14 @@
 use std::sync::Arc;
 
 use bevy::{
-    asset::Assets,
-    color::Color,
-    ecs::{
-        entity::{Entity, EntityHashSet},
-        system::{Commands, Query, Res, ResMut},
-    },
-    math::IVec2,
-    prelude::{Component, Deref},
+    ecs::entity::EntityHashSet,
+    prelude::*,
     render::{
-        sync_world::{MainEntity, RenderEntity, TemporaryRenderEntity},
+        sync_world::{RenderEntity, TemporaryRenderEntity},
         Extract,
     },
-    transform::components::GlobalTransform,
 };
-use spatial_grid::{depth::Depth, grid::SpatialGrid, position::Position};
+use spatial_grid::{depth::Depth, global_position::GlobalPosition, grid::SpatialGrid};
 
 use crate::{
     atlas::FontAtlasCache,
@@ -39,7 +32,7 @@ pub fn extract_glyph_buffers(
     q_glyph_buffer: Extract<
         Query<(
             RenderEntity,
-            &Position,
+            &GlobalPosition,
             &GlobalTransform,
             &GlyphBuffer,
             &CustomFont,
@@ -49,7 +42,7 @@ pub fn extract_glyph_buffers(
     >,
     q_textures: Extract<
         Query<(
-            &Position,
+            &GlobalPosition,
             Option<&GlyphSprite>,
             Option<&GlyphAnimation>,
             Option<&GlyphSpriteMirrored>,
@@ -74,7 +67,8 @@ pub fn extract_glyph_buffers(
             .get(&(font_size.clone(), font_source.key()))
             .unwrap();
 
-        commands.entity(buffer_render_entity).insert((
+        let mut buffer_commands = commands.entity(buffer_render_entity);
+        buffer_commands.insert((
             GlyphBuffer {
                 size: buffer.size,
                 textures: EntityHashSet::default(),
@@ -107,7 +101,7 @@ pub fn extract_glyph_buffers(
 
                     commands.spawn((
                         TemporaryRenderEntity,
-                        Position::from(**position + offset - **buffer_position),
+                        GlobalPosition::from(**position + offset - **buffer_position),
                         TargetGlyphBuffer(buffer_render_entity),
                         ExtractedGlyphTexture(extracted_glyph_texture),
                         depth.cloned().unwrap_or_default(),
@@ -126,7 +120,7 @@ pub fn extract_glyph_buffers(
 
                     commands.spawn((
                         TemporaryRenderEntity,
-                        Position::from(**position + glyph_sprite.offset - **buffer_position),
+                        GlobalPosition::from(**position + glyph_sprite.offset - **buffer_position),
                         TargetGlyphBuffer(buffer_render_entity),
                         ExtractedGlyphTexture(extracted_glyph_texture),
                         depth.cloned().unwrap_or_default(),
