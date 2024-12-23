@@ -1,7 +1,7 @@
 use ascii_ui::{
     attachments,
     widget_builder::{WidgetBuilder, WidgetSaver},
-    widgets::{Column, Container, Divider, TabView, Text},
+    widgets::{self, Column, Container, Divider, TabView, Text},
 };
 use bevy::{
     ecs::{
@@ -27,14 +27,15 @@ pub(crate) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuS
         DebugOptions::build(),
     ])(&mut commands);
 
-    let inspector_tab = Column::build(vec![]).with((InspectorTab::default(),))(&mut commands);
+    let inspector_tab = Column::build(vec![widgets::Text::build("text")])
+        .with((InspectorTab::default(),))(&mut commands);
 
     Container::build(Some(Column::build(vec![
-        Text::build("[F3 Debug Menu]".into()),
+        Text::build("[F3 Debug Menu]"),
         Divider::build('='),
         TabView::build(vec![
-            ("Settings".into(), settings_tab),
-            ("Inspector".into(), inspector_tab),
+            ("Settings", settings_tab),
+            ("Inspector", inspector_tab),
         ]),
     ])))
     .with((

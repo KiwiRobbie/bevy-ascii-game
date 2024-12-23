@@ -69,11 +69,11 @@ impl<T: Bundle> TextBundle<T> {
 }
 
 impl Text {
-    pub fn build<'a>(text: String) -> WidgetBuilderFn<'a> {
+    pub fn build<'a>(text: impl Into<String> + 'a) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             commands
                 .spawn((
-                    Self { text },
+                    Self { text: text.into() },
                     RenderBundle::default(),
                     WidgetLayout::new::<TextLogic>(),
                 ))

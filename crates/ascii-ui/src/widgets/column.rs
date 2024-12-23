@@ -31,7 +31,7 @@ impl WidgetLayoutLogic for ColumnLogic {
         world: &World,
         commands: &mut Commands,
     ) -> UVec2 {
-        let row = world
+        let column = world
             .get::<Column>(entity)
             .expect("Column Widget Logic missing Column Component!");
 
@@ -40,7 +40,7 @@ impl WidgetLayoutLogic for ColumnLogic {
         let mut cursor_y: u32 = 0;
         let mut width: u32 = 0;
 
-        for child in row.children.iter() {
+        for child in column.children.iter() {
             let child_logic = world
                 .get::<WidgetLayout>(*child)
                 .expect("Failed to get widget logic for child");
@@ -72,19 +72,22 @@ impl WidgetLayoutLogic for ColumnLogic {
     fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
         world
             .get::<Column>(entity)
-            .expect("Row logic without Row!")
+            .expect("Column logic without Column!")
             .children
             .clone()
     }
 }
 
 impl Column {
-    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+    pub fn build<'a>(
+        children: impl IntoIterator<Item = WidgetBuilderFn<'a>> + 'a,
+    ) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
-            let mut children_entities = vec![];
-            for child in children.into_iter() {
-                children_entities.push((child)(commands));
-            }
+            let children_entities = children
+                .into_iter()
+                .map(|child| (child)(commands))
+                .collect();
+
             commands
                 .spawn((
                     Self {

@@ -137,22 +137,19 @@ impl WidgetLayoutLogic for RowLogic {
 impl Row {
     pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
-            let mut children_entities = vec![];
-            for child in children.into_iter() {
-                children_entities.push((child)(commands));
-            }
+            let children_entities = children
+                .into_iter()
+                .map(|child| (child)(commands))
+                .collect();
 
-            let mut row = commands.spawn(());
-            for entity in children_entities.iter() {
-                row.add_child(*entity);
-            }
-            row.insert((
-                Self {
-                    children: children_entities,
-                },
-                WidgetLayout::new::<RowLogic>(),
-            ))
-            .id()
+            commands
+                .spawn((
+                    Self {
+                        children: children_entities,
+                    },
+                    WidgetLayout::new::<RowLogic>(),
+                ))
+                .id()
         })
     }
 }

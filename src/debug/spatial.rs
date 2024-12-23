@@ -18,8 +18,6 @@ use spatial_grid::{
 
 use grid_physics::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
 
-use crate::physics_grids::grid_translate;
-
 pub(crate) struct SpatialDebugPlugin;
 impl Plugin for SpatialDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {

@@ -24,7 +24,7 @@ use self::input::{update_mouse_position, MouseInput};
 pub mod input;
 
 #[derive(Debug, Component)]
-pub struct IntractableMarker;
+pub struct InteractableMarker;
 
 #[derive(Debug, Component)]
 pub(crate) struct ScrollableMarker;
@@ -67,7 +67,7 @@ pub(crate) fn mouse_interaction(
             Option<&ClipRegion>,
             &LayoutDepth,
         ),
-        With<IntractableMarker>,
+        With<InteractableMarker>,
     >,
     q_active: Query<Entity, With<ActiveMarker>>,
     q_triggered: Query<Entity, With<TriggeredMarker>>,

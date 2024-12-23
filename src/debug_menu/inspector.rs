@@ -1,4 +1,5 @@
 use ascii_ui::{
+    layout::delete_layout_recursive,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
     widgets,
 };
@@ -8,15 +9,15 @@ use bevy::{
         component::{Component, ComponentId, ComponentInfo},
         entity::Entity,
         query::With,
-        schedule::{apply_deferred, IntoSystemConfigs},
+        schedule::IntoSystemConfigs,
         system::{Commands, Query, Res, Resource},
         world::World,
     },
     hierarchy::DespawnRecursiveExt,
     math::{IVec2, UVec2, Vec2},
+    prelude::DespawnRecursive,
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
-// use ::Downcast;
 use grid_physics::velocity::Velocity;
 use spatial_grid::position::Position;
 use std::any::{Any, TypeId};
@@ -200,14 +201,14 @@ pub(crate) fn inspector_fetch_system(
             }
 
             for entity in column.children.iter() {
-                commands.entity(*entity).despawn_recursive();
+                delete_layout_recursive(*entity, &mut commands, world);
             }
 
             commands
                 .entity(inspector_entity)
-                .insert(widgets::column::Column {
+                .insert((widgets::column::Column {
                     children: inspector_widgets,
-                });
+                },));
         } else {
             commands
                 .entity(inspector_entity)
@@ -221,12 +222,7 @@ impl Plugin for InspectorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
             Update,
-            (
-                inspector_init_system,
-                inspector_fetch_system,
-                apply_deferred,
-            )
-                .chain(),
+            (inspector_init_system, inspector_fetch_system).chain(),
         )
         .init_resource::<TypeRegistryResource>();
     }

@@ -5,7 +5,7 @@ use bevy::ecs::{
 };
 
 use crate::{
-    mouse::{IntractableMarker, TriggeredMarker},
+    mouse::{InteractableMarker, TriggeredMarker},
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
 };
 
@@ -52,17 +52,17 @@ pub(crate) fn checkbox_interaction_system(
     }
 }
 impl Checkbox {
-    pub fn build<'a>(label: String) -> WidgetBuilderFn<'a> {
+    pub fn build<'a>(label: impl Into<String> + 'a) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             let mut toggle_text = Entity::PLACEHOLDER;
             widgets::Row::build(vec![
                 widgets::Text::build(label),
-                widgets::Text::build("[ ]".into()).save_id(&mut toggle_text),
+                widgets::Text::build("[ ]").save_id(&mut toggle_text),
             ])
             .apply(commands)
             .with((
                 attachments::MainAxisAlignment::SpaceBetween,
-                IntractableMarker,
+                InteractableMarker,
                 Checkbox {
                     checkbox: toggle_text,
                 },

@@ -37,11 +37,11 @@ impl InfoCounts {
         Box::new(|commands: &mut Commands| {
             let mut info = InfoCounts::default();
             Column::build(vec![
-                Text::build("".into()).save_id(&mut info.fps_text),
-                Text::build("".into()).save_id(&mut info.entity_text),
-                Text::build("".into()).save_id(&mut info.actor_text),
-                Text::build("".into()).save_id(&mut info.player_text),
-                Text::build("".into()).save_id(&mut info.solid_text),
+                Text::build("").save_id(&mut info.fps_text),
+                Text::build("").save_id(&mut info.entity_text),
+                Text::build("").save_id(&mut info.actor_text),
+                Text::build("").save_id(&mut info.player_text),
+                Text::build("").save_id(&mut info.solid_text),
             ])
             .apply(commands)
             .with(info)(commands)

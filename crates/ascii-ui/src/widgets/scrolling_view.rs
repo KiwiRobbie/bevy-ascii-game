@@ -18,7 +18,7 @@ use crate::{
         positioned::Positioned,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    mouse::{IntractableMarker, ScrollInteraction, ScrollableMarker},
+    mouse::{InteractableMarker, ScrollInteraction, ScrollableMarker},
     widget_builder::WidgetBuilderFn,
 };
 
@@ -108,7 +108,7 @@ impl ScrollingView {
                         remainder: 0.0,
                     },
                     WidgetLayout::new::<ScrollingViewLogic>(),
-                    IntractableMarker,
+                    InteractableMarker,
                     ScrollableMarker,
                 ))
                 .id()
@@ -119,7 +119,7 @@ impl ScrollingView {
 pub(crate) fn scrolling_view_interaction_system(
     mut q_scrolling_view: Query<
         (&mut ScrollingView, &ScrollInteraction),
-        (With<IntractableMarker>, With<ScrollableMarker>),
+        (With<InteractableMarker>, With<ScrollableMarker>),
     >,
 ) {
     for (mut view, interaction) in q_scrolling_view.iter_mut() {

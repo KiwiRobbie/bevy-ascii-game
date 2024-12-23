@@ -3,20 +3,22 @@ use bevy::{
     asset::Assets,
     ecs::{
         entity::Entity,
-        schedule::{apply_deferred, IntoSystemConfigs},
+        schedule::IntoSystemConfigs,
         system::{Commands, Query, ResMut},
     },
     math::IVec2,
+    prelude::TransformSystem,
 };
 use glyph_render::{glyph_render_plugin::GlyphTexture, glyph_sprite::GlyphSprite};
 use spatial_grid::position::Position;
 
-use crate::layout::{build_layout::propagate_data_positions, render_clip::ClipRegion};
+use crate::layout::{render_clip::ClipRegion, UiLayoutSet};
 
 use super::{
     attachments::border::border_render,
     clear::clear_sprites,
     widgets::{divider::divider_render, text::text_render, texture::texture_render},
+    UiRenderSet,
 };
 
 pub(crate) struct RenderPlugin;
@@ -26,13 +28,13 @@ impl Plugin for RenderPlugin {
             PostUpdate,
             (
                 clear_sprites,
-                apply_deferred,
                 (text_render, divider_render, border_render, texture_render),
-                apply_deferred,
                 apply_clipping,
             )
                 .chain()
-                .after(propagate_data_positions),
+                .in_set(UiRenderSet)
+                .before(TransformSystem::TransformPropagate)
+                .after(UiLayoutSet),
         );
     }
 }

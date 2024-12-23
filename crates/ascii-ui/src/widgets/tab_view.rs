@@ -2,7 +2,7 @@ use bevy::ecs::{component::Component, entity::Entity, query::With, system::Query
 
 use crate::{
     attachments::{stack::Stack, MainAxisAlignment},
-    mouse::{IntractableMarker, TriggeredMarker},
+    mouse::{InteractableMarker, TriggeredMarker},
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
 };
 
@@ -24,7 +24,7 @@ pub(crate) fn tab_view_interaction_system(
     q_tab_view: Query<&TabView>,
     mut q_stack: Query<&mut Stack>,
     mut q_text: Query<&mut Text>,
-    q_buttons: Query<Option<&TriggeredMarker>, (With<IntractableMarker>, With<Text>)>,
+    q_buttons: Query<Option<&TriggeredMarker>, (With<InteractableMarker>, With<Text>)>,
 ) {
     for tab_view in q_tab_view.iter() {
         let Some(mut stack) = q_stack.get_mut(tab_view.stack).ok() else {
@@ -57,14 +57,17 @@ pub(crate) fn tab_view_interaction_system(
     }
 }
 impl TabView {
-    pub fn build<'a>(children: Vec<(String, Entity)>) -> WidgetBuilderFn<'a> {
+    pub fn build<'a>(children: Vec<(impl Into<String> + 'a, Entity)>) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
-            let tab_titles = children.iter().map(|(name, _)| name.clone()).collect();
-            let tab_entities = children.iter().map(|(_, tab)| *tab).collect();
+            // let tab_titles = children.iter().map(|(name, _)| (*name).into()).collect();
+            // let tab_entities = children.iter().map(|(_, tab)| *tab).collect();
 
-            let left = widgets::Text::build("<-".into()).with(IntractableMarker)(commands);
-            let title = widgets::Text::build("[ Tab View ]".into())(commands);
-            let right = widgets::Text::build("->".into()).with(IntractableMarker)(commands);
+            let (tab_titles, tab_entities) =
+                children.into_iter().map(|(a, b)| (a.into(), b)).unzip();
+
+            let left = widgets::Text::build("<-").with(InteractableMarker)(commands);
+            let title = widgets::Text::build("[ Tab View ]")(commands);
+            let right = widgets::Text::build("->").with(InteractableMarker)(commands);
 
             let stack = widgets::Container::build(None)
                 .with((attachments::StackBuilder::new(tab_entities, 0),))(

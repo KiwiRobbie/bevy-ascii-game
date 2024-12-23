@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use ascii_ui::{
     attachments::{self, MainAxisAlignment},
-    mouse::IntractableMarker,
+    mouse::InteractableMarker,
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
     widgets::{self, Column, Container, Divider},
 };
@@ -99,9 +99,9 @@ pub(super) fn setup_ui(
     }(&mut commands);
 
     Container::build(Some(widgets::TabView::build(vec![
-        ("Settings".into(), settings_tab),
-        ("List Builder".into(), list_builder_tab),
-        ("Tileset".into(), tileset_tab),
+        ("Settings", settings_tab),
+        ("List Builder", list_builder_tab),
+        ("Tileset", tileset_tab),
     ])))
     .with((
         attachments::Root {
@@ -118,7 +118,7 @@ pub(super) fn setup_ui(
         .padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
-        IntractableMarker,
+        InteractableMarker,
     ))
     .save_id(&mut menu_state.root_widget)(&mut commands);
 }
@@ -148,14 +148,14 @@ fn build_tileset_ui<'a>(
                 Box::new(move |index, item: &Arc<GlyphTextureSource>| {
                     if item.data.len() == (tile_size.x * tile_size.y) as usize {
                         widgets::Texture::build(item.data.clone(), tile_size).with((
-                            IntractableMarker,
+                            InteractableMarker,
                             TilesetTileId {
                                 tile: index as u32,
                                 tileset: handle.clone(),
                             },
                         ))
                     } else {
-                        widgets::Text::build("???".into())
+                        widgets::Text::build("???")
                     }
                 }),
                 source.tiles.clone(),

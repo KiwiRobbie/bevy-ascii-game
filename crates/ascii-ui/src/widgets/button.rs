@@ -1,11 +1,14 @@
-use bevy::ecs::{
-    component::Component,
-    entity::Entity,
-    system::{Commands, Query},
+use bevy::{
+    ecs::{
+        component::Component,
+        entity::Entity,
+        system::{Commands, Query},
+    },
+    prelude::Has,
 };
 
 use crate::{
-    mouse::{IntractableMarker, TriggeredMarker},
+    mouse::{InteractableMarker, TriggeredMarker},
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
 };
 
@@ -23,16 +26,12 @@ pub struct ButtonJustPressedMarker;
 
 pub(crate) fn button_interaction_system(
     mut commands: Commands,
-    q_buttons: Query<(
-        Entity,
-        Option<&ButtonPressedMarker>,
-        Option<&TriggeredMarker>,
-    )>,
+    q_buttons: Query<(Entity, Has<ButtonPressedMarker>, Has<TriggeredMarker>)>,
 ) {
     for (entity, pressed, triggered) in q_buttons.iter() {
         commands.entity(entity).remove::<ButtonJustPressedMarker>();
-        if triggered.is_some() {
-            if !pressed.is_some() {
+        if triggered {
+            if !pressed {
                 commands
                     .entity(entity)
                     .insert((ButtonPressedMarker, ButtonJustPressedMarker));
@@ -46,7 +45,7 @@ impl Button {
     pub fn build<'a>(label: String) -> WidgetBuilderFn<'a> {
         widgets::Text::build(format!("[ {label} ]")).with((
             attachments::MainAxisAlignment::SpaceBetween,
-            IntractableMarker,
+            InteractableMarker,
             Button {},
         ))
     }
