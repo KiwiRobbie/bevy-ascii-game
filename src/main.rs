@@ -7,7 +7,7 @@ use bevy::{
     core_pipeline::bloom::Bloom,
     ecs::{
         component::Component,
-        entity::{Entity, MapEntities},
+        entity::Entity,
         event::EventReader,
         query::With,
         system::{Commands, Local, Query, Res, ResMut},
@@ -54,9 +54,7 @@ use glyph_render::{
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture, GlyphTextureSource},
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
-use grid_physics::{
-    actor::ActorPhysicsBundle, collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle,
-};
+use grid_physics::{collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
 use rand_core::RngCore;
 use spatial_grid::{depth::Depth, position::SpatialBundle, PositionPropagationPlugin};
 
@@ -87,7 +85,7 @@ fn main() {
         UiSectionsPlugin,
         EntropyPlugin::<WyRand>::default(),
     ))
-    .add_systems(Startup, (setup_system))
+    .add_systems(Startup, setup_system)
     .add_systems(PostStartup, late_setup_system)
     .add_systems(
         Update,
@@ -131,7 +129,7 @@ fn handle_gamepads(
 
 fn late_setup_system(
     mut commands: Commands,
-    server: Res<AssetServer>,
+    // server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     grid: Res<GamePhysicsGrid>,
     mut rng: ResMut<GlobalEntropy<WyRand>>,
@@ -207,7 +205,7 @@ fn setup_system(
     mut commands: Commands,
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-    grid: Res<GamePhysicsGrid>,
+    _grid: Res<GamePhysicsGrid>,
 ) {
     commands.spawn((
         Tilemap(server.load("tilemaps/bridge_base.tilemap.ron")),

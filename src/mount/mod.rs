@@ -213,7 +213,7 @@ fn horse_animation_system(
         &mount_inputs::Movement,
     )>,
 ) {
-    for (mut target, has_rider, movement_input) in q_horse.iter_mut() {
+    for (mut target, _, movement_input) in q_horse.iter_mut() {
         let target_str = if movement_input.horizontal != 0. {
             "gallop"
         } else {

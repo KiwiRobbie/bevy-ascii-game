@@ -1,4 +1,7 @@
-use std::collections::{self, BinaryHeap};
+use std::{
+    cmp::Reverse,
+    collections::{self, BinaryHeap},
+};
 
 use bevy::{
     color::palettes::css,
@@ -10,7 +13,7 @@ use grid_physics::{
     actor::FilterActors,
     collision::{Collider, RayTest},
 };
-use spatial_grid::{position::Position, remainder::Remainder};
+use spatial_grid::position::Position;
 
 use crate::utils::clear_component;
 
@@ -54,7 +57,7 @@ impl RaycastConfig {
     where
         F: QueryFilter,
     {
-        let mut heap = collections::BinaryHeap::new();
+        let mut heap: BinaryHeap<Reverse<RaycastIntersection>> = collections::BinaryHeap::new();
         for (actor, pos, col) in raycast.actors.iter() {
             if let Some((min, max)) = (pos, col).test_ray(*self.origin, self.dir_inv) {
                 if let Some(start) = self.start {
@@ -67,30 +70,26 @@ impl RaycastConfig {
                         continue;
                     }
                 }
-                heap.push(RaycastIntersection { min, max, actor });
+                heap.push(Reverse(RaycastIntersection {
+                    min,
+                    _max: max,
+                    actor,
+                }));
             };
         }
 
-        RaycastState {
-            position: self.origin,
-            remainder: Vec2::ZERO.into(),
-            heap,
-            config: self,
-        }
+        RaycastState { heap }
     }
 }
 
 pub(crate) struct RaycastState {
-    position: Position,
-    remainder: Remainder,
-    config: RaycastConfig,
-    heap: BinaryHeap<RaycastIntersection>,
+    heap: BinaryHeap<Reverse<RaycastIntersection>>,
 }
 
 #[derive(Debug, Clone)]
-struct RaycastIntersection {
+pub struct RaycastIntersection {
     min: f32,
-    max: f32,
+    _max: f32,
     actor: Entity,
 }
 
@@ -104,21 +103,21 @@ impl Eq for RaycastIntersection {}
 // Reversed ordering to turn min-heap to max-heap
 impl PartialOrd for RaycastIntersection {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        other.min.partial_cmp(&self.min)
+        Some(self.cmp(other))
     }
 }
 impl Ord for RaycastIntersection {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.min.total_cmp(&self.min)
+        self.min.total_cmp(&other.min)
     }
 }
 
 impl RaycastState {
-    pub(crate) fn get_first(self) -> Option<RaycastIntersection> {
-        self.heap.peek().cloned()
+    pub fn get_first(self) -> Option<RaycastIntersection> {
+        self.heap.peek().map(|x| x.0.clone())
     }
-    pub(crate) fn get_next(&mut self) -> Option<RaycastIntersection> {
-        self.heap.pop()
+    pub fn _get_next(&mut self) -> Option<RaycastIntersection> {
+        self.heap.pop().map(|x| x.0)
     }
 }
 
@@ -132,7 +131,7 @@ pub struct PlayerInteractable;
 
 #[derive(Debug, Component)]
 pub struct PlayerInteractFocused {
-    pub(crate) player: Entity,
+    pub(crate) _player: Entity,
 }
 #[derive(Debug, Component)]
 pub(crate) struct PlayerInteractActive {
@@ -184,7 +183,7 @@ pub(crate) fn interaction_system(
         if let Some(intersection) = result.get_first() {
             let mut command = commands.entity(intersection.actor);
 
-            command.insert(PlayerInteractFocused { player });
+            command.insert(PlayerInteractFocused { _player: player });
             if interacting {
                 command.insert(PlayerInteractActive { player });
             }

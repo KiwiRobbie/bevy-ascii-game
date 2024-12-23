@@ -37,7 +37,7 @@ impl PlayerDirection {
         }
         self.0.x = x;
     }
-    pub(crate) fn set_y(&mut self, y: i32) {
+    pub(crate) fn _set_y(&mut self, y: i32) {
         if !(-1..=1).contains(&y) {
             panic!();
         }

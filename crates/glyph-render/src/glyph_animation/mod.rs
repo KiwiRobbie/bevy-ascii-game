@@ -14,10 +14,10 @@ use crate::glyph_render_plugin::GlyphTextureSource;
 mod loader;
 pub mod player;
 
-#[derive(Asset, TypePath)]
+#[derive(Debug, Asset, TypePath)]
 pub struct GlyphAnimationSource {
-    pub(crate) name: String,
-    pub(crate) size: UVec2,
+    pub name: String,
+    pub size: UVec2,
     pub(crate) frames: Vec<(GlyphAnimationFrame, Option<GlyphAnimationFrame>)>,
 }
 

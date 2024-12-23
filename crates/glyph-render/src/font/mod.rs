@@ -74,11 +74,11 @@ impl CustomFontSource {
             key,
         })
     }
-    pub(crate) fn from_file(path: &str, index: usize) -> Option<Self> {
-        // Read the full font file
-        let data = std::fs::read(path).ok()?;
-        Self::from_bytes(&data, index)
-    }
+    // pub(crate) fn from_file(path: &str, index: usize) -> Option<Self> {
+    //     // Read the full font file
+    //     let data = std::fs::read(path).ok()?;
+    //     Self::from_bytes(&data, index)
+    // }
 
     // Create the transient font reference for accessing this crate's
     // functionality.

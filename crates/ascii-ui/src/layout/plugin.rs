@@ -1,10 +1,7 @@
 use bevy::{
     app::{Plugin, PostUpdate},
-    ecs::{
-        archetype::ArchetypeEntity,
-        schedule::{apply_deferred, IntoSystemConfigs},
-    },
-    prelude::{Component, Entity, Query, TransformSystem, With, World},
+    ecs::schedule::IntoSystemConfigs,
+    prelude::*,
 };
 
 use crate::render::UiRenderSet;

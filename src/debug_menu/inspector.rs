@@ -4,18 +4,8 @@ use ascii_ui::{
     widgets,
 };
 use bevy::{
-    app::{Plugin, Update},
-    ecs::{
-        component::{Component, ComponentId, ComponentInfo},
-        entity::Entity,
-        query::With,
-        schedule::IntoSystemConfigs,
-        system::{Commands, Query, Res, Resource},
-        world::World,
-    },
-    hierarchy::DespawnRecursiveExt,
-    math::{IVec2, UVec2, Vec2},
-    prelude::DespawnRecursive,
+    ecs::component::{ComponentId, ComponentInfo},
+    prelude::*,
     reflect::{ReflectFromPtr, ReflectRef, TypeRegistry},
 };
 use grid_physics::velocity::Velocity;

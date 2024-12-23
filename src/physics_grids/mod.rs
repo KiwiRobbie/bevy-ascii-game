@@ -12,12 +12,10 @@ use bevy::{
     render::sync_world::SyncToRenderWorld,
     time::Time,
     transform::components::{GlobalTransform, Transform},
-    utils::HashSet,
 };
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
     font::{CustomFont, FontSize},
-    glyph_animation::player,
     glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
 };
 

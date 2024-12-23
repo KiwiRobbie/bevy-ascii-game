@@ -3,7 +3,6 @@ use bevy::{
         component::Component, entity::Entity, reflect::ReflectComponent, system::Commands,
         world::World,
     },
-    hierarchy::BuildChildren,
     math::{IVec2, UVec2},
     reflect::Reflect,
 };

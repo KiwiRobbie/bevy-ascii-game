@@ -9,7 +9,7 @@ pub struct Constraint {
 }
 
 impl Constraint {
-    pub fn remove_x_bounds(&self) -> Self {
+    pub fn _remove_x_bounds(&self) -> Self {
         Self {
             width: None,
             height: self.height.clone(),

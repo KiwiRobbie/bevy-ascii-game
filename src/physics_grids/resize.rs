@@ -31,7 +31,7 @@ pub(super) fn grid_resize_update(
     if let Some(e) = ev_resize.read().last() {
         log::info!("{:?}", e);
 
-        if let Ok((mut transform, grid, font_size, mut buffer)) = q_glyph_buffer.get_mut(game_grid)
+        if let Ok((mut transform, grid, _font_size, mut buffer)) = q_glyph_buffer.get_mut(game_grid)
         {
             *transform =
                 Transform::from_translation(-0.5 * Vec2::new(e.width, e.height).extend(0.0));

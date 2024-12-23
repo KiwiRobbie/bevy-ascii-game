@@ -117,8 +117,8 @@ impl AssetLoader for TilesetLoader {
                 display_name: meta.display_name,
                 id: meta.id,
                 tile_size,
-                tile_ids,
-                tile_labels,
+                _tile_ids: tile_ids,
+                _tile_labels: tile_labels,
                 tiles,
             })
         })

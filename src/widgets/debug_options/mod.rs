@@ -1,6 +1,6 @@
 use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{checkbox::CheckboxEnabledMarker, Checkbox, Column, Text},
+    widgets::{checkbox::CheckboxEnabledMarker, Checkbox, Column},
 };
 use bevy::{
     app::{Plugin, Update},
