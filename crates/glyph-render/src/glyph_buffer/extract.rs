@@ -6,11 +6,15 @@ use bevy::{
     asset::Assets,
     color::Color,
     ecs::{
-        entity::Entity,
+        entity::{Entity, EntityHashSet},
         system::{Commands, Query, Res, ResMut},
     },
     math::IVec2,
-    render::Extract,
+    prelude::{Component, Deref},
+    render::{
+        sync_world::{MainEntity, RenderEntity, TemporaryRenderEntity},
+        Extract,
+    },
     transform::components::GlobalTransform,
 };
 use spatial_grid::{depth::Depth, grid::SpatialGrid, position::Position};
@@ -28,13 +32,14 @@ use crate::{
 
 use super::{GlyphBuffer, TargetGlyphBuffer};
 
-pub(crate) fn extract_glyph_buffers(
+pub fn extract_glyph_buffers(
     mut commands: Commands,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,
     q_glyph_buffer: Extract<
         Query<(
-            Entity,
+            RenderEntity,
+            &Position,
             &GlobalTransform,
             &GlyphBuffer,
             &CustomFont,
@@ -44,9 +49,7 @@ pub(crate) fn extract_glyph_buffers(
     >,
     q_textures: Extract<
         Query<(
-            Entity,
             &Position,
-            &TargetGlyphBuffer,
             Option<&GlyphSprite>,
             Option<&GlyphAnimation>,
             Option<&GlyphSpriteMirrored>,
@@ -59,18 +62,31 @@ pub(crate) fn extract_glyph_buffers(
     glyph_animations: Extract<Res<Assets<GlyphAnimationSource>>>,
     mut glyph_texture_cache: ResMut<ExtractedGlyphTextureCache>,
 ) {
-    for (buffer_entity, transform, buffer, font, font_size, grid) in q_glyph_buffer.iter() {
-        let Some(font) = fonts.get(font.id()) else {
+    for (buffer_render_entity, buffer_position, transform, buffer, font, font_size, grid) in
+        &q_glyph_buffer
+    {
+        let Some(font_source) = fonts.get(font.id()) else {
             continue;
         };
 
         let atlas = atlas_cache
             .cached
-            .get(&(font_size.clone(), font.key()))
+            .get(&(font_size.clone(), font_source.key()))
             .unwrap();
 
+        commands.entity(buffer_render_entity).insert((
+            GlyphBuffer {
+                size: buffer.size,
+                textures: EntityHashSet::default(),
+            },
+            buffer_position.clone(),
+            transform.clone(),
+            ExtractedAtlas(atlas.clone()),
+            grid.clone(),
+        ));
+
         for entity in buffer.textures.iter() {
-            if let Ok((entity, position, target, sprite, animation, mirrored, solid_color, depth)) =
+            if let Ok((position, sprite, animation, mirrored, solid_color, depth)) =
                 q_textures.get(*entity)
             {
                 if let Some(glyph_animation) = animation {
@@ -86,18 +102,16 @@ pub(crate) fn extract_glyph_buffers(
                         &data,
                         solid_color.map(|c| c.color).unwrap_or(Color::WHITE),
                         atlas,
-                        font.as_ref(),
+                        font_source.as_ref(),
                     );
 
-                    commands.insert_or_spawn_batch([(
-                        entity,
-                        (
-                            Position::from(**position + offset),
-                            target.clone(),
-                            ExtractedGlyphTexture(extracted_glyph_texture),
-                            depth.cloned().unwrap_or_default(),
-                        ),
-                    )]);
+                    commands.spawn((
+                        TemporaryRenderEntity,
+                        Position::from(**position + offset - **buffer_position),
+                        TargetGlyphBuffer(buffer_render_entity),
+                        ExtractedGlyphTexture(extracted_glyph_texture),
+                        depth.cloned().unwrap_or_default(),
+                    ));
                 } else if let Some(glyph_sprite) = sprite {
                     let Some(texture) = glyph_textures.get(&glyph_sprite.texture) else {
                         continue;
@@ -107,31 +121,19 @@ pub(crate) fn extract_glyph_buffers(
                         &texture.source,
                         solid_color.map(|c| c.color).unwrap_or(Color::WHITE),
                         atlas,
-                        font.as_ref(),
+                        font_source.as_ref(),
                     );
 
-                    commands.insert_or_spawn_batch([(
-                        entity,
-                        (
-                            Position::from(**position + glyph_sprite.offset),
-                            target.clone(),
-                            ExtractedGlyphTexture(extracted_glyph_texture),
-                            depth.cloned().unwrap_or_default(),
-                        ),
-                    )]);
+                    commands.spawn((
+                        TemporaryRenderEntity,
+                        Position::from(**position + glyph_sprite.offset - **buffer_position),
+                        TargetGlyphBuffer(buffer_render_entity),
+                        ExtractedGlyphTexture(extracted_glyph_texture),
+                        depth.cloned().unwrap_or_default(),
+                    ));
                 }
             }
         }
-
-        commands.insert_or_spawn_batch([(
-            buffer_entity,
-            (
-                transform.clone(),
-                buffer.clone(),
-                ExtractedAtlas(atlas.clone()),
-                grid.clone(),
-            ),
-        )]);
     }
 }
 

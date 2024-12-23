@@ -11,6 +11,25 @@ pub struct Collider {
     pub shape: CompositeCollisionShape,
 }
 
+impl Collider {
+    pub fn aabb(&self) -> Option<Aabb> {
+        let mut min_max: Option<(IVec2, IVec2)> = None;
+
+        for aabb in self.shape.shapes.iter() {
+            if let Some((min, max)) = min_max.as_mut() {
+                *min = min.min(aabb.start);
+                *max = max.max(aabb.start + aabb.size.as_ivec2())
+            } else {
+                min_max = Some((aabb.start, aabb.start + aabb.size.as_ivec2()));
+            }
+        }
+        min_max.map(|(min, max)| Aabb {
+            start: min,
+            size: (max - min).as_uvec2(),
+        })
+    }
+}
+
 impl RayTest for (&Position, &Collider) {
     fn test_ray(&self, origin: IVec2, direction_inv: Vec2) -> Option<(f32, f32)> {
         let mut min: Option<f32> = None;

@@ -20,6 +20,7 @@ use bevy::{
     prelude::Camera2d,
     render::{
         camera::{Camera, CameraRenderGraph, ClearColorConfig},
+        sync_world::SyncWorldPlugin,
         texture::ImagePlugin,
     },
     window::{Window, WindowPlugin},
@@ -33,7 +34,7 @@ use bevy_ascii_game::{
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
-        reset::{create_player_with_gamepad, create_player_with_keyboard},
+        reset::{create_player, create_player_with_gamepad},
         PlayerPlugin,
     },
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
@@ -48,15 +49,7 @@ use glyph_render::{
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture, GlyphTextureSource},
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
-use grid_physics::{
-    actor::ActorPhysicsBundle,
-    collision::{Aabb, Collider},
-    free::FreeMarker,
-    gravity::Gravity,
-    plugin::PhysicsPlugin,
-    solid::SolidPhysicsBundle,
-    velocity::Velocity,
-};
+use grid_physics::{collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
 use spatial_grid::{depth::Depth, position::SpatialBundle};
 
 fn main() {
@@ -133,25 +126,30 @@ fn setup_system(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
     commands.spawn((
-        Tilemap(server.load("tilemaps/output.tilemap.ron")),
+        Tilemap(server.load("tilemaps/bridge_base.tilemap.ron")),
         GlyphSolidColor {
-            color: Hsla {
-                hue: 0.0,
-                saturation: 0.0,
-                lightness: 0.2,
-                alpha: 1.0,
-            }
-            .into(),
+            color: Hsla::new(0., 0., 0.15, 1.).into(),
         },
         SolidPhysicsBundle {
-            position: SpatialBundle::from(IVec2::new(20, 10)),
+            position: IVec2::new(20, 8).into(),
             ..Default::default()
         },
         GamePhysicsGridMarker,
-        Depth(-100.0),
+        Depth(-5.0),
     ));
-
-    create_player_with_keyboard(&mut commands, &server).insert((
+    commands.spawn((
+        Tilemap(server.load("tilemaps/output.tilemap.ron")),
+        GlyphSolidColor {
+            color: Hsla::new(0., 0., 0.25, 1.).into(),
+        },
+        SolidPhysicsBundle {
+            position: IVec2::new(12, 8).into(),
+            ..Default::default()
+        },
+        GamePhysicsGridMarker,
+        Depth(5.0),
+    ));
+    create_player(&mut commands, &server).insert((
         PlayerInputKeyboardMarker,
         GlyphSolidColor {
             color: Color::LinearRgba(Color::hsl(0.0, 1.0, 0.6).to_linear() * 10.0),
@@ -161,32 +159,6 @@ fn setup_system(
 
     create_horse(&mut commands, &server);
 
-    commands.spawn((
-        GlyphSprite {
-            texture: server.load("art/dj/dj.art"),
-            offset: IVec2::ZERO,
-        },
-        ActorPhysicsBundle {
-            collider: Collider {
-                shape: Aabb {
-                    start: IVec2::new(0, 0),
-                    size: UVec2::new(50, 10),
-                }
-                .into(),
-            },
-            position: IVec2::new(40, 10).into(),
-            ..Default::default()
-        },
-        GlyphSolidColor {
-            color: Color::srgba_u8(0xff, 0x61, 0x88, 0xff),
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-        GamePhysicsGridMarker,
-        Depth(0.0),
-    ));
-
     // Keyboard display
     commands.spawn((
         GlyphSprite {
@@ -195,7 +167,7 @@ fn setup_system(
                 16,
                 std::iter::repeat(' '),
             )),
-            offset: IVec2 { x: 0, y: 0 },
+            offset: IVec2::ZERO,
         },
         SpatialBundle {
             ..Default::default()
@@ -208,14 +180,11 @@ fn setup_system(
     // Floor
     commands.spawn((
         SolidPhysicsBundle {
-            position: IVec2::new(0, 0).into(),
-            collider: Collider {
-                shape: Aabb {
-                    start: IVec2::ZERO,
-                    size: UVec2 { x: 100, y: 2 },
-                }
-                .into(),
-            },
+            collider: Aabb {
+                start: IVec2::new(-1024, 0),
+                size: UVec2::new(2048, 2),
+            }
+            .into(),
             ..Default::default()
         },
         GamePhysicsGridMarker,

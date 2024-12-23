@@ -8,6 +8,8 @@ use bevy_time::Time;
 
 use spatial_grid::{position::Position, remainder::Remainder};
 
+use crate::actor::FilterActors;
+
 use super::{
     actor::Actor,
     collision::Collider,
@@ -17,11 +19,52 @@ use super::{
     velocity::Velocity,
 };
 
+pub fn update_obstructions(
+    mut q_actors: Query<
+        (&mut MovementObstructed, &Position, &Collider),
+        (FilterActors, With<FreeMarker>),
+    >,
+    solid_collision_cache: Res<SolidCollisionCache>,
+) {
+    for (mut obstructed, actor_position, actor_collider) in q_actors.iter_mut() {
+        *obstructed = MovementObstructed {
+            x: Actor::test_move_x(
+                1.0,
+                actor_position,
+                &Remainder::default(),
+                actor_collider,
+                solid_collision_cache.as_ref(),
+            ),
+            y: Actor::test_move_y(
+                1.0,
+                actor_position,
+                &Remainder::default(),
+                actor_collider,
+                solid_collision_cache.as_ref(),
+            ),
+            neg_x: Actor::test_move_x(
+                -1.0,
+                actor_position,
+                &Remainder::default(),
+                actor_collider,
+                solid_collision_cache.as_ref(),
+            ),
+            neg_y: Actor::test_move_y(
+                -1.0,
+                actor_position,
+                &Remainder::default(),
+                actor_collider,
+                solid_collision_cache.as_ref(),
+            ),
+        };
+    }
+}
+
 #[derive(Component, Clone)]
 pub struct FreeMarker;
 
 pub(super) fn obstruct_velocity(
-    mut q_free_actors: Query<(&mut Velocity, &MovementObstructed), With<FreeMarker>>,
+    mut q_free_actors: Query<(&mut Velocity, &mut MovementObstructed), With<FreeMarker>>,
 ) {
     for (mut velocity, obstructed) in q_free_actors.iter_mut() {
         if velocity.x > 0.0 && obstructed.x.is_some() {

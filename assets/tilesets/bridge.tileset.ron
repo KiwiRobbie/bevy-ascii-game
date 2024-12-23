@@ -1,0 +1,11 @@
+(
+    display_name: "Bridge Tileset",
+    id: "bridge",
+    size: (21, 9),
+    assets: [
+        (
+            asset: "art/bridge/tileset.art",
+            tiles: All("0"),
+        )
+    ]
+)

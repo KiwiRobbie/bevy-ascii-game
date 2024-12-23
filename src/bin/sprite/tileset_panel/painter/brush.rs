@@ -108,7 +108,7 @@ pub(crate) fn update_brush(
 
         let grid_cursor_position =
             ((transform.compute_matrix().inverse() * world_cursor_position.extend(1.0)).xy()
-                / grid.size.as_vec2()
+                / grid.step.as_vec2()
                 + 0.5)
                 .as_ivec2()
                 + **buffer_position;

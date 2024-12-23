@@ -142,7 +142,7 @@ fn cursor_in_widget(
 ) -> Option<IVec2> {
     let (grid, transform) = q_physics_grid.get(grid_member.grid).ok()?;
     let position =
-        (transform.compute_matrix().inverse() * position.extend(1.0)).xy() / grid.size.as_vec2();
+        (transform.compute_matrix().inverse() * position.extend(1.0)).xy() / grid.step.as_vec2();
     let position = position.as_ivec2() + IVec2::Y;
 
     let cursor_position = IVec2::new(1, -1) * position;

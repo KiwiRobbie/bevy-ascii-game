@@ -189,10 +189,10 @@ fn mouse_zoom_system(
     for (mut font_size, mut grid, mut buffer) in q_glyph_buffer.iter_mut() {
         let size = *size as u32;
         **font_size = size;
-        grid.size = UVec2::new(font_size.advance(), font_size.line_spacing());
+        grid.step = UVec2::new(font_size.advance(), font_size.line_spacing());
 
-        buffer.size.x = (window.width() / grid.size.x as f32) as u32;
-        buffer.size.y = (window.height() / grid.size.y as f32) as u32;
+        buffer.size.x = (window.width() / grid.step.x as f32) as u32;
+        buffer.size.y = (window.height() / grid.step.y as f32) as u32;
     }
 }
 

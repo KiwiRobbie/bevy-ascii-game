@@ -82,8 +82,7 @@ impl AssetLoader for TilesetLoader {
 
                                     let x_start = tile_x * tile_size.x as usize;
                                     let x_end = x_start + tile_size.x as usize;
-
-                                    if x_end >= source_data[y].len() {
+                                    if x_end > source_data[y].chars().count() {
                                         break 'add_x;
                                     }
 
@@ -100,6 +99,12 @@ impl AssetLoader for TilesetLoader {
                                 tile_ids.insert(label.clone(), tiles.len());
                                 tile_labels.push(label);
                                 tiles.push(Arc::new(GlyphTextureSource::from(&tile)));
+
+                                let mirrored_label = format!("{}-{}-{}-m", name, tile_x, tile_y);
+                                let mirrored_data = text_util::text_mirror::mirror_lines(&tile);
+                                tile_ids.insert(mirrored_label.clone(), tiles.len());
+                                tile_labels.push(mirrored_label);
+                                tiles.push(Arc::new(GlyphTextureSource::from(&mirrored_data)));
 
                                 tile_x += 1;
                             }

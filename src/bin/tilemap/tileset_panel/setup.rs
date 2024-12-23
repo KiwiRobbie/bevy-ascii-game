@@ -93,7 +93,7 @@ pub(super) fn setup_ui(
                 (),
             )
             .with(TilesetHandles {
-                handles: vec![server.load("tilesets/cave.tileset.ron")],
+                handles: vec![server.load("tilesets/bridge.tileset.ron")],
             }),
         ])
     }(&mut commands);
@@ -146,13 +146,17 @@ fn build_tileset_ui<'a>(
         widgets::Container::build(Some(
             widgets::ScrollingView::build(vec![ListBuilderWidget::build::<widgets::Grid>(
                 Box::new(move |index, item: &Arc<GlyphTextureSource>| {
-                    widgets::Texture::build(item.data.clone(), tile_size).with((
-                        IntractableMarker,
-                        TilesetTileId {
-                            tile: index as u32,
-                            tileset: handle.clone(),
-                        },
-                    ))
+                    if item.data.len() == (tile_size.x * tile_size.y) as usize {
+                        widgets::Texture::build(item.data.clone(), tile_size).with((
+                            IntractableMarker,
+                            TilesetTileId {
+                                tile: index as u32,
+                                tileset: handle.clone(),
+                            },
+                        ))
+                    } else {
+                        widgets::Text::build("???".into())
+                    }
                 }),
                 source.tiles.clone(),
                 source.tile_size,

@@ -18,6 +18,8 @@ use spatial_grid::{
 
 use grid_physics::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
 
+use crate::physics_grids::grid_translate;
+
 pub(crate) struct SpatialDebugPlugin;
 impl Plugin for SpatialDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -48,17 +50,17 @@ fn debug_collision_system(
         Option<&Solid>,
         Option<&Actor>,
     )>,
-    q_physics_grid: Query<(&SpatialGrid, &Transform)>,
+    q_physics_grid: Query<(&SpatialGrid, &Transform, &Position)>,
 ) {
     for (collider, position, grid_member, solid, actor) in q_colliders.iter() {
-        let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
+        let Ok((grid, transform, grid_position)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
 
         for shape in collider.shape.shapes.iter() {
-            let min = (**position + shape.start).as_vec2() * grid.size.as_vec2()
+            let min = (**position + shape.start - **grid_position).as_vec2() * grid.step.as_vec2()
                 + transform.translation.truncate();
-            let size = shape.size.as_vec2() * grid.size.as_vec2();
+            let size = shape.size.as_vec2() * grid.step.as_vec2();
 
             let center = min + 0.5 * size;
 
@@ -79,19 +81,19 @@ fn debug_position_system(
         Option<&Velocity>,
         &PhysicsGridMember,
     )>,
-    q_physics_grid: Query<(&SpatialGrid, &Transform)>,
+    q_physics_grid: Query<(&SpatialGrid, &Transform, &Position)>,
 ) {
     for (position, remainder, velocity, grid_member) in q_position.iter() {
-        let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
+        let Ok((grid, transform, grid_position)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
-        let position = **position * grid.size.as_ivec2();
+        let position = (**position - **grid_position) * grid.step.as_ivec2();
         let position = position.as_vec2() + transform.translation.truncate();
 
         gizmos.circle_2d(position, 5.0, BLUE);
 
         let position = if let Some(remainder) = remainder {
-            let remainder = **remainder * grid.size.as_vec2();
+            let remainder = **remainder * grid.step.as_vec2();
             gizmos.circle_2d(position + remainder, 2.0, RED);
             position + remainder
         } else {

@@ -62,13 +62,13 @@ fn main() {
                 ..Default::default()
             }),
         PlayerPlugin,
+        GlyphRenderPlugin,
         GlyphAnimationPlugin,
         GlyphAnimationGraphPlugin,
         FontAtlasPlugin,
         TilesetPlugin,
         TilemapPlugin,
         PhysicsPlugin,
-        GlyphRenderPlugin,
         TilesetPanelPlugin,
         PhysicsGridPlugin,
         DebugPlugin,
@@ -83,7 +83,7 @@ fn main() {
 fn setup_system(mut commands: Commands, server: Res<AssetServer>) {
     commands
         .spawn((
-            Tilemap(server.load("tilemaps/output.tilemap.ron")),
+            Tilemap(server.load("tilemaps/output_bridge.tilemap.ron")),
             SolidPhysicsBundle {
                 position: SpatialBundle::from(IVec2::new(20, 10)),
                 ..Default::default()
@@ -123,19 +123,17 @@ fn zoom_system(
 
     let factor = (distance / 16.0).exp();
     *size *= factor;
-    dbg!(factor);
     *size = size.clamp(2.0, 128.0);
 
-    dbg!(&size);
     let window = window.get_single().unwrap();
 
     for (mut font_size, mut grid, mut buffer) in q_glyph_buffer.iter_mut() {
         let size = *size as u32;
         **font_size = size;
-        grid.size = UVec2::new(font_size.advance(), font_size.line_spacing());
+        grid.step = UVec2::new(font_size.advance(), font_size.line_spacing());
 
-        buffer.size.x = (window.width() / grid.size.x as f32) as u32;
-        buffer.size.y = (window.height() / grid.size.y as f32) as u32;
+        buffer.size.x = (window.width() / grid.step.x as f32) as u32;
+        buffer.size.y = (window.height() / grid.step.y as f32) as u32;
     }
 }
 

@@ -6,7 +6,7 @@ use bevy::{
     ecs::system::{Commands, Query, Res, ResMut},
     math::{IVec2, UVec2},
     prelude::{Component, Entity, With},
-    render::Extract,
+    render::{sync_world::RenderEntity, Extract},
 };
 use glyph_render::{
     atlas::FontAtlasCache,
@@ -33,12 +33,19 @@ pub(crate) fn extract_tilemaps(
     q_existing_tiles: Query<Entity, With<ExtractedTileMapTileMarker>>,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,
-    q_glyph_buffer: Extract<Query<(&Position, &GlyphBuffer, &CustomFont, &FontSize)>>,
+    q_extracted_glyph_buffer: Extract<
+        Query<(
+            RenderEntity,
+            &Position,
+            &GlyphBuffer,
+            &CustomFont,
+            &FontSize,
+        )>,
+    >,
     q_tilemaps: Extract<
         Query<(
             &Position,
             Option<&Depth>,
-            &TargetGlyphBuffer,
             &Tilemap,
             Option<&GlyphSolidColor>,
         )>,
@@ -52,7 +59,8 @@ pub(crate) fn extract_tilemaps(
         commands.entity(entity).despawn();
     }
 
-    for (buffer_position, buffer, font, font_size) in q_glyph_buffer.iter() {
+    for (render_entity, buffer_position, buffer, font, font_size) in q_extracted_glyph_buffer.iter()
+    {
         let Some(font) = fonts.get(font.id()) else {
             continue;
         };
@@ -65,7 +73,7 @@ pub(crate) fn extract_tilemaps(
         let buffer_start = **buffer_position;
         let buffer_end = buffer_start + buffer.size.as_ivec2();
 
-        for (tilemap_position, tilemap_depth, target, tilemap, solid_color) in buffer
+        for (tilemap_position, tilemap_depth, tilemap, solid_color) in buffer
             .textures
             .iter()
             .flat_map(|entity| q_tilemaps.get(*entity))
@@ -132,7 +140,7 @@ pub(crate) fn extract_tilemaps(
                                     - **buffer_position,
                             ),
                             tilemap_depth.cloned().unwrap_or_default(),
-                            target.clone(),
+                            TargetGlyphBuffer(render_entity),
                             ExtractedTileMapTileMarker,
                             ExtractedGlyphTexture(extracted_glyph_texture),
                         ));

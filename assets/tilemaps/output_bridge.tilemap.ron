@@ -1,0 +1,9 @@
+(
+    chunk_size: (4, 4),
+    tile_size: (21, 9),
+    tilesets: [
+        "tilesets/bridge.tileset.ron",
+    ],
+    chunk_dir: "tilemaps/output_bridge",
+    chunks: [],
+)

@@ -49,6 +49,7 @@ impl Plugin for GlyphRenderPlugin {
             .add_systems(
                 Render,
                 (update_glyph_buffer_entities, prepare_glyph_buffers)
+                    .chain()
                     .in_set(RenderSet::PrepareAssets),
             )
             .add_systems(
@@ -139,11 +140,12 @@ impl From<GlyphTextureSource> for GlyphTexture {
 impl From<&Vec<String>> for GlyphTextureSource {
     fn from(from: &Vec<String>) -> Self {
         let height = from.len();
-        let width = from[0].len();
+        let width = from[0].chars().count();
 
         let mut data: Box<[char]> = vec!['\0'; width * height].into_boxed_slice();
         let mut index = 0;
         for row in from.into_iter() {
+            // assert_eq!(row.chars().count(), width);
             for ch in row.chars() {
                 data[index] = ch;
                 index += 1;
@@ -317,8 +319,8 @@ fn prepare_buffers(
                 .unwrap_or(Color::WHITE.to_srgba().to_vec4()),
             width: gpu_glyph_texture.width,
             height: gpu_glyph_texture.height,
-            advance: grid.size.x,
-            line_spacing: grid.size.y,
+            advance: grid.step.x,
+            line_spacing: grid.step.y,
         });
         uniform_buffer.set_label(Some("Glyph raster uniforms"));
         uniform_buffer.write_buffer(&render_device, &render_queue);

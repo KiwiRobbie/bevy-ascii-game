@@ -51,13 +51,13 @@ pub fn create_player_with_gamepad(
     gamepad: Entity,
     glyph_buffer: Entity,
 ) {
-    create_player_with_keyboard(commands, server)
+    create_player(commands, server)
         .insert(PlayerInputController(gamepad))
         .insert(TargetGlyphBuffer(glyph_buffer))
         .insert(GamePhysicsGridMarker);
 }
 
-pub fn create_player_with_keyboard<'a>(
+pub fn create_player<'a>(
     commands: &'a mut Commands,
     server: &Res<AssetServer>,
 ) -> bevy::ecs::system::EntityCommands<'a> {

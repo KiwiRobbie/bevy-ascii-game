@@ -43,14 +43,29 @@ impl WidgetLayoutLogic for TextureLogic {
 
 impl Texture {
     pub fn build<'a>(data: Box<[char]>, size: UVec2) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
-            commands
-                .spawn((
-                    Self { data, size },
-                    RenderBundle::default(),
-                    WidgetLayout::new::<TextureLogic>(),
-                ))
-                .id()
-        })
+        if data.len() == (size.x * size.y) as usize {
+            Box::new(move |commands| {
+                commands
+                    .spawn((
+                        Self { data, size },
+                        RenderBundle::default(),
+                        WidgetLayout::new::<TextureLogic>(),
+                    ))
+                    .id()
+            })
+        } else {
+            Box::new(move |commands| {
+                commands
+                    .spawn((
+                        Self {
+                            data: Box::new(['?']),
+                            size: UVec2::ONE,
+                        },
+                        RenderBundle::default(),
+                        WidgetLayout::new::<TextureLogic>(),
+                    ))
+                    .id()
+            })
+        }
     }
 }

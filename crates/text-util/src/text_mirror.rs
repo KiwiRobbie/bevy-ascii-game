@@ -12,6 +12,7 @@ pub(crate) fn mirror_lines_with(lines: &[String], map: HashMap<char, char>) -> V
         *line = line.chars().map(|c| *map.get(&c).unwrap_or(&c)).collect();
     }
 
+    dbg!(&mirrored_lines);
     return mirrored_lines;
 }
 
@@ -24,12 +25,13 @@ pub fn mirror_lines(lines: &[String]) -> Vec<String> {
     mirror_lines_with(lines, map)
 }
 
-const MIRROR_CHARS: [(char, char); 7] = [
+const MIRROR_CHARS: [(char, char); 8] = [
     ('\\', '/'),
-    ('\'', '`'),
+    ('´', '`'),
     ('<', '>'),
     ('p', 'q'),
     ('b', 'd'),
     ('[', ']'),
     ('(', ')'),
+    ('{', '}'),
 ];

@@ -24,10 +24,10 @@ impl Constraint {
     }
     pub fn constrain(&self, mut size: UVec2) -> UVec2 {
         if let Some(width) = &self.width {
-            size.x = *(width.start().clamp(&size.x, width.end()));
+            size.x = *(width.start().max(&size.x).min(width.end()));
         }
         if let Some(height) = &self.height {
-            size.y = *(height.start().clamp(&size.y, height.end()));
+            size.y = *(height.start().max(&size.y).min(height.end()));
         }
         return size;
     }

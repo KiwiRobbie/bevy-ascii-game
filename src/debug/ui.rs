@@ -24,9 +24,9 @@ fn debug_active(
             continue;
         };
 
-        let offset = positioned.offset.as_vec2() * grid.size.as_vec2() * Vec2::new(1.0, -1.0)
+        let offset = positioned.offset.as_vec2() * grid.step.as_vec2() * Vec2::new(1.0, -1.0)
             + transform.translation.truncate();
-        let size = positioned.size.as_vec2() * grid.size.as_vec2() * Vec2::new(1.0, -1.0);
+        let size = positioned.size.as_vec2() * grid.step.as_vec2() * Vec2::new(1.0, -1.0);
         let center = offset + 0.5 * size;
 
         gizmos.rect_2d(center, size, ORANGE);

@@ -127,7 +127,6 @@ impl AssetLoader for GlyphAnimationAssetLoader {
                     mirrored,
                 ))
             }
-
             Ok(GlyphAnimationSource {
                 name: meta.name.clone(),
                 size: meta.size.into(),

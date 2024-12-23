@@ -1,5 +1,5 @@
 use bevy_ecs::{component::Component, entity::Entity};
-use bevy_math::UVec2;
+use bevy_math::{IVec2, UVec2};
 
 #[derive(Component, Clone)]
 pub struct PhysicsGridMember {
@@ -8,5 +8,5 @@ pub struct PhysicsGridMember {
 
 #[derive(Component, Clone)]
 pub struct SpatialGrid {
-    pub size: UVec2,
+    pub step: UVec2,
 }

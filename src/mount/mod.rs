@@ -1,14 +1,18 @@
 use bevy::{color::palettes::css, prelude::*};
 use glyph_render::{
-    glyph_animation_graph::player::GlyphAnimationGraphTarget, glyph_render_plugin::GlyphSolidColor,
+    glyph_animation_graph::player::GlyphAnimationGraphTarget,
+    glyph_render_plugin::{GlyphSolidColor, GlyphSpriteMirrored},
 };
-use grid_physics::{gravity::Gravity, movement::Movement, velocity::Velocity};
+use grid_physics::{
+    free::FreeMarker, gravity::Gravity, movement::Movement, plugin::PhysicsUpdateSet,
+    velocity::Velocity,
+};
 use spatial_grid::position::Position;
 
 use crate::player::{
     input::{player_inputs, PlayerInputSet},
     interaction::{PlayerInteractActive, PlayerInteractable},
-    movement::PlayerMovementMarker,
+    movement::{direction::PlayerDirection, PlayerMovementMarker},
     PlayerMarker,
 };
 
@@ -21,11 +25,22 @@ impl Plugin for HorsePlugin {
             Update,
             (
                 mount_interaction_system,
-                (horse_movement_system, update_rider_position).chain_ignore_deferred(),
+                horse_movement_system,
+                mount_update_sprite_mirror_system,
                 horse_animation_system,
+                dismount_system,
             ),
         )
-        .add_systems(PreUpdate, transfer_player_inputs.after(PlayerInputSet));
+        .add_systems(
+            PostUpdate,
+            update_rider_system
+                .in_set(PhysicsUpdateSet::PostUpdate)
+                .after(PhysicsUpdateSet::Update),
+        )
+        .add_systems(
+            PreUpdate,
+            transfer_player_inputs_system.after(PlayerInputSet),
+        );
     }
 }
 
@@ -50,11 +65,14 @@ pub(crate) struct MountRider {
     rider: Entity,
 }
 
-pub(crate) fn mount_interaction_system(
-    q_mounts: Query<(Entity, &PlayerInteractActive), With<MountableMarker>>,
+fn mount_interaction_system(
+    q_mounts: Query<
+        (Entity, &PlayerInteractActive, Has<GlyphSpriteMirrored>),
+        With<MountableMarker>,
+    >,
     mut commands: Commands,
 ) {
-    for (mount, &PlayerInteractActive { player }) in q_mounts.iter() {
+    for (mount, &PlayerInteractActive { player }, mirrored) in q_mounts.iter() {
         let mut mount_command: EntityCommands<'_> = commands.entity(mount);
         mount_command.remove::<PlayerInteractable>();
         mount_command.insert((
@@ -69,23 +87,76 @@ pub(crate) fn mount_interaction_system(
         ));
 
         let mut player_command: EntityCommands<'_> = commands.entity(player);
-        player_command.remove::<(PlayerMovementMarker, Velocity, Gravity, Movement)>();
+        player_command.remove::<(PlayerMovementMarker, FreeMarker, Movement)>();
         player_command.insert(RiderMount { mount });
+        if mirrored {
+            player_command.insert(GlyphSpriteMirrored);
+        } else {
+            player_command.remove::<GlyphSpriteMirrored>();
+        }
     }
 }
 
-pub(crate) fn update_rider_position(
+fn dismount_system(
     q_mount: Query<
-        (&Position, &MountOrigin, &MountRider),
+        (
+            Entity,
+            &mount_inputs::Movement,
+            &MountRider,
+            Has<GlyphSpriteMirrored>,
+        ),
+        With<MountableMarker>,
+    >,
+    mut commands: Commands,
+) {
+    for (mount, movement, &MountRider { rider }, mirrored) in q_mount.iter() {
+        if movement.vertical > -0.5 {
+            continue;
+        }
+
+        let mut mount_command: EntityCommands<'_> = commands.entity(mount);
+        mount_command.remove::<(PlayerInteractable, MountRider)>();
+        mount_command.insert((PlayerInteractable, mount_inputs::Movement::default()));
+
+        let mut player_command: EntityCommands<'_> = commands.entity(rider);
+        player_command.remove::<RiderMount>();
+        player_command.insert((
+            PlayerMovementMarker,
+            FreeMarker,
+            Movement::default(),
+            PlayerDirection::new(if mirrored { IVec2::NEG_X } else { IVec2::X }),
+        ));
+    }
+}
+
+fn update_rider_system(
+    q_mount: Query<
+        (&Position, &Velocity, &MountOrigin, &MountRider),
         (With<MountMarker>, Without<PlayerMarker>),
     >,
-    mut q_player: Query<&mut Position, (Without<MountMarker>, With<PlayerMarker>)>,
+    mut q_player: Query<(&mut Position, &mut Velocity), (Without<MountMarker>, With<PlayerMarker>)>,
 ) {
-    for (mount_pos, mount_origin, &MountRider { rider }) in q_mount.iter() {
-        let Ok(mut rider_pos) = q_player.get_mut(rider) else {
+    for (mount_pos, mount_vel, mount_origin, &MountRider { rider }) in q_mount.iter() {
+        let Ok((mut rider_pos, mut rider_vel)) = q_player.get_mut(rider) else {
             continue;
         };
         **rider_pos = mount_pos.0 + mount_origin.origin;
+        **rider_vel = **mount_vel;
+    }
+}
+
+fn mount_update_sprite_mirror_system(
+    mut commands: Commands,
+    q_mount: Query<(Entity, &mount_inputs::Movement, &MountRider), With<MountMarker>>,
+) {
+    for (player, movement, &MountRider { rider }) in q_mount.iter() {
+        if movement.horizontal < -0.5 {
+            commands.entity(player).insert(GlyphSpriteMirrored);
+            commands.entity(rider).insert(GlyphSpriteMirrored);
+        } else if movement.horizontal > 0.5 {
+            commands.entity(player).remove::<GlyphSpriteMirrored>();
+            commands.entity(rider).remove::<GlyphSpriteMirrored>();
+        }
     }
 }
 
@@ -102,7 +173,7 @@ pub mod mount_inputs {
     pub struct JumpMarker;
 }
 
-pub(crate) fn transfer_player_inputs(
+fn transfer_player_inputs_system(
     mut q_mount: Query<
         (Entity, &MountRider, &mut mount_inputs::Movement),
         (With<MountMarker>, Without<PlayerMarker>),

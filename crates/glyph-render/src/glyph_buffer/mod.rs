@@ -1,21 +1,28 @@
 use bevy::{
-    ecs::{bundle::Bundle, component::Component, entity::Entity, query::Without, system::Query},
+    ecs::{
+        bundle::Bundle,
+        component::Component,
+        entity::{Entity, EntityHashSet},
+        query::Without,
+        system::Query,
+    },
     math::UVec2,
     prelude::{Deref, DerefMut},
     render::render_resource::TextureView,
-    utils::HashSet,
 };
 
 use crate::{
     atlas::FontAtlasUser,
     font::{CustomFont, FontSize},
 };
+
+pub use extract::extract_glyph_buffers;
 pub(crate) mod extract;
 pub(crate) mod prepare;
 
 #[derive(Component, Clone)]
 pub struct GlyphBuffer {
-    pub textures: HashSet<Entity>,
+    pub textures: EntityHashSet,
     pub size: UVec2,
 }
 
@@ -30,7 +37,7 @@ pub(crate) struct GlyphBufferBundle {
 #[derive(Component, Clone, Deref, DerefMut)]
 pub struct TargetGlyphBuffer(pub Entity);
 
-pub(crate) fn update_glyph_buffer_entities(
+pub fn update_glyph_buffer_entities(
     q_sources: Query<(Entity, &TargetGlyphBuffer), Without<GlyphBuffer>>,
     mut q_buffers: Query<&mut GlyphBuffer, Without<TargetGlyphBuffer>>,
 ) {
@@ -41,11 +48,9 @@ pub(crate) fn update_glyph_buffer_entities(
     for (source_entity, source_target) in q_sources.iter() {
         let target = **source_target;
 
-        q_buffers
-            .get_mut(target)
-            .unwrap()
-            .textures
-            .insert(source_entity);
+        let mut target = q_buffers.get_mut(target).unwrap();
+
+        target.textures.insert(source_entity);
     }
 }
 
