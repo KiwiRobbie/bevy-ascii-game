@@ -49,6 +49,7 @@ use spatial_grid::{
     grid::SpatialGrid,
     position::{Position, SpatialBundle, SpatialTraits},
     remainder::Remainder,
+    PositionPropagationPlugin,
 };
 use tileset_panel::plugin::TilesetPanelPlugin;
 
@@ -66,14 +67,16 @@ fn main() {
                 }),
                 ..Default::default()
             }),
+        PositionPropagationPlugin,
         PlayerPlugin,
-        GlyphAnimationPlugin,
-        GlyphAnimationGraphPlugin,
+        (
+            GlyphRenderPlugin,
+            GlyphAnimationPlugin,
+            GlyphAnimationGraphPlugin,
+        ),
         FontAtlasPlugin,
-        TilesetPlugin,
-        TilemapPlugin,
+        (TilesetPlugin, TilemapPlugin),
         PhysicsPlugin,
-        GlyphRenderPlugin,
         TilesetPanelPlugin,
         PhysicsGridPlugin,
         DebugPlugin,
