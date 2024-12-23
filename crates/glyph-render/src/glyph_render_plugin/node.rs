@@ -4,7 +4,6 @@ use bevy::{
         query::{QueryData, QueryFilter, QueryState, With},
         world::{FromWorld, World},
     },
-    log::{info, info_span},
     render::{
         render_graph,
         render_resource::{

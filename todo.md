@@ -1,4 +1,28 @@
 # Combat 
+Intent based 
+- Defend `,` / `<` key
+- Attack  `.` / `>` key 
+
+Timer/cooldown 
+Randomness affected by sword stats?
+
+
+## Feint 
+Double tap attack 
+
+## Wrench 
+Tap then hold 
+
+## Close Defend and move closer 
+
+## Riposte 
+Back + attack 
+
+
+
+
+
+# Combat 
 - Use movement keys combined with attack/parry to determine action.
 - VSCode like "chords" 
 - Close: Parry, Forward Attack
@@ -15,7 +39,7 @@ O: Out
 PIA: Close 
 OA:  Remise 
 
-Honor System? 
+Honour System? 
 
 
 # Horses 

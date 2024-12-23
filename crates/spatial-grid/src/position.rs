@@ -5,11 +5,14 @@ use bevy_reflect::Reflect;
 
 use crate::remainder::Remainder;
 
-#[derive(Component, Default, Debug, Clone, Reflect, Deref, DerefMut)]
+#[derive(Component, Default, Debug, Clone, Copy, Reflect, Deref, DerefMut)]
 pub struct Position(pub IVec2);
 
 impl Position {
     pub const ZERO: Self = Self(IVec2::ZERO);
+    pub fn offset(self, offset: IVec2) -> Self {
+        Self(*self + offset)
+    }
 }
 
 #[derive(Bundle, Default, Clone)]

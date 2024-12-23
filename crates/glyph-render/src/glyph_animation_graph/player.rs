@@ -24,8 +24,8 @@ impl Default for GlyphAnimationGraphSettings {
     }
 }
 
-#[derive(Debug, Component, Deref, DerefMut)]
-pub struct GlyphAnimationGraphTarget(pub String);
+#[derive(Debug, Component, Deref, DerefMut, Clone, Default)]
+pub struct GlyphAnimationGraphTarget(pub Option<String>);
 
 #[derive(Debug, Component, Default, Clone)]
 pub struct GlyphAnimationGraphCurrent {
@@ -87,18 +87,22 @@ pub fn animation_graph_player(
 }
 
 pub fn animation_graph_traverse(
-    mut q_players: Query<(
+    mut q_animation_graphs: Query<(
         &mut GlyphAnimationGraph,
         &mut GlyphAnimationGraphCurrent,
         &GlyphAnimationGraphTarget,
     )>,
     glyph_animation_graphs: Res<Assets<GlyphAnimationGraphSource>>,
 ) {
-    for (graph, mut current, target) in q_players.iter_mut() {
+    for (graph, mut current, target) in q_animation_graphs.iter_mut() {
+        let Some(target) = target.as_ref() else {
+            continue;
+        };
+
         let Some(graph_source) = glyph_animation_graphs.get(&graph.source) else {
             continue;
         };
-        let target = *graph_source.state_names.get(&**target).unwrap();
+        let target = *graph_source.state_names.get(target).unwrap();
 
         if current.current_state != target {
             let transition = graph_source.traverse(current.current_state, target);

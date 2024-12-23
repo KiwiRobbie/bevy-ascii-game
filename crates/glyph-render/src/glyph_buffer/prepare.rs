@@ -67,7 +67,7 @@ pub fn prepare_glyph_buffers(
                 size: UVec2::new(texture.width as u32, texture.height as u32),
                 target_size: buffer.size,
                 depth: **depth,
-                padding: Default::default(),
+                padding: 0.0,
             });
             uniform_buffer.set_label(Some("Glyph render uniforms"));
             uniform_buffer.write_buffer(&render_device, &render_queue);

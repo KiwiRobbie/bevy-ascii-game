@@ -1,47 +1,56 @@
-use bevy::ecs::{
-    entity::Entity,
-    query::With,
-    system::{Commands, Query},
+use bevy::{
+    ecs::{query::With, system::Query},
+    prelude::Has,
 };
 
 use glyph_render::glyph_animation_graph::player::GlyphAnimationGraphTarget;
 use grid_physics::free::FreeGrounded;
 
-use super::{input::player_inputs::Movement, movement::lunge::PlayerLunging, PlayerMarker};
+use crate::mount::RiderMount;
+
+use super::{
+    input::player_inputs,
+    movement::{lunge::PlayerLunging, PlayerMovementMarker},
+    PlayerMarker,
+};
 
 pub fn set_animation_target(
-    mut commands: Commands,
-    q_players: Query<
+    mut q_players: Query<
         (
-            Entity,
-            &Movement,
-            Option<&FreeGrounded>,
-            Option<&PlayerLunging>,
+            &mut GlyphAnimationGraphTarget,
+            Has<PlayerMovementMarker>,
+            &player_inputs::Movement,
+            Has<FreeGrounded>,
+            Has<PlayerLunging>,
+            Has<RiderMount>,
         ),
         With<PlayerMarker>,
     >,
 ) {
-    for (player, movement, grounded, lunging) in q_players.iter() {
-        let movement = movement.horizontal.abs() > 0.5;
-        let grounded = grounded.is_some();
-        let lunging = lunging.is_some();
-
-        let target = if lunging {
-            "lunging"
-        } else if grounded {
-            if movement {
-                "running"
+    for (mut animation_target, movement_enabled, input_movement, grounded, lunging, mounted) in
+        q_players.iter_mut()
+    {
+        let horizontal_movement = input_movement.horizontal.abs() > 0.5;
+        let target = if movement_enabled {
+            if lunging {
+                "lunging"
+            } else if grounded {
+                if horizontal_movement {
+                    "running"
+                } else {
+                    "idle"
+                }
+            } else if horizontal_movement {
+                "air_strafe"
             } else {
-                "idle"
+                "air_idle"
             }
-        } else if movement {
-            "air_strafe"
+        } else if mounted {
+            "idle"
         } else {
-            "air_idle"
+            "idle"
         };
 
-        commands
-            .entity(player)
-            .insert(GlyphAnimationGraphTarget(target.into()));
+        **animation_target = Some(target.into());
     }
 }

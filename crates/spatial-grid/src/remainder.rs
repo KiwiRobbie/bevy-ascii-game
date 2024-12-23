@@ -5,3 +5,8 @@ use bevy_reflect::Reflect;
 
 #[derive(Component, Default, Debug, Clone, Reflect, Deref, DerefMut)]
 pub struct Remainder(pub Vec2);
+impl From<Vec2> for Remainder {
+    fn from(value: Vec2) -> Self {
+        Self(value.fract())
+    }
+}

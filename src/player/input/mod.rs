@@ -1,6 +1,7 @@
 use bevy::{
     app::Plugin,
     ecs::{bundle::Bundle, component::Component},
+    prelude::SystemSet,
 };
 
 use self::{controller::PlayerControllerInputPlugin, keyboard::PlayerKeyboardInputPlugin};
@@ -15,6 +16,9 @@ impl Plugin for PlayerInputPlugin {
         app.add_plugins((PlayerControllerInputPlugin, PlayerKeyboardInputPlugin));
     }
 }
+
+#[derive(Debug, SystemSet, Hash, PartialEq, Eq, Clone)]
+pub struct PlayerInputSet;
 
 #[derive(Component, Default, Clone)]
 pub struct PlayerInputMarker;
@@ -35,6 +39,12 @@ pub mod player_inputs {
         interact: InteractMarker,
         reset: ResetMarker,
     }
+
+    #[derive(Component, Default, Debug)]
+    pub struct DefendMarker;
+
+    #[derive(Component, Default, Debug)]
+    pub struct AttackMaker;
 
     #[derive(Component, Default, Debug)]
     pub struct JumpMarker;

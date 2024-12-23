@@ -20,9 +20,9 @@ bevy = { version = "0.15.0", default-features = false, features = [
     "x11",
     "bevy_gizmos",
     "webgl2",
-    "wayland",
+    # "wayland",
 ] }
-
+# bevy_animation = { version = "0.14.0-rc.4" }
 ascii-ui = { path = "crates/ascii-ui" }
 grid-physics = { path = "crates/grid-physics" }
 glyph-render = { path = "crates/glyph-render" }
@@ -55,6 +55,14 @@ incremental = true
 codegen-units = 16
 
 [profile.dev.package.ascii-ui]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 16
+
+[profile.dev.package.grid-physics]
 opt-level = 0
 debug = true
 debug-assertions = true

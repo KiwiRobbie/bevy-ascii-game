@@ -7,11 +7,12 @@ use bevy::{
         system::{Commands, Query, Res},
     },
     input::{keyboard::KeyCode, ButtonInput},
+    prelude::IntoSystemConfigs,
 };
 
 use crate::player::PlayerMarker;
 
-use super::{player_inputs, PlayerInputMarker};
+use super::{player_inputs, PlayerInputMarker, PlayerInputSet};
 
 #[derive(Debug, Component, Clone)]
 pub struct PlayerInputKeyboardMarker;
@@ -69,7 +70,12 @@ fn player_keyboard_input_buttons(
         let mut commands = commands.entity(entity);
 
         commands.remove::<player_inputs::MarkerResetBundle>();
-
+        if keyboard.pressed(KeyCode::KeyS) {
+            commands.insert(player_inputs::DefendMarker);
+        }
+        if keyboard.pressed(KeyCode::KeyD) {
+            commands.insert(player_inputs::AttackMaker);
+        }
         if keyboard.pressed(KeyCode::KeyC) {
             commands.insert(player_inputs::JumpMarker);
         }
@@ -93,7 +99,8 @@ impl Plugin for PlayerKeyboardInputPlugin {
             (
                 player_keyboard_input_movement,
                 player_keyboard_input_buttons,
-            ),
+            )
+                .in_set(PlayerInputSet),
         );
     }
 }

@@ -7,12 +7,12 @@ use bevy::{
         system::{Commands, Query},
     },
     input::gamepad::GamepadButton,
-    prelude::Gamepad,
+    prelude::{Gamepad, IntoSystemConfigs},
 };
 
 use crate::player::PlayerMarker;
 
-use super::{player_inputs, PlayerInputMarker};
+use super::{player_inputs, PlayerInputMarker, PlayerInputSet};
 
 #[derive(Debug, Component)]
 pub struct PlayerInputController(pub Entity);
@@ -76,7 +76,8 @@ impl Plugin for PlayerControllerInputPlugin {
             (
                 player_controller_input_movement,
                 player_controller_input_buttons,
-            ),
+            )
+                .in_set(PlayerInputSet),
         );
     }
 }

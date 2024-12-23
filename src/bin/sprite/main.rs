@@ -103,8 +103,7 @@ fn setup_system(
         32,
         std::iter::repeat('.')
             .take(64 * 32)
-            .collect::<Box<[char]>>()
-            .into(),
+            .collect::<Box<[char]>>(),
     ))));
     commands
         .spawn((

@@ -8,6 +8,7 @@
     "cooldown",
     "debugdump",
     "despawn",
+    "Interactable",
     "labeled",
     "rect",
     "Tilemap",

@@ -14,7 +14,7 @@ use spatial_grid::{
     remainder::Remainder,
 };
 
-use crate::collision::CollisionShape;
+use crate::collision::Aabb;
 
 use super::{
     actor::{Actor, FilterActors},
@@ -58,8 +58,7 @@ pub fn solid_move_system(
             solid_remainder.x -= movement.x as f32;
             solid_position.x += movement.x;
 
-            let solid_aabbs: Vec<CollisionShape> =
-                solid_collision.shape.iter_at(**solid_position).collect();
+            let solid_aabbs: Vec<Aabb> = solid_collision.shape.iter_at(**solid_position).collect();
 
             for (actor, mut actor_position, mut actor_remainder, actor_collision) in
                 q_actors.iter_mut()
@@ -108,8 +107,7 @@ pub fn solid_move_system(
 
         // Update collision cache entry
         {
-            let solid_aabbs: Vec<CollisionShape> =
-                solid_collision.shape.iter_at(**solid_position).collect();
+            let solid_aabbs: Vec<Aabb> = solid_collision.shape.iter_at(**solid_position).collect();
             solid_collision_cache.collisions.insert(solid, solid_aabbs);
         }
     }
@@ -128,7 +126,7 @@ pub struct SolidPhysicsBundle {
 
 #[derive(Resource, Debug, Default)]
 pub struct SolidCollisionCache {
-    pub collisions: EntityHashMap<Vec<CollisionShape>>,
+    pub collisions: EntityHashMap<Vec<Aabb>>,
 }
 
 pub fn update_collision_cache(

@@ -9,7 +9,6 @@ use bevy::{
         renderer::{RenderDevice, RenderQueue},
         Render, RenderApp, RenderSet,
     },
-    utils::hashbrown::HashMap,
 };
 use bytemuck::{cast_slice_mut, Pod, Zeroable};
 pub use node::GlyphGenerationNode;

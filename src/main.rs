@@ -22,16 +22,18 @@ use bevy::{
         camera::{Camera, CameraRenderGraph, ClearColorConfig},
         texture::ImagePlugin,
     },
-    window::{Window, WindowPlugin, WindowResolution},
+    window::{Window, WindowPlugin},
     DefaultPlugins,
 };
 
 use bevy_ascii_game::{
     debug::DebugPlugin,
     debug_menu::plugin::DebugMenuPlugin,
+    mount::{HorsePlugin, MountMarker, MountOrigin, MountableMarker},
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
+        interaction::PlayerInteractable,
         reset::{create_player, create_player_with_gamepad},
         PlayerPlugin,
     },
@@ -65,13 +67,13 @@ fn main() {
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
                 primary_window: Some(Window {
-                    resolution: WindowResolution::default().with_scale_factor_override(1.0),
                     present_mode: bevy::window::PresentMode::AutoNoVsync,
                     ..Default::default()
                 }),
                 ..Default::default()
             }),
         PlayerPlugin,
+        HorsePlugin,
         GlyphAnimationPlugin,
         GlyphAnimationGraphPlugin,
         FontAtlasPlugin,
@@ -183,6 +185,12 @@ fn setup_system(
         Velocity::default(),
         GamePhysicsGridMarker,
         Depth(0.5),
+        PlayerInteractable,
+        MountMarker,
+        MountableMarker,
+        MountOrigin {
+            origin: IVec2::new(5, 5),
+        },
     ));
 
     commands.spawn((
@@ -194,7 +202,7 @@ fn setup_system(
             collider: Collider {
                 shape: Aabb {
                     start: IVec2::new(0, 0),
-                    size: UVec2 { x: 50, y: 10 },
+                    size: UVec2::new(50, 10),
                 }
                 .into(),
             },
@@ -268,7 +276,6 @@ fn keyboard_input_system(
     let Some(glyph_sprite) = q_glyph_sprite.get_single().ok() else {
         return;
     };
-
     let glyph_texture = glyph_textures.get_mut(glyph_sprite.texture.id()).unwrap();
     let width = glyph_texture.source.width;
     let height = glyph_texture.source.height;
