@@ -31,7 +31,8 @@ use bevy_ascii_game::{
     debug_menu::plugin::DebugMenuPlugin,
     mount::{horse::spawn::create_horse, HorsePlugin},
     physics_grids::{
-        GamePhysicsGrid, GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker,
+        parallax::ParallaxLayer, GamePhysicsGrid, GamePhysicsGridMarker, PhysicsGridPlugin,
+        PrimaryGlyphBufferMarker,
     },
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
@@ -134,62 +135,39 @@ fn late_setup_system(
     grid: Res<GamePhysicsGrid>,
     mut rng: ResMut<GlobalEntropy<WyRand>>,
 ) {
-    // commands
-    //     .spawn((
-    //         GlyphSprite {
-    //             texture: server.load("art/dj/dj.art"),
-    //             offset: IVec2::ZERO,
-    //         },
-    //         ActorPhysicsBundle {
-    //             collider: Aabb {
-    //                 start: IVec2::new(0, 0),
-    //                 size: UVec2::new(50, 10),
-    //             }
-    //             .into(),
-    //             position: IVec2::new(40, 10).into(),
-    //             ..Default::default()
-    //         },
-    //         GlyphSolidColor {
-    //             color: Color::srgba_u8(0xff, 0x61, 0x88, 0xff),
-    //         },
-    //         GamePhysicsGridMarker,
-    //         Depth(0.5),
-    //     ))
-    //     .set_parent(grid.unwrap());
+    {
+        let width = 500usize;
+        let height = 17usize;
 
-    let width = 100usize;
-    let height = 50usize;
+        let mut data = vec![' '; width * height];
+        let chars = [' ', '.', '-', '~'];
 
-    let mut data = vec![' '; width * height];
-    let chars = [' ', '.', '-', '~'];
+        let mut value: usize = 0;
+        let mut index: usize = 0;
+        while index < width * height {
+            data[index] = chars[value];
+            if rng.next_u32() % 3 == 0 {
+                value = value.saturating_add(1).clamp(0, 3);
+            } else {
+                value = value.saturating_sub(1).clamp(0, 3);
+            }
 
-    let mut value: usize = 0;
-    let mut index: usize = 0;
-    while index < width * height {
-        data[index] = chars[value];
-        if rng.next_u32() % 3 == 0 {
-            value = value.saturating_add(1).clamp(0, 3);
-        } else {
-            value = value.saturating_sub(1).clamp(0, 3);
+            if value == 0 {
+                index += rng.next_u32() as usize % 10;
+            } else {
+                index += 1;
+            }
         }
 
-        if value == 0 {
-            index += rng.next_u32() as usize % 10;
-        } else {
-            index += 1;
-        }
-    }
-
-    let texture = GlyphTexture::new(Arc::new(GlyphTextureSource {
-        data: data.into(),
-        width,
-        height,
-    }));
-    commands
-        .spawn((
+        let texture = GlyphTexture::new(Arc::new(GlyphTextureSource {
+            data: data.into(),
+            width,
+            height,
+        }));
+        commands.spawn((
             GlyphSprite {
                 texture: glyph_textures.add(texture),
-                offset: IVec2::ZERO,
+                offset: IVec2::new(0, 0),
             },
             SpatialBundle::default(),
             GlyphSolidColor {
@@ -197,8 +175,91 @@ fn late_setup_system(
             },
             GamePhysicsGridMarker,
             Depth(-100.0),
-        ))
-        .set_parent(grid.unwrap());
+            ParallaxLayer {
+                factor: 0.8,
+                target: grid.unwrap(),
+            },
+        ));
+    }
+    {
+        let width = 100usize;
+        let height = 17usize;
+
+        let mut data = vec![' '; width * height];
+        for character in data.iter_mut() {
+            let value = (rng.next_u32() % (1 << 12)) as f32 / (1 << 12) as f32;
+
+            *character = match value {
+                ..0.005 => '*',
+                ..0.05 => '.',
+                _ => ' ',
+            }
+        }
+
+        let texture = GlyphTexture::new(Arc::new(GlyphTextureSource {
+            data: data.into(),
+            width,
+            height,
+        }));
+
+        commands.spawn((
+            GlyphSprite {
+                texture: glyph_textures.add(texture),
+                offset: IVec2::new(0, 18),
+            },
+            SpatialBundle::default(),
+            GlyphSolidColor {
+                color: Hsva::new(0., 0.0, 0.1, 1.).into(),
+            },
+            GamePhysicsGridMarker,
+            Depth(-100.0),
+            ParallaxLayer {
+                factor: 1.0,
+                target: grid.unwrap(),
+            },
+        ));
+    }
+    {
+        let width = 14usize;
+        let height = 7usize;
+
+        let data: Box<[char]> = [
+            r#"    __,.      "#,
+            r#" ,·´··.'´     "#,
+            r#"/····/        "#,
+            r#"|····'        "#,
+            r#"\·····`.__·.·/"#,
+            r#" `.········.´ "#,
+            r#"    `'--'´    "#,
+        ]
+        .into_iter()
+        .map(str::chars)
+        .flatten()
+        .collect();
+
+        let texture = GlyphTexture::new(Arc::new(GlyphTextureSource {
+            data,
+            width,
+            height,
+        }));
+
+        commands.spawn((
+            GlyphSprite {
+                texture: glyph_textures.add(texture),
+                offset: IVec2::new(15, 20),
+            },
+            SpatialBundle::default(),
+            GlyphSolidColor {
+                color: Hsva::new(0., 0.0, 0.8, 1.).into(),
+            },
+            GamePhysicsGridMarker,
+            Depth(-100.0),
+            ParallaxLayer {
+                factor: 1.0,
+                target: grid.unwrap(),
+            },
+        ));
+    }
 }
 
 fn setup_system(

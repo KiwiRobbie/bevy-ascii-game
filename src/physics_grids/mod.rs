@@ -20,6 +20,7 @@ use glyph_render::{
 };
 
 use grid_physics::{collision::Collider, plugin::PhysicsUpdateSet, velocity::Velocity};
+use parallax::parallax_system;
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::{Position, SpatialBundle},
@@ -29,6 +30,7 @@ use crate::player::PlayerMarker;
 
 use self::resize::grid_resize_update;
 
+pub mod parallax;
 pub mod resize;
 
 #[derive(Component)]
@@ -173,7 +175,8 @@ impl Plugin for PhysicsGridPlugin {
             .add_systems(Update, grid_resize_update)
             .add_systems(
                 PostUpdate,
-                grid_translate
+                (grid_translate, parallax_system)
+                    .chain()
                     .after(PhysicsUpdateSet::PostUpdate)
                     .before(TransformSystem::TransformPropagate),
             )

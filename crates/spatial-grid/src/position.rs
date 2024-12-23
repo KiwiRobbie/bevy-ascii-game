@@ -23,6 +23,7 @@ pub struct SpatialBundle {
 
 pub trait SpatialTraits {
     fn offset(&mut self, delta: Vec2);
+    fn set(&mut self, value: Vec2);
 }
 impl SpatialTraits for (&mut Position, &mut Remainder) {
     fn offset(&mut self, delta: Vec2) {
@@ -31,6 +32,10 @@ impl SpatialTraits for (&mut Position, &mut Remainder) {
         **self.1 -= delta;
         **self.0 += delta.as_ivec2();
     }
+    fn set(&mut self, value: Vec2) {
+        **self.0 = value.floor().as_ivec2();
+        **self.1 = value.fract();
+    }
 }
 impl<'a> SpatialTraits for (Mut<'a, Position>, Mut<'a, Remainder>) {
     fn offset(&mut self, delta: Vec2) {
@@ -38,6 +43,10 @@ impl<'a> SpatialTraits for (Mut<'a, Position>, Mut<'a, Remainder>) {
         let delta = self.1.round();
         **self.1 -= delta;
         **self.0 += delta.as_ivec2();
+    }
+    fn set(&mut self, value: Vec2) {
+        **self.0 = value.floor().as_ivec2();
+        **self.1 = value.fract();
     }
 }
 impl From<IVec2> for SpatialBundle {
