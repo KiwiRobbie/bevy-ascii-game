@@ -24,7 +24,6 @@ impl TilesetLoader {
             .split(|&b| b == b'\n')
             .map(|line| {
                 String::from_utf8(line.strip_suffix(b"\r").unwrap_or(line).to_vec()).unwrap()
-                // .replace('·', " ")
             })
             .collect::<Vec<_>>()
     }

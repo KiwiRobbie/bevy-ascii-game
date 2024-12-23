@@ -72,28 +72,6 @@ impl Plugin for GlyphRenderPlugin {
     }
 }
 
-// fn debug(world: &World) {
-//     let mut component_counts: HashMap<&str, usize> = HashMap::new();
-
-//     for entity in world.iter_entities() {
-//         for component in entity.archetype().components() {
-//             let info = world.components().get_info(component).unwrap();
-//             let name = info.name();
-
-//             if let Some(count) = component_counts.get_mut(name) {
-//                 *count += 1;
-//             } else {
-//                 component_counts.insert(name, 0);
-//             }
-//         }
-//     }
-//     let mut component_counts: Vec<(&str, usize)> = component_counts.into_iter().collect();
-//     component_counts.sort_by(|a, b| a.1.cmp(&b.1));
-//     for (component, count) in component_counts.into_iter() {
-//         println!("{}: {}", component, count);
-//     }
-// }
-
 #[derive(Clone, ShaderType)]
 pub struct GlyphUniforms {
     pub color: Vec4,
@@ -390,15 +368,6 @@ fn prepare_buffers(
 
         let glyph_buffer_texture = gpu_glyph_texture.buffer_texture.clone();
 
-        // let v_w = gpu_glyph_texture.width as f32 * grid.size.x as f32;
-        // let v_h = gpu_glyph_texture.height as f32 * grid.size.y as f32;
-
-        // let vertex = render_device.create_buffer_with_data(&BufferInitDescriptor {
-        //     label: Some("Vertex buffer"),
-        //     contents: cast_slice(&[v_w, v_h]),
-        //     usage: BufferUsages::VERTEX,
-        // });
-
         commands.entity(entity).insert((
             GlyphUniformBuffer(uniform_buffer),
             GlyphModelUniformBuffer(model_uniform_buffer),
@@ -408,7 +377,6 @@ fn prepare_buffers(
             },
             GlyphBufferData {
                 buffer: glyph_buffer_texture,
-                // vertex,
             },
         ));
     }

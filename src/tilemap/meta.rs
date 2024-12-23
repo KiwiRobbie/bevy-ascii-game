@@ -9,11 +9,5 @@ pub struct TilemapMeta {
     pub chunks: Vec<(i32, i32)>,
 }
 
-// #[derive(serde::Deserialize, Asset, TypePath, Clone)]
-// pub enum ChunkDataLocation {
-//     Relative(String),
-//     Dir(String),
-// }
-
 #[derive(serde::Deserialize, Asset, TypePath, Clone, Deref, serde::Serialize)]
 pub struct ChunkMeta(pub Vec<Vec<(u32, u32)>>);

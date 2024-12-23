@@ -120,13 +120,7 @@ fn zoom_system(
         .scroll
         .unwrap_or_default()
         .y;
-    // let distance = ev_scroll
-    //     .read()
-    //     .map(|ev| match ev.unit {
-    //         bevy::input::mouse::MouseScrollUnit::Line => dbg!(16.0 * ev.y),
-    //         bevy::input::mouse::MouseScrollUnit::Pixel => dbg!(ev.y),
-    //     })
-    //     .sum::<f32>();
+
     let factor = (distance / 16.0).exp();
     *size *= factor;
     dbg!(factor);

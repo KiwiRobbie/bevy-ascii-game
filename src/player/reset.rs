@@ -52,11 +52,6 @@ pub fn create_player_with_gamepad(
 ) {
     create_player(commands, server)
         .insert(PlayerInputController(gamepad))
-        // .insert(GlyphSolidColor {
-        //     color: Color::LinearRgba(
-        //         Color::hsl(360.0 * (1.0 + gamepad.id as f32) / 6.0, 1.0, 0.6).to_linear() * 10.0,
-        //     ),
-        // })
         .insert(TargetGlyphBuffer(glyph_buffer))
         .insert(GamePhysicsGridMarker);
 }

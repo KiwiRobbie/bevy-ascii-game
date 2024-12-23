@@ -43,15 +43,6 @@ impl AssetLoader for TilemapLoader {
                 let loaded_asset: bevy::asset::LoadedAsset<TilesetSource> =
                     load_context.loader().immediate().load(tileset).await?;
                 let value: TilesetSource = loaded_asset.get().clone();
-                // let value: TilesetSource = load_context
-                //     .loader()
-                //     .direct()
-                //     .untyped()
-                //     .load(tileset)
-                //     .await
-                //     .unwrap()
-                //     .take()
-                //     .unwrap();
 
                 tilesets.push(value);
             }
@@ -71,7 +62,6 @@ impl AssetLoader for TilemapLoader {
                 let chunk = ChunkLoader
                     .load(
                         &mut VecReader::new(load_context.read_asset_bytes(path).await.unwrap()),
-                        // .as_slice(),
                         &ChunkSettings {
                             size: Some(meta.chunk_size.into()),
                         },

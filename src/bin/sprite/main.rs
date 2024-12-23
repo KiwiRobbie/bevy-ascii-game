@@ -222,30 +222,6 @@ fn mouse_pan_system(
     }
 }
 
-// #[derive(Resource)]
-// pub struct EditorSprite(Handle<GlyphTexture>);
-
-// fn keyboard_typing_system(
-//     mut evr_kbd: EventReader<KeyboardInput>,
-//     mut q_sprite: Query<&mut GlyphSprite>,
-//     q_cursor: Query<&Position, With<EditorCursorMarker>>,
-//     res_texture: Res<EditorSprite>,
-//     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-// ) {
-//     for ev in evr_kbd.read() {
-//         match &ev.logical_key {
-//             Key::Character(ch) => {
-//                 if let Some(editor_texture) = glyph_textures.get_mut(&res_texture.0) {
-//                     let mut data = editor_texture.source.data.clone();
-//                     // let end = ch.len().min(data[0].len());
-//                     // data.splice(0..end, "a".to_string());
-//                 }
-//             }
-//             _ => {}
-//         };
-//     }
-// }
-
 fn keyboard_pan_system(
     mut evr_kbd: EventReader<KeyboardInput>,
     // keyboard: Res<ButtonInput<KeyCode>>,
@@ -264,20 +240,7 @@ fn keyboard_pan_system(
     let Ok(mut grid) = q_grid.get_single_mut() else {
         return;
     };
-    // TODO: Check if focused
 
-    // if keyboard.just_pressed(KeyCode::ArrowLeft) {
-    //     cursor.offset(Vec2::NEG_X);
-    // }
-    // if keyboard.just_pressed(KeyCode::ArrowRight) {
-    //     cursor.offset(Vec2::X);
-    // }
-    // if keyboard.just_pressed(KeyCode::ArrowDown) {
-    //     cursor.offset(Vec2::NEG_Y);
-    // }
-    // if keyboard.just_pressed(KeyCode::ArrowUp) {
-    //     cursor.offset(Vec2::Y);
-    // }
     for ev in evr_kbd.read() {
         if ev.state.is_pressed() {
             if let Some(offset) = match &ev.logical_key {
