@@ -1,11 +1,5 @@
 use bevy_derive::{Deref, DerefMut};
-use bevy_ecs::{
-    schedule::SystemSet,
-    system::{Res, Resource},
-};
-
-#[derive(Debug, SystemSet, PartialEq, Eq, Hash, Clone)]
-pub(crate) struct PhysicsPostUpdateSet;
+use bevy_ecs::system::{Res, Resource};
 
 pub fn physics_systems_enabled(enabled: Res<EnablePhysicsSystems>) -> bool {
     **enabled

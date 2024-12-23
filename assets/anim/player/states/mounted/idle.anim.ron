@@ -1,0 +1,14 @@
+(
+    name: "player_mounted_idle",
+    size: (14, 8),
+    frames: [
+        (
+            (
+                asset: "art/player/mounted/idle.art",
+                start: Pixel(0, 0),
+                frame_count: Single,
+            ),
+            Auto(-8,0),
+        ),
+    ],
+)

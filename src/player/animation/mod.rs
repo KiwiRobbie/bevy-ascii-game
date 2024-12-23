@@ -1,12 +1,12 @@
 use bevy::{
     ecs::{query::With, system::Query},
-    prelude::Has,
+    prelude::{Has, Without},
 };
 
 use glyph_render::glyph_animation_graph::player::GlyphAnimationGraphTarget;
 use grid_physics::free::FreeGrounded;
 
-use crate::mount::RiderMount;
+use crate::mount::{mount_inputs, MountMarker, RiderMount};
 
 use super::{
     input::player_inputs,
@@ -14,7 +14,7 @@ use super::{
     PlayerMarker,
 };
 
-pub(crate) fn set_animation_target(
+pub(super) fn set_animation_target(
     mut q_players: Query<
         (
             &mut GlyphAnimationGraphTarget,
@@ -22,12 +22,13 @@ pub(crate) fn set_animation_target(
             &player_inputs::Movement,
             Has<FreeGrounded>,
             Has<PlayerLunging>,
-            Has<RiderMount>,
+            Option<&RiderMount>,
         ),
         With<PlayerMarker>,
     >,
+    q_mount: Query<&mount_inputs::Movement, (With<MountMarker>, Without<PlayerMarker>)>,
 ) {
-    for (mut animation_target, movement_enabled, input_movement, grounded, lunging, mounted) in
+    for (mut animation_target, movement_enabled, input_movement, grounded, lunging, mount) in
         q_players.iter_mut()
     {
         let horizontal_movement = input_movement.horizontal.abs() > 0.5;
@@ -45,8 +46,16 @@ pub(crate) fn set_animation_target(
             } else {
                 "air_idle"
             }
-        } else if mounted {
-            "idle"
+        } else if let Some(&RiderMount { mount }) = mount {
+            if q_mount
+                .get(mount)
+                .map(|movement| movement.horizontal != 0.)
+                .unwrap_or(false)
+            {
+                "mounted_gallop"
+            } else {
+                "mounted_idle"
+            }
         } else {
             "idle"
         };

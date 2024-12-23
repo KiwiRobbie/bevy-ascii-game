@@ -13,6 +13,7 @@ use bevy::{
         view::{ViewTarget, ViewUniforms},
     },
 };
+use spatial_grid::depth::Depth;
 
 use crate::glyph_buffer::TargetGlyphBuffer;
 
@@ -47,6 +48,7 @@ struct TextureQueryData {
     render_uniforms: &'static GlyphRenderUniformBuffer,
     glyph_texture: &'static GpuGlyphTexture,
     target: &'static TargetGlyphBuffer,
+    depth: &'static Depth,
 }
 
 #[derive(QueryFilter)]
@@ -197,15 +199,21 @@ impl render_graph::Node for GlyphGenerationNode {
                 let render_device = render_context.render_device();
                 // Render textures to buffers
                 let mut bind_groups = vec![];
-                for TextureQueryDataItem {
-                    render_uniforms,
-                    glyph_texture,
-                    target: _,
-                } in self
+
+                let mut textures: Vec<_> = self
                     .texture_entities
                     .iter()
                     .flat_map(|e| self.q_textures.get_manual(world, *e))
                     .filter(|item| **item.target == buffer_entity)
+                    .collect();
+                textures.sort_unstable_by(|a, b| a.depth.total_cmp(&b.depth));
+
+                for TextureQueryDataItem {
+                    render_uniforms,
+                    glyph_texture,
+                    target: _,
+                    depth: _,
+                } in textures.into_iter()
                 {
                     let _span = bevy::prelude::info_span!("create_bind_group",).entered();
 
@@ -222,7 +230,6 @@ impl render_graph::Node for GlyphGenerationNode {
 
                     bind_groups.push(bind_group);
                 }
-
                 {
                     let _span = bevy::prelude::info_span!("render_pass",).entered();
                     let mut render_pass = render_context

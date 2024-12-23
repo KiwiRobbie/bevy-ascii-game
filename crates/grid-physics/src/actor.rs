@@ -73,7 +73,7 @@ impl Actor {
         None
     }
 
-    pub(crate) fn test_move_x(
+    pub fn test_move_x(
         amount: f32,
         actor_position: &Position,
         actor_remainder: &Remainder,
@@ -88,7 +88,7 @@ impl Actor {
             collision_cache,
         )
     }
-    pub(crate) fn test_move_y(
+    pub fn test_move_y(
         amount: f32,
         actor_position: &Position,
         actor_remainder: &Remainder,

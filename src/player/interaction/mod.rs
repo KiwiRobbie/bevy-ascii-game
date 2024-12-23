@@ -14,10 +14,7 @@ use spatial_grid::{position::Position, remainder::Remainder};
 
 use crate::utils::clear_component;
 
-use super::{
-    input::player_inputs::{self},
-    movement::direction::PlayerDirection,
-};
+use super::{input::player_inputs, movement::direction::PlayerDirection};
 
 pub(crate) struct PlayerInteractionPlugin;
 impl Plugin for PlayerInteractionPlugin {
@@ -59,9 +56,7 @@ impl RaycastConfig {
     {
         let mut heap = collections::BinaryHeap::new();
         for (actor, pos, col) in raycast.actors.iter() {
-            dbg!(actor);
             if let Some((min, max)) = (pos, col).test_ray(*self.origin, self.dir_inv) {
-                dbg!(min, max);
                 if let Some(start) = self.start {
                     if min < start {
                         continue;
@@ -75,8 +70,6 @@ impl RaycastConfig {
                 heap.push(RaycastIntersection { min, max, actor });
             };
         }
-
-        dbg!(&heap);
 
         RaycastState {
             position: self.origin,
@@ -195,7 +188,6 @@ pub(crate) fn interaction_system(
             if interacting {
                 command.insert(PlayerInteractActive { player });
             }
-            dbg!(intersection.actor);
         }
     }
 }

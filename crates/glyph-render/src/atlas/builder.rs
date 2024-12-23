@@ -150,7 +150,7 @@ impl<'a> AtlasBuilder<'a> {
             size: self.size,
             data: data.into(),
             items: items.into(),
-            glyph_ids: self.rendered.iter().map(|image| image.glyph_id).collect(),
+            // glyph_ids: self.rendered.iter().map(|image| image.glyph_id).collect(),
             local_index: HashMap::from_iter(
                 self.rendered
                     .iter()

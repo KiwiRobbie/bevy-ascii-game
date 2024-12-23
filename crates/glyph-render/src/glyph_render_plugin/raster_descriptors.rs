@@ -4,7 +4,7 @@ use bevy::render::render_resource::{
 };
 use bevy::render::{render_resource::ShaderSize, view::ViewUniform};
 
-use super::{GlyphModelUniform, GlyphRenderUniforms, GlyphUniforms};
+use super::{GlyphModelUniform, GlyphRasterUniforms, GlyphRenderUniforms};
 
 pub(crate) fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
     [
@@ -15,7 +15,7 @@ pub(crate) fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
             ty: BindingType::Buffer {
                 ty: BufferBindingType::Uniform,
                 has_dynamic_offset: false,
-                min_binding_size: BufferSize::new(GlyphUniforms::SHADER_SIZE.get()),
+                min_binding_size: BufferSize::new(GlyphRasterUniforms::SHADER_SIZE.get()),
             },
             count: None,
         },

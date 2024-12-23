@@ -20,6 +20,14 @@
             name: "lunging",
             animation: "anim/player/states/lunging.anim.ron",
         ),
+        (
+            name: "mounted_idle",
+            animation: "anim/player/states/mounted/idle.anim.ron",
+        ),
+        (
+            name: "mounted_gallop",
+            animation: "anim/player/states/mounted/gallop.anim.ron",
+        ),
     ],
     transitions: [
         (from: "idle", to: "running"),
@@ -32,10 +40,16 @@
             from: "air_strafe",
             to: "air_idle",
         ),
-        (from: "idle", to: "air_idle",             animation: "anim/player/transitional/landing.anim.ron",
-),
-        (from: "air_idle", to: "idle",             animation: "anim/player/transitional/landing.anim.ron",
-),
+        (
+            from: "idle", 
+            to: "air_idle",             
+            animation: "anim/player/transitional/landing.anim.ron",
+        ),
+        (
+            from: "air_idle",
+             to: "idle",             
+             animation: "anim/player/transitional/landing.anim.ron",
+        ),
         (
             from: "running",
             to: "air_strafe",
@@ -48,7 +62,10 @@
             from: "lunging",
             to: "air_strafe",
         ),
-        (from: "lunging", to: "running"),
+        (
+            from: "lunging", 
+            to: "running"
+        ),
         (
             from: "air_strafe",
             to: "lunging",

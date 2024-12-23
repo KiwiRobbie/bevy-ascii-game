@@ -29,11 +29,10 @@ use bevy::{
 use bevy_ascii_game::{
     debug::DebugPlugin,
     debug_menu::plugin::DebugMenuPlugin,
-    mount::{HorsePlugin, MountMarker, MountOrigin, MountableMarker},
+    mount::{horse::spawn::create_horse, HorsePlugin},
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
-        interaction::PlayerInteractable,
         reset::{create_player_with_gamepad, create_player_with_keyboard},
         PlayerPlugin,
     },
@@ -44,7 +43,7 @@ use bevy_ascii_game::{
 use glyph_render::{
     atlas::FontAtlasPlugin,
     font::font_load_system,
-    glyph_animation::{player::GlyphAnimationPlayer, GlyphAnimation, GlyphAnimationPlugin},
+    glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture, GlyphTextureSource},
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
@@ -149,7 +148,7 @@ fn setup_system(
             ..Default::default()
         },
         GamePhysicsGridMarker,
-        Depth(-1.0),
+        Depth(-100.0),
     ));
 
     create_player_with_keyboard(&mut commands, &server).insert((
@@ -159,39 +158,8 @@ fn setup_system(
         },
         GamePhysicsGridMarker,
     ));
-    commands.spawn((
-        GlyphAnimation {
-            source: server.load("anim/horse/states/mounted/gallop.anim.ron"),
-            frame: 0,
-        },
-        GlyphAnimationPlayer {
-            framerate: 10.0,
-            repeat: true,
-            frame_timer: 0.0,
-        },
-        ActorPhysicsBundle {
-            collider: Collider {
-                shape: Aabb {
-                    start: IVec2::new(0, 0),
-                    size: UVec2 { x: 30, y: 10 },
-                }
-                .into(),
-            },
-            position: IVec2::new(10, 10).into(),
-            ..Default::default()
-        },
-        FreeMarker,
-        Gravity::default(),
-        Velocity::default(),
-        GamePhysicsGridMarker,
-        Depth(0.5),
-        PlayerInteractable,
-        MountMarker,
-        MountableMarker,
-        MountOrigin {
-            origin: IVec2::new(5, 5),
-        },
-    ));
+
+    create_horse(&mut commands, &server);
 
     commands.spawn((
         GlyphSprite {
@@ -216,7 +184,7 @@ fn setup_system(
         Gravity::default(),
         Velocity::default(),
         GamePhysicsGridMarker,
-        Depth(0.5),
+        Depth(0.0),
     ));
 
     // Keyboard display

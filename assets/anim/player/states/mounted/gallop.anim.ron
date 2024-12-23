@@ -1,0 +1,14 @@
+(
+    name: "player_mounted_gallop",
+    size: (14, 8),
+    frames: [
+        (
+            (
+                asset: "art/player/mounted/gallop.art",
+                start: Pixel(0, 0),
+                frame_count: Y(6),
+            ),
+            Auto(-8,0),
+        ),
+    ],
+)

@@ -29,7 +29,7 @@ struct InstanceInput {
 @group(0) @binding(1) var glyph_buffer: texture_2d<u32>;
 
 
-var<private> verticies: array<vec2<f32>,6> = array(
+var<private> vertices: array<vec2<f32>,6> = array(
     vec2<f32>(0.0, 0.0),
     vec2<f32>(1.0, 0.0),
     vec2<f32>(1.0, 1.0),
@@ -40,7 +40,7 @@ var<private> verticies: array<vec2<f32>,6> = array(
 
 @vertex 
 fn vertex(input: InstanceInput) -> VertexOutput {
-    let corner = verticies[input.vertex_index];
+    let corner = vertices[input.vertex_index];
     let target_size = vec2<f32>(uniform_buffer.target_size) ;
 
     let start = vec2<f32>(uniform_buffer.position) / target_size;

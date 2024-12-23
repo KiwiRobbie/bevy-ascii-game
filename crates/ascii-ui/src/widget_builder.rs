@@ -1,12 +1,6 @@
-use bevy::{
-    ecs::{bundle::Bundle, entity::Entity, system::Commands},
-    prelude::{Deref, DerefMut},
-};
+use bevy::ecs::{bundle::Bundle, entity::Entity, system::Commands};
 
 pub type WidgetBuilderFn<'a> = Box<dyn (FnOnce(&mut Commands) -> Entity) + 'a>;
-
-#[derive(Deref, DerefMut)]
-pub(crate) struct WidgetBuilderStruct<'a>(pub(crate) WidgetBuilderFn<'a>);
 
 pub trait WidgetBuilder<'a, 'b> {
     fn entity(entity: Entity) -> WidgetBuilderFn<'a>;

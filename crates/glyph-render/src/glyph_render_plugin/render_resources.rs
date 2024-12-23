@@ -4,13 +4,10 @@ use bevy::{
     render::render_resource::{Texture, UniformBuffer},
 };
 
-use super::GlyphUniforms;
+use super::GlyphRasterUniforms;
 
 #[derive(Component, Deref, DerefMut)]
-pub(crate) struct GlyphUniformBuffer(pub(crate) UniformBuffer<GlyphUniforms>);
-
-#[derive(Component, Deref, DerefMut)]
-pub(crate) struct GlyphStorageTexture(pub(crate) Texture);
+pub(crate) struct GlyphUniformBuffer(pub(crate) UniformBuffer<GlyphRasterUniforms>);
 
 #[derive(Component)]
 pub(crate) struct GlyphBufferData {

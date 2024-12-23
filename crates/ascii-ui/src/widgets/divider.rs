@@ -49,18 +49,6 @@ pub(crate) struct DividerBundle {
     pub(crate) layout: WidgetLayout,
     pub(crate) render: RenderBundle,
 }
-impl DividerBundle {
-    pub(crate) fn new(character: char) -> Self {
-        Self {
-            layout: WidgetLayout::new::<DividerLogic>(),
-            render: RenderBundle::default(),
-            divider: Divider { character },
-        }
-    }
-    pub(crate) fn spawn(commands: &mut Commands, character: char) -> Entity {
-        commands.spawn(Self::new(character)).id()
-    }
-}
 
 impl Divider {
     pub fn build<'a>(character: char) -> WidgetBuilderFn<'a> {

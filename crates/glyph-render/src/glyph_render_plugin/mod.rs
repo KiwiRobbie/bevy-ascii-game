@@ -12,7 +12,7 @@ use bevy::{
 };
 use bytemuck::{cast_slice_mut, Pod, Zeroable};
 pub(crate) use node::GlyphGenerationNode;
-use spatial_grid::grid::SpatialGrid;
+use spatial_grid::{depth::Depth, grid::SpatialGrid};
 use swash::FontRef;
 
 use crate::{
@@ -73,7 +73,7 @@ impl Plugin for GlyphRenderPlugin {
 }
 
 #[derive(Clone, ShaderType)]
-pub(crate) struct GlyphUniforms {
+pub(crate) struct GlyphRasterUniforms {
     pub(crate) color: Vec4,
     pub(crate) width: u32,
     pub(crate) height: u32,
@@ -182,44 +182,6 @@ pub struct ExtractedGlyphTextureSource {
 }
 
 impl ExtractedGlyphTextureSource {
-    pub(crate) fn from_text_data(
-        text: &Vec<String>,
-        atlas: &FontAtlasSource,
-        font: FontRef,
-        color: Color,
-    ) -> Self {
-        let height = text.len();
-        let width = text[0].chars().count();
-
-        let mut data: Box<[u8]> = vec![0; 4 * 4 * width * height].into();
-        let charmap = font.charmap();
-
-        for (y, chars) in text.iter().enumerate() {
-            assert_eq!(chars.chars().count(), width);
-            for (x, c) in chars.chars().enumerate() {
-                let index = 16 * (x + (height - y - 1) * width);
-                let glyph_id = atlas
-                    .local_index
-                    .get(&charmap.map(c))
-                    .unwrap_or(&if c == '·' { u16::MAX - 1 } else { u16::MAX })
-                    .to_le_bytes();
-
-                data[index + 4..index + 16].copy_from_slice(cast_slice_mut(
-                    &mut color.to_srgba().to_f32_array_no_alpha(),
-                ));
-
-                data[index + 0] = glyph_id[0];
-                data[index + 1] = glyph_id[1];
-            }
-        }
-
-        Self {
-            data,
-            width: width as u32,
-            height: height as u32,
-        }
-    }
-
     pub(crate) fn from_texture_data(
         texture: &GlyphTextureSource,
         atlas: &FontAtlasSource,
@@ -338,7 +300,7 @@ pub(crate) struct AtlasGpuDataSource {
 
 fn prepare_buffers(
     mut commands: Commands,
-    query: Query<(
+    q_textures: Query<(
         Entity,
         Option<&GlyphSolidColor>,
         &GlobalTransform,
@@ -348,8 +310,8 @@ fn prepare_buffers(
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,
 ) {
-    for (entity, color, global_transform, gpu_glyph_texture, grid) in query.iter() {
-        let mut uniform_buffer = UniformBuffer::from(GlyphUniforms {
+    for (entity, color, global_transform, gpu_glyph_texture, grid) in q_textures.iter() {
+        let mut uniform_buffer = UniformBuffer::from(GlyphRasterUniforms {
             color: color
                 .map(|color| color.color.to_srgba().to_vec4())
                 .unwrap_or(Color::WHITE.to_srgba().to_vec4()),

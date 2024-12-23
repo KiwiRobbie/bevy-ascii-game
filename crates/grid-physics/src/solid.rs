@@ -26,7 +26,7 @@ use super::{
 pub struct Solid;
 
 #[derive(Component, Deref, DerefMut, Default)]
-pub(crate) struct RidingEntities(pub(crate) EntityHashSet);
+pub struct RidingEntities(pub(crate) EntityHashSet);
 
 pub(crate) type FilterSolids = (With<Solid>, Without<Actor>);
 
@@ -125,7 +125,7 @@ pub struct SolidPhysicsBundle {
 }
 
 #[derive(Resource, Debug, Default)]
-pub(crate) struct SolidCollisionCache {
+pub struct SolidCollisionCache {
     pub(crate) collisions: EntityHashMap<Vec<Aabb>>,
 }
 

@@ -53,12 +53,18 @@ pub(crate) fn create_data(
         let line = &data[src_y as usize];
 
         let src_start_x = start_x as usize;
-        let src_data_width = (frame.size.0 as usize).min(line.len() - src_start_x);
-        let src_end_x = src_start_x + src_data_width;
+        let src_data_width = (frame.size.0 as usize).min(line.chars().count() - src_start_x);
+        // let src_end_x = src_start_x + src_data_width;
 
         let prefix = " ".repeat(frame.offset.0 as usize);
         let suffix = " ".repeat(frame_size.x as usize - frame.offset.0 as usize - src_data_width);
-        frame_data[dst_y] = prefix + &line[src_start_x..src_end_x] + &suffix;
+
+        let line_data = line
+            .chars()
+            .skip(src_start_x)
+            .take(src_data_width)
+            .collect::<String>();
+        frame_data[dst_y] = prefix + &line_data + &suffix;
     }
 
     frame_data

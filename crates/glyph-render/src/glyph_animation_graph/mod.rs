@@ -88,29 +88,9 @@ impl AssetLoader for GlyphAnimationGraphAssetLoader {
 
 pub(crate) struct GlyphAnimationTransition {
     pub(crate) transitions: Option<Vec<Handle<GlyphAnimationSource>>>,
-    pub(crate) destination: Handle<GlyphAnimationSource>,
 }
 
 impl GlyphAnimationGraphSource {
-    pub(crate) fn traverse_named(
-        &self,
-        src: String,
-        dest: String,
-    ) -> Result<GlyphAnimationTransition, anyhow::Error> {
-        let (src, dest) = (
-            *self
-                .state_names
-                .get(&src)
-                .context("Invalid state name {} in transition from {} -> {}")?,
-            *self
-                .state_names
-                .get(&dest)
-                .context("Invalid state name {} in transition from {} -> {}")?,
-        );
-
-        Ok(self.traverse(src, dest))
-    }
-
     pub(crate) fn traverse(&self, src: usize, dest: usize) -> GlyphAnimationTransition {
         let mut visited: HashSet<usize> = HashSet::new();
         let mut queue = VecDeque::<(usize, Vec<Handle<GlyphAnimationSource>>)>::new();
@@ -120,7 +100,6 @@ impl GlyphAnimationGraphSource {
             if node == dest {
                 return GlyphAnimationTransition {
                     transitions: Some(path),
-                    destination: self.states[dest].animation.clone(),
                 };
             }
             visited.insert(node);
@@ -137,10 +116,7 @@ impl GlyphAnimationGraphSource {
             }
         }
 
-        GlyphAnimationTransition {
-            transitions: None,
-            destination: self.states[dest].animation.clone(),
-        }
+        GlyphAnimationTransition { transitions: None }
     }
 }
 
@@ -190,12 +166,12 @@ pub(crate) struct GlyphAnimationGraphTransition {
 }
 
 #[derive(Debug, Component, Clone)]
-pub(crate) struct GlyphAnimationGraph {
-    pub(crate) source: Handle<GlyphAnimationGraphSource>,
+pub struct GlyphAnimationGraph {
+    source: Handle<GlyphAnimationGraphSource>,
 }
 
-impl GlyphAnimationGraph {
-    pub(crate) fn new(graph: Handle<GlyphAnimationGraphSource>) -> Self {
-        Self { source: graph }
-    }
-}
+// impl GlyphAnimationGraph {
+//     pub(crate) fn new(graph: Handle<GlyphAnimationGraphSource>) -> Self {
+//         Self { source: graph }
+//     }
+// }

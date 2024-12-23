@@ -45,12 +45,12 @@ impl MouseInput {
             .map(|buttons| buttons.pressed(input))
             .unwrap_or(false)
     }
-    pub(crate) fn just_pressed(&self, input: MouseButton) -> bool {
+    pub fn just_pressed(&self, input: MouseButton) -> bool {
         self.buttons()
             .map(|buttons| buttons.just_pressed(input))
             .unwrap_or(false)
     }
-    pub(crate) fn just_released(&self, input: MouseButton) -> bool {
+    pub fn just_released(&self, input: MouseButton) -> bool {
         self.buttons()
             .map(|buttons| buttons.just_released(input))
             .unwrap_or(false)

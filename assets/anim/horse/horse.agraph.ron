@@ -1,0 +1,16 @@
+(
+    states: [
+        (
+            name: "idle",
+            animation: "anim/horse/states/unmounted/idle.anim.ron",
+        ),
+        (
+            name: "gallop",
+            animation: "anim/horse/states/unmounted/gallop.anim.ron",
+        ),
+    ],
+    transitions: [
+        (from: "idle", to: "gallop"),
+        (from: "gallop", to: "idle"),
+    ],
+)

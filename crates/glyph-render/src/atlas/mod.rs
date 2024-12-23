@@ -45,7 +45,7 @@ pub struct FontAtlasSource {
     pub(crate) size: u32,
     pub(crate) items: Box<[AtlasItem]>,
     pub(crate) local_index: HashMap<u16, u16>,
-    pub(crate) glyph_ids: Box<[u16]>,
+    // pub(crate) glyph_ids: Box<[u16]>,
     pub(crate) charset: HashSet<char>,
 }
 

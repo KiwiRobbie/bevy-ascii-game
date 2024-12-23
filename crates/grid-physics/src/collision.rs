@@ -20,7 +20,7 @@ impl RayTest for (&Position, &Collider) {
             .1
             .shape
             .iter_at(self.0 .0)
-            .filter_map(|aabb| dbg!(RayTest::test_ray(&aabb, origin, direction_inv)))
+            .filter_map(|aabb| RayTest::test_ray(&aabb, origin, direction_inv))
         {
             if ray_min.is_finite() {
                 if let Some(t_min) = min {
@@ -128,14 +128,24 @@ pub struct Aabb {
 }
 
 impl Aabb {
-    pub(crate) fn contains(&self, point: IVec2) -> bool {
+    pub fn contains(&self, point: IVec2) -> bool {
         self.start.cmple(point).all() && point.cmplt(self.start + self.size.as_ivec2()).all()
     }
 
-    pub(crate) fn translate(&self, offset: IVec2) -> Self {
+    pub fn translate(&self, offset: IVec2) -> Self {
         Self {
             start: self.start + offset,
             size: self.size,
+        }
+    }
+}
+
+impl Into<Collider> for Aabb {
+    fn into(self) -> Collider {
+        Collider {
+            shape: CompositeCollisionShape {
+                shapes: Box::new([self]),
+            },
         }
     }
 }

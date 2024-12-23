@@ -33,7 +33,7 @@ impl Border {
         let b = pos.y == size.y - 1;
         return (l, r, t, b);
     }
-    pub(crate) fn top(character: char) -> Self {
+    pub fn top(character: char) -> Self {
         Self {
             top: Some(character),
             bottom: None,
@@ -42,7 +42,7 @@ impl Border {
             corners: [Some(character), Some(character), None, None],
         }
     }
-    pub(crate) fn bottom(character: char) -> Self {
+    pub fn bottom(character: char) -> Self {
         Self {
             top: None,
             bottom: Some(character),
@@ -51,7 +51,7 @@ impl Border {
             corners: [None, None, Some(character), Some(character)],
         }
     }
-    pub(crate) fn left(character: char) -> Self {
+    pub fn left(character: char) -> Self {
         Self {
             top: None,
             bottom: None,
@@ -60,7 +60,7 @@ impl Border {
             corners: [Some(character), None, None, Some(character)],
         }
     }
-    pub(crate) fn right(character: char) -> Self {
+    pub fn right(character: char) -> Self {
         Self {
             top: None,
             bottom: None,

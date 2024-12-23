@@ -1,18 +1,18 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
+use glyph_render::{
+    glyph_animation_graph::player::GlyphAnimationGraphTarget, glyph_render_plugin::GlyphSolidColor,
+};
 use grid_physics::{gravity::Gravity, movement::Movement, velocity::Velocity};
 use spatial_grid::position::Position;
 
 use crate::player::{
-    input::{
-        player_inputs::{self, InteractMarker},
-        PlayerInputSet,
-    },
-    interaction::PlayerInteractActive,
+    input::{player_inputs, PlayerInputSet},
+    interaction::{PlayerInteractActive, PlayerInteractable},
     movement::PlayerMovementMarker,
     PlayerMarker,
 };
 
-pub(crate) mod horse;
+pub mod horse;
 
 pub struct HorsePlugin;
 impl Plugin for HorsePlugin {
@@ -22,6 +22,7 @@ impl Plugin for HorsePlugin {
             (
                 mount_interaction_system,
                 (horse_movement_system, update_rider_position).chain_ignore_deferred(),
+                horse_animation_system,
             ),
         )
         .add_systems(PreUpdate, transfer_player_inputs.after(PlayerInputSet));
@@ -55,13 +56,16 @@ pub(crate) fn mount_interaction_system(
 ) {
     for (mount, &PlayerInteractActive { player }) in q_mounts.iter() {
         let mut mount_command: EntityCommands<'_> = commands.entity(mount);
-        mount_command.remove::<InteractMarker>();
+        mount_command.remove::<PlayerInteractable>();
         mount_command.insert((
             MountRider { rider: player },
             mount_inputs::Movement::default(),
             Velocity::default(),
             Gravity::default(),
             Movement::default(),
+            GlyphSolidColor {
+                color: css::WHITE.into(),
+            },
         ));
 
         let mut player_command: EntityCommands<'_> = commands.entity(player);
@@ -85,17 +89,17 @@ pub(crate) fn update_rider_position(
     }
 }
 
-mod mount_inputs {
+pub mod mount_inputs {
     use bevy::prelude::Component;
 
     #[derive(Debug, Component, Default)]
-    pub(crate) struct Movement {
-        pub(crate) horizontal: f32,
-        pub(crate) vertical: f32,
+    pub struct Movement {
+        pub horizontal: f32,
+        pub vertical: f32,
     }
 
     #[derive(Debug, Component)]
-    pub(crate) struct JumpMarker;
+    pub struct JumpMarker;
 }
 
 pub(crate) fn transfer_player_inputs(
@@ -125,10 +129,25 @@ pub(crate) fn transfer_player_inputs(
     }
 }
 
-pub(crate) fn horse_movement_system(
-    mut q_horse_movement: Query<(&mut Velocity, &mount_inputs::Movement)>,
-) {
+fn horse_movement_system(mut q_horse_movement: Query<(&mut Velocity, &mount_inputs::Movement)>) {
     for (mut velocity, input) in q_horse_movement.iter_mut() {
         velocity.x = input.horizontal * 100.0;
+    }
+}
+
+fn horse_animation_system(
+    mut q_horse: Query<(
+        &mut GlyphAnimationGraphTarget,
+        Has<MountRider>,
+        &mount_inputs::Movement,
+    )>,
+) {
+    for (mut target, has_rider, movement_input) in q_horse.iter_mut() {
+        let target_str = if movement_input.horizontal != 0. {
+            "gallop"
+        } else {
+            "idle"
+        };
+        **target = Some(target_str.into());
     }
 }
