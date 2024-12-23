@@ -14,8 +14,8 @@ use crate::glyph_animation::{GlyphAnimation, GlyphAnimationSource};
 use super::{GlyphAnimationGraph, GlyphAnimationGraphSource};
 
 #[derive(Debug, Component, Clone)]
-pub struct GlyphAnimationGraphSettings {
-    pub framerate: f32,
+pub(crate) struct GlyphAnimationGraphSettings {
+    pub(crate) framerate: f32,
 }
 
 impl Default for GlyphAnimationGraphSettings {
@@ -28,10 +28,10 @@ impl Default for GlyphAnimationGraphSettings {
 pub struct GlyphAnimationGraphTarget(pub Option<String>);
 
 #[derive(Debug, Component, Default, Clone)]
-pub struct GlyphAnimationGraphCurrent {
-    pub transitional_states: Vec<Handle<GlyphAnimationSource>>,
-    pub current_state: usize,
-    pub frame_timer: f32,
+pub(crate) struct GlyphAnimationGraphCurrent {
+    pub(crate) transitional_states: Vec<Handle<GlyphAnimationSource>>,
+    pub(crate) current_state: usize,
+    pub(crate) frame_timer: f32,
 }
 
 pub fn animation_graph_player(
@@ -86,7 +86,7 @@ pub fn animation_graph_player(
     }
 }
 
-pub fn animation_graph_traverse(
+pub(crate) fn animation_graph_traverse(
     mut q_animation_graphs: Query<(
         &mut GlyphAnimationGraph,
         &mut GlyphAnimationGraphCurrent,

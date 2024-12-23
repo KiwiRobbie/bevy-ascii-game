@@ -16,7 +16,7 @@ use grid_physics::{actor::Actor, solid::Solid};
 
 use crate::player::PlayerMarker;
 
-pub struct InfoCountsPlugin;
+pub(crate) struct InfoCountsPlugin;
 impl Plugin for InfoCountsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Update, update_info_count);
@@ -25,11 +25,11 @@ impl Plugin for InfoCountsPlugin {
 
 #[derive(Debug, Component, Default)]
 pub struct InfoCounts {
-    pub fps_text: Option<Entity>,
-    pub entity_text: Option<Entity>,
-    pub actor_text: Option<Entity>,
-    pub player_text: Option<Entity>,
-    pub solid_text: Option<Entity>,
+    pub(crate) fps_text: Option<Entity>,
+    pub(crate) entity_text: Option<Entity>,
+    pub(crate) actor_text: Option<Entity>,
+    pub(crate) player_text: Option<Entity>,
+    pub(crate) solid_text: Option<Entity>,
 }
 
 impl InfoCounts {

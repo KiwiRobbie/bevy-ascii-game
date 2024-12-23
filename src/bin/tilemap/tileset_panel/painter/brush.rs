@@ -32,7 +32,7 @@ use spatial_grid::{
 
 use crate::tileset_panel::setup::TilesetTileId;
 
-pub struct BrushPlugin;
+pub(crate) struct BrushPlugin;
 impl Plugin for BrushPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Startup, setup)
@@ -40,7 +40,7 @@ impl Plugin for BrushPlugin {
     }
 }
 
-pub fn setup(mut commands: Commands) {
+pub(crate) fn setup(mut commands: Commands) {
     commands.spawn((
         Brush,
         SpatialBundle::default(),
@@ -50,9 +50,9 @@ pub fn setup(mut commands: Commands) {
 }
 
 #[derive(Component, Deref)]
-pub struct BrushTileSize(pub UVec2);
+pub(crate) struct BrushTileSize(pub(crate) UVec2);
 
-pub fn set_brush(
+pub(crate) fn set_brush(
     q_select: Query<&TilesetTileId, With<TriggeredMarker>>,
     q_brush: Query<Entity, With<Brush>>,
     mut commands: Commands,
@@ -79,7 +79,7 @@ pub fn set_brush(
     }
 }
 
-pub fn update_brush(
+pub(crate) fn update_brush(
     mut commands: Commands,
     q_physics_grid: Query<(&SpatialGrid, &Position, &GlobalTransform)>,
     mut q_brush: Query<
@@ -124,6 +124,7 @@ pub fn update_brush(
             let Some(tilemap_source) = tilemaps.get(tilemap.id()) else {
                 continue;
             };
+
             let tile_size = tilemap_source.tile_size.as_ivec2();
             let tilemap_local = (grid_cursor_position - **tilemap_position).div_euclid(tile_size);
             cursor_position = tilemap_local * tile_size + **tilemap_position - **buffer_position;
@@ -158,4 +159,4 @@ pub fn update_brush(
 }
 
 #[derive(Component)]
-pub struct Brush;
+pub(crate) struct Brush;

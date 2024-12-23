@@ -16,7 +16,7 @@ struct RenderedGlyph {
     texture: Vec<u8>,
 }
 
-pub struct AtlasBuilder<'a> {
+pub(crate) struct AtlasBuilder<'a> {
     font: swash::FontRef<'a>,
     render: Render<'a>,
     scaler: Scaler<'a>,
@@ -28,7 +28,7 @@ pub struct AtlasBuilder<'a> {
 }
 
 impl<'a> AtlasBuilder<'a> {
-    pub fn new(
+    pub(crate) fn new(
         font: swash::FontRef<'a>,
         render: Render<'a>,
         scaler: Scaler<'a>,
@@ -48,7 +48,7 @@ impl<'a> AtlasBuilder<'a> {
         }
     }
 
-    pub fn insert_char(&mut self, character: char) -> Option<()> {
+    pub(crate) fn insert_char(&mut self, character: char) -> Option<()> {
         self.characters.insert(character);
         let glyph_id = self.font.charmap().map(character);
         self.insert_glyph(glyph_id)
@@ -116,7 +116,7 @@ impl<'a> AtlasBuilder<'a> {
         }
     }
 
-    pub fn build(&mut self) -> FontAtlasSource {
+    pub(crate) fn build(&mut self) -> FontAtlasSource {
         const CHANNELS: usize = 4;
         self.create_packing();
 

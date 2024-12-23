@@ -75,7 +75,7 @@ impl RayTest for Aabb {
     }
 }
 
-pub trait Overlaps<T> {
+pub(crate) trait Overlaps<T> {
     fn overlaps(&self, other: T) -> bool;
     fn overlap_distance(&self, other: T, direction: Direction) -> Option<i32>;
 }
@@ -128,11 +128,11 @@ pub struct Aabb {
 }
 
 impl Aabb {
-    pub fn contains(&self, point: IVec2) -> bool {
+    pub(crate) fn contains(&self, point: IVec2) -> bool {
         self.start.cmple(point).all() && point.cmplt(self.start + self.size.as_ivec2()).all()
     }
 
-    pub fn translate(&self, offset: IVec2) -> Self {
+    pub(crate) fn translate(&self, offset: IVec2) -> Self {
         Self {
             start: self.start + offset,
             size: self.size,
@@ -141,7 +141,7 @@ impl Aabb {
 }
 
 impl Collider {
-    pub fn overlaps(&self, self_pos: IVec2, other: &SolidCollisionCache) -> Option<Entity> {
+    pub(crate) fn overlaps(&self, self_pos: IVec2, other: &SolidCollisionCache) -> Option<Entity> {
         let self_colliders = self.shape.iter_at(self_pos);
 
         for actor_aabb in self_colliders {
@@ -158,7 +158,7 @@ impl Collider {
         None
     }
 
-    pub fn overlap_distance(
+    pub(crate) fn overlap_distance(
         &self,
         self_pos: IVec2,
         other: &[Aabb],

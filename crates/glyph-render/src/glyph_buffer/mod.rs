@@ -10,8 +10,8 @@ use crate::{
     atlas::FontAtlasUser,
     font::{CustomFont, FontSize},
 };
-pub mod extract;
-pub mod prepare;
+pub(crate) mod extract;
+pub(crate) mod prepare;
 
 #[derive(Component, Clone)]
 pub struct GlyphBuffer {
@@ -20,17 +20,17 @@ pub struct GlyphBuffer {
 }
 
 #[derive(Bundle)]
-pub struct GlyphBufferBundle {
-    pub buffer: GlyphBuffer,
-    pub font: CustomFont,
-    pub font_size: FontSize,
-    pub atlas_user: FontAtlasUser,
+pub(crate) struct GlyphBufferBundle {
+    pub(crate) buffer: GlyphBuffer,
+    pub(crate) font: CustomFont,
+    pub(crate) font_size: FontSize,
+    pub(crate) atlas_user: FontAtlasUser,
 }
 
 #[derive(Component, Clone, Deref, DerefMut)]
 pub struct TargetGlyphBuffer(pub Entity);
 
-pub fn update_glyph_buffer_entities(
+pub(crate) fn update_glyph_buffer_entities(
     q_sources: Query<(Entity, &TargetGlyphBuffer), Without<GlyphBuffer>>,
     mut q_buffers: Query<&mut GlyphBuffer, Without<TargetGlyphBuffer>>,
 ) {
@@ -50,4 +50,4 @@ pub fn update_glyph_buffer_entities(
 }
 
 #[derive(Component, Clone, Deref, DerefMut)]
-pub struct TargetBufferTexture(pub TextureView);
+pub(crate) struct TargetBufferTexture(pub(crate) TextureView);

@@ -25,13 +25,13 @@ use crate::{
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct ScrollingView {
-    pub children: Vec<Entity>,
-    pub position: u32,
-    pub remainder: f32,
+    pub(crate) children: Vec<Entity>,
+    pub(crate) position: u32,
+    pub(crate) remainder: f32,
 }
 
 #[derive(Debug, Default)]
-pub struct ScrollingViewLogic;
+pub(crate) struct ScrollingViewLogic;
 impl WidgetLayoutLogic for ScrollingViewLogic {
     fn layout(
         &self,
@@ -116,7 +116,7 @@ impl ScrollingView {
     }
 }
 
-pub fn scrolling_view_interaction_system(
+pub(crate) fn scrolling_view_interaction_system(
     mut q_scrolling_view: Query<
         (&mut ScrollingView, &ScrollInteraction),
         (With<IntractableMarker>, With<ScrollableMarker>),

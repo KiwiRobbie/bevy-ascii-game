@@ -6,19 +6,19 @@ use bevy::{
 use super::constraint::Constraint;
 
 #[derive(Debug, Component)]
-pub struct WidgetLayout {
-    pub logic: Box<dyn WidgetLayoutLogic>,
+pub(crate) struct WidgetLayout {
+    pub(crate) logic: Box<dyn WidgetLayoutLogic>,
 }
 
 impl WidgetLayout {
-    pub fn new<T: WidgetLayoutLogic + Default + 'static>() -> Self {
+    pub(crate) fn new<T: WidgetLayoutLogic + Default + 'static>() -> Self {
         Self {
             logic: Box::new(T::default()),
         }
     }
 }
 
-pub trait WidgetLayoutLogic: std::fmt::Debug + Send + Sync {
+pub(crate) trait WidgetLayoutLogic: std::fmt::Debug + Send + Sync {
     fn layout(
         &self,
         entity: Entity,

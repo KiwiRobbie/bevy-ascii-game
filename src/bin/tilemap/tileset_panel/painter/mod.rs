@@ -2,9 +2,9 @@ use bevy::app::Plugin;
 
 use self::brush::BrushPlugin;
 
-pub mod brush;
+pub(crate) mod brush;
 
-pub struct PainterPlugin;
+pub(crate) struct PainterPlugin;
 impl Plugin for PainterPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins(BrushPlugin);

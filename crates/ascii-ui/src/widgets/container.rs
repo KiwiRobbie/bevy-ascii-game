@@ -20,11 +20,11 @@ use crate::{
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct Container {
-    pub child: Option<Entity>,
+    pub(crate) child: Option<Entity>,
 }
 
 #[derive(Debug, Default)]
-pub struct ContainerLogic;
+pub(crate) struct ContainerLogic;
 impl WidgetLayoutLogic for ContainerLogic {
     fn layout(
         &self,

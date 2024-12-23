@@ -1,3 +1,3 @@
-pub mod ai;
-pub mod player;
-pub mod spawn;
+pub(crate) mod ai;
+pub(crate) mod player;
+pub(crate) mod spawn;

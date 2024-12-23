@@ -16,12 +16,12 @@ use super::super::widgets;
 pub struct Button {}
 
 #[derive(Debug, Component)]
-pub struct ButtonPressedMarker;
+pub(crate) struct ButtonPressedMarker;
 
 #[derive(Debug, Component)]
 pub struct ButtonJustPressedMarker;
 
-pub fn button_interaction_system(
+pub(crate) fn button_interaction_system(
     mut commands: Commands,
     q_buttons: Query<(
         Entity,

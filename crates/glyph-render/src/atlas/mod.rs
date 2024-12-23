@@ -22,7 +22,7 @@ impl Default for CharacterSet {
 use bytemuck::{Pod, Zeroable};
 pub use plugin::FontAtlasPlugin;
 
-pub use builder::AtlasBuilder;
+pub(crate) use builder::AtlasBuilder;
 
 use crate::font::{CustomFontCacheKey, FontSize};
 
@@ -33,20 +33,20 @@ pub struct FontAtlasCache {
 
 #[derive(Debug, Clone, Pod, Copy, Zeroable)]
 #[repr(C)]
-pub struct AtlasItem {
-    pub start: UVec2,
-    pub size: UVec2,
-    pub offset: IVec2,
+pub(crate) struct AtlasItem {
+    pub(crate) start: UVec2,
+    pub(crate) size: UVec2,
+    pub(crate) offset: IVec2,
 }
 
 #[derive(Component, TypePath, Debug, Clone)]
 pub struct FontAtlasSource {
-    pub data: Box<[u8]>,
-    pub size: u32,
-    pub items: Box<[AtlasItem]>,
-    pub local_index: HashMap<u16, u16>,
-    pub glyph_ids: Box<[u16]>,
-    pub charset: HashSet<char>,
+    pub(crate) data: Box<[u8]>,
+    pub(crate) size: u32,
+    pub(crate) items: Box<[AtlasItem]>,
+    pub(crate) local_index: HashMap<u16, u16>,
+    pub(crate) glyph_ids: Box<[u16]>,
+    pub(crate) charset: HashSet<char>,
 }
 
 #[derive(Component, Clone)]

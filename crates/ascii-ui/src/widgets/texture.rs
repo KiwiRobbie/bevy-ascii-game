@@ -15,12 +15,12 @@ use crate::{
 #[derive(Component, Debug, Clone, Default)]
 // #[reflect(Component)]
 pub struct Texture {
-    pub data: Box<[char]>,
-    pub size: UVec2,
+    pub(crate) data: Box<[char]>,
+    pub(crate) size: UVec2,
 }
 #[derive(Debug, Default)]
 
-pub struct TextureLogic;
+pub(crate) struct TextureLogic;
 impl WidgetLayoutLogic for TextureLogic {
     fn layout(
         &self,

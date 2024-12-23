@@ -9,7 +9,7 @@ use self::{controller::PlayerControllerInputPlugin, keyboard::PlayerKeyboardInpu
 pub mod controller;
 pub mod keyboard;
 
-pub struct PlayerInputPlugin;
+pub(crate) struct PlayerInputPlugin;
 
 impl Plugin for PlayerInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -18,22 +18,22 @@ impl Plugin for PlayerInputPlugin {
 }
 
 #[derive(Debug, SystemSet, Hash, PartialEq, Eq, Clone)]
-pub struct PlayerInputSet;
+pub(crate) struct PlayerInputSet;
 
 #[derive(Component, Default, Clone)]
-pub struct PlayerInputMarker;
+pub(crate) struct PlayerInputMarker;
 
 #[derive(Bundle, Default, Clone)]
-pub struct PlayerInputBundle {
+pub(crate) struct PlayerInputBundle {
     marker: PlayerInputMarker,
     movement_input: player_inputs::Movement,
 }
 
-pub mod player_inputs {
+pub(crate) mod player_inputs {
     use bevy::{ecs::bundle::Bundle, ecs::component::Component};
 
     #[derive(Bundle)]
-    pub struct MarkerResetBundle {
+    pub(crate) struct MarkerResetBundle {
         jump: JumpMarker,
         lunge: LungeMarker,
         interact: InteractMarker,
@@ -41,26 +41,26 @@ pub mod player_inputs {
     }
 
     #[derive(Component, Default, Debug)]
-    pub struct DefendMarker;
+    pub(crate) struct DefendMarker;
 
     #[derive(Component, Default, Debug)]
-    pub struct AttackMaker;
+    pub(crate) struct AttackMaker;
 
     #[derive(Component, Default, Debug)]
-    pub struct JumpMarker;
+    pub(crate) struct JumpMarker;
 
     #[derive(Component, Default, Debug)]
-    pub struct LungeMarker;
+    pub(crate) struct LungeMarker;
 
     #[derive(Component, Default, Debug)]
-    pub struct InteractMarker;
+    pub(crate) struct InteractMarker;
 
     #[derive(Debug, Default, Component, Clone)]
-    pub struct ResetMarker;
+    pub(crate) struct ResetMarker;
 
     #[derive(Debug, Default, Component, Clone)]
-    pub struct Movement {
-        pub horizontal: f32,
-        pub vertical: f32,
+    pub(crate) struct Movement {
+        pub(crate) horizontal: f32,
+        pub(crate) vertical: f32,
     }
 }

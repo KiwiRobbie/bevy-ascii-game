@@ -5,7 +5,7 @@ use bevy::{
 
 use super::build_layout::{build_layout, clear_layout, propagate_data_positions};
 
-pub struct LayoutPlugin;
+pub(crate) struct LayoutPlugin;
 impl Plugin for LayoutPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(

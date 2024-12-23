@@ -11,7 +11,7 @@ use super::{
     },
 };
 
-pub struct TilesetPanelPlugin;
+pub(crate) struct TilesetPanelPlugin;
 impl Plugin for TilesetPanelPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_plugins((UiPlugin, PainterPlugin))

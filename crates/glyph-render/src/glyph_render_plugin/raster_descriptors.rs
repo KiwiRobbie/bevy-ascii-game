@@ -6,7 +6,7 @@ use bevy::render::{render_resource::ShaderSize, view::ViewUniform};
 
 use super::{GlyphModelUniform, GlyphRenderUniforms, GlyphUniforms};
 
-pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
+pub(crate) fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
     [
         // UNIFORMS
         BindGroupLayoutEntry {
@@ -76,7 +76,7 @@ pub fn raster_bind_group_layout() -> [BindGroupLayoutEntry; 6] {
         },
     ]
 }
-pub fn render_bind_group_layout() -> [BindGroupLayoutEntry; 2] {
+pub(crate) fn render_bind_group_layout() -> [BindGroupLayoutEntry; 2] {
     [
         BindGroupLayoutEntry {
             binding: 0,

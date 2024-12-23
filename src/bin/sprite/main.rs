@@ -265,4 +265,4 @@ fn keyboard_pan_system(
 }
 
 #[derive(Component)]
-pub struct EditorCursorMarker;
+pub(crate) struct EditorCursorMarker;

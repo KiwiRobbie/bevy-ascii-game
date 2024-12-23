@@ -19,11 +19,11 @@ use crate::{
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct Grid {
-    pub children: Vec<Entity>,
-    pub child_size: UVec2,
+    pub(crate) children: Vec<Entity>,
+    pub(crate) child_size: UVec2,
 }
 #[derive(Debug, Default)]
-pub struct GridLogic;
+pub(crate) struct GridLogic;
 impl WidgetLayoutLogic for GridLogic {
     fn layout(
         &self,
@@ -87,7 +87,10 @@ impl WidgetLayoutLogic for GridLogic {
 }
 
 impl Grid {
-    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>, child_size: UVec2) -> WidgetBuilderFn<'a> {
+    pub(crate) fn build<'a>(
+        children: Vec<WidgetBuilderFn<'a>>,
+        child_size: UVec2,
+    ) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             let mut children_entities = vec![];
             for child in children.into_iter() {

@@ -34,7 +34,7 @@ use bevy_ascii_game::{
     player::{
         input::{controller::PlayerInputController, keyboard::PlayerInputKeyboardMarker},
         interaction::PlayerInteractable,
-        reset::{create_player, create_player_with_gamepad},
+        reset::{create_player_with_gamepad, create_player_with_keyboard},
         PlayerPlugin,
     },
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
@@ -152,7 +152,7 @@ fn setup_system(
         Depth(-1.0),
     ));
 
-    create_player(&mut commands, &server).insert((
+    create_player_with_keyboard(&mut commands, &server).insert((
         PlayerInputKeyboardMarker,
         GlyphSolidColor {
             color: Color::LinearRgba(Color::hsl(0.0, 1.0, 0.6).to_linear() * 10.0),

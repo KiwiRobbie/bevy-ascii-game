@@ -6,7 +6,7 @@ use bevy::{
 pub type WidgetBuilderFn<'a> = Box<dyn (FnOnce(&mut Commands) -> Entity) + 'a>;
 
 #[derive(Deref, DerefMut)]
-pub struct WidgetBuilderStruct<'a>(pub WidgetBuilderFn<'a>);
+pub(crate) struct WidgetBuilderStruct<'a>(pub(crate) WidgetBuilderFn<'a>);
 
 pub trait WidgetBuilder<'a, 'b> {
     fn entity(entity: Entity) -> WidgetBuilderFn<'a>;

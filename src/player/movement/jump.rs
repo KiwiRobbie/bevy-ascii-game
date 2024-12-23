@@ -16,8 +16,8 @@ use grid_physics::{
 use super::MovementFilter;
 
 #[derive(Component, Debug, Clone, Reflect)]
-pub struct PlayerJumpVelocity {
-    pub velocity: f32,
+pub(crate) struct PlayerJumpVelocity {
+    pub(crate) velocity: f32,
 }
 
 impl Default for PlayerJumpVelocity {
@@ -26,7 +26,7 @@ impl Default for PlayerJumpVelocity {
     }
 }
 
-pub fn player_jump_system(
+pub(crate) fn player_jump_system(
     mut commands: Commands,
     mut q_player: Query<
         (Entity, &mut Velocity, &PlayerJumpVelocity),

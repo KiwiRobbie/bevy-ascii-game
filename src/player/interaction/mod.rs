@@ -19,7 +19,7 @@ use super::{
     movement::direction::PlayerDirection,
 };
 
-pub struct PlayerInteractionPlugin;
+pub(crate) struct PlayerInteractionPlugin;
 impl Plugin for PlayerInteractionPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
@@ -38,7 +38,7 @@ impl Plugin for PlayerInteractionPlugin {
 }
 
 #[derive(SystemParam)]
-pub struct Raycast<'w, 's, F>
+pub(crate) struct Raycast<'w, 's, F>
 where
     F: QueryFilter + 'static,
 {
@@ -46,14 +46,14 @@ where
 }
 
 #[derive(Debug)]
-pub struct RaycastConfig {
+pub(crate) struct RaycastConfig {
     origin: Position,
     dir_inv: Vec2,
     start: Option<f32>,
     end: Option<f32>,
 }
 impl RaycastConfig {
-    pub fn cast<F>(self, raycast: &Raycast<F>) -> RaycastState
+    pub(crate) fn cast<F>(self, raycast: &Raycast<F>) -> RaycastState
     where
         F: QueryFilter,
     {
@@ -87,7 +87,7 @@ impl RaycastConfig {
     }
 }
 
-pub struct RaycastState {
+pub(crate) struct RaycastState {
     position: Position,
     remainder: Remainder,
     config: RaycastConfig,
@@ -121,16 +121,16 @@ impl Ord for RaycastIntersection {
 }
 
 impl RaycastState {
-    pub fn get_first(self) -> Option<RaycastIntersection> {
+    pub(crate) fn get_first(self) -> Option<RaycastIntersection> {
         self.heap.peek().cloned()
     }
-    pub fn get_next(&mut self) -> Option<RaycastIntersection> {
+    pub(crate) fn get_next(&mut self) -> Option<RaycastIntersection> {
         self.heap.pop()
     }
 }
 
 #[derive(Debug, Component, Clone, Default)]
-pub struct InteractionSource {
+pub(crate) struct InteractionSource {
     offset: IVec2,
 }
 
@@ -139,14 +139,14 @@ pub struct PlayerInteractable;
 
 #[derive(Debug, Component)]
 pub struct PlayerInteractFocused {
-    pub player: Entity,
+    pub(crate) player: Entity,
 }
 #[derive(Debug, Component)]
-pub struct PlayerInteractActive {
-    pub player: Entity,
+pub(crate) struct PlayerInteractActive {
+    pub(crate) player: Entity,
 }
 
-pub fn interaction_color_system(
+pub(crate) fn interaction_color_system(
     q_interactable: Query<
         (
             Entity,
@@ -168,7 +168,7 @@ pub fn interaction_color_system(
     }
 }
 
-pub fn interaction_system(
+pub(crate) fn interaction_system(
     q_player: Query<(
         Entity,
         &Position,

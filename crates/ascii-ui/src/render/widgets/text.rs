@@ -11,7 +11,7 @@ use spatial_grid::{depth::Depth, position::Position};
 
 use crate::{layout::positioned::Positioned, widgets::text::Text};
 
-pub fn text_render(
+pub(crate) fn text_render(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut commands: Commands,
     q_text: Query<(Entity, &Positioned, &Text)>,

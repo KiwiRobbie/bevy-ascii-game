@@ -26,11 +26,11 @@ use super::{
 pub struct Solid;
 
 #[derive(Component, Deref, DerefMut, Default)]
-pub struct RidingEntities(pub EntityHashSet);
+pub(crate) struct RidingEntities(pub(crate) EntityHashSet);
 
-pub type FilterSolids = (With<Solid>, Without<Actor>);
+pub(crate) type FilterSolids = (With<Solid>, Without<Actor>);
 
-pub fn solid_move_system(
+pub(crate) fn solid_move_system(
     mut commands: Commands,
     mut q_solids: Query<
         (
@@ -114,7 +114,7 @@ pub fn solid_move_system(
 }
 
 #[derive(Component)]
-pub struct SquishedMarker;
+pub(crate) struct SquishedMarker;
 
 #[derive(Bundle, Default)]
 pub struct SolidPhysicsBundle {
@@ -125,11 +125,11 @@ pub struct SolidPhysicsBundle {
 }
 
 #[derive(Resource, Debug, Default)]
-pub struct SolidCollisionCache {
-    pub collisions: EntityHashMap<Vec<Aabb>>,
+pub(crate) struct SolidCollisionCache {
+    pub(crate) collisions: EntityHashMap<Vec<Aabb>>,
 }
 
-pub fn update_collision_cache(
+pub(crate) fn update_collision_cache(
     mut solid_collision_cache: ResMut<SolidCollisionCache>,
     q_solids: Query<(Entity, &Position, &Collider), FilterSolids>,
 ) {

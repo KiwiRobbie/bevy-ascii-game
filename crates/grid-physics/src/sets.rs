@@ -5,14 +5,14 @@ use bevy_ecs::{
 };
 
 #[derive(Debug, SystemSet, PartialEq, Eq, Hash, Clone)]
-pub struct PhysicsPostUpdateSet;
+pub(crate) struct PhysicsPostUpdateSet;
 
 pub fn physics_systems_enabled(enabled: Res<EnablePhysicsSystems>) -> bool {
     **enabled
 }
 
 #[derive(Debug, Resource, Deref, DerefMut)]
-pub struct EnablePhysicsSystems(pub bool);
+pub struct EnablePhysicsSystems(pub(crate) bool);
 
 impl Default for EnablePhysicsSystems {
     fn default() -> Self {

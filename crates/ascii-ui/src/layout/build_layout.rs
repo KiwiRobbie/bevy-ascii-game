@@ -21,7 +21,7 @@ use crate::{
 
 use super::render_clip::ClipRegion;
 
-pub fn clear_layout(
+pub(crate) fn clear_layout(
     mut commands: Commands,
     q_positioned: Query<Entity, With<Positioned>>,
     q_depth: Query<Entity, With<LayoutDepth>>,
@@ -34,7 +34,7 @@ pub fn clear_layout(
     }
 }
 
-pub fn build_layout(
+pub(crate) fn build_layout(
     mut commands: Commands,
     q_root: Query<(Entity, &WidgetLayout, &Root), With<Container>>,
     world: &World,
@@ -58,7 +58,7 @@ pub fn build_layout(
     }
 }
 
-pub fn propagate_data_positions(
+pub(crate) fn propagate_data_positions(
     mut commands: Commands,
     q_root: Query<(Entity, &TargetGlyphBuffer, &PhysicsGridMember, &Root)>,
     world: &World,
@@ -78,7 +78,7 @@ pub fn propagate_data_positions(
     }
 }
 
-pub fn recurse_apply_data<B: Bundle + Clone>(
+pub(crate) fn recurse_apply_data<B: Bundle + Clone>(
     commands: &mut Commands,
     depth: usize,
     parent_offset: IVec2,
@@ -143,4 +143,4 @@ pub fn recurse_apply_data<B: Bundle + Clone>(
 }
 
 #[derive(Component, DerefMut, Deref)]
-pub struct LayoutDepth(pub usize);
+pub(crate) struct LayoutDepth(pub(crate) usize);

@@ -30,15 +30,15 @@ use crate::{
     },
 };
 
-pub struct CacheItem<T> {
+pub(crate) struct CacheItem<T> {
     item: T,
     lifetime: u32,
 }
 
 pub struct ExtractedTextureKey {
-    pub data: Weak<GlyphTextureSource>,
-    pub atlas: Weak<FontAtlasSource>,
-    pub color: Color,
+    pub(crate) data: Weak<GlyphTextureSource>,
+    pub(crate) atlas: Weak<FontAtlasSource>,
+    pub(crate) color: Color,
 }
 impl PartialEq for ExtractedTextureKey {
     fn eq(&self, other: &Self) -> bool {
@@ -60,7 +60,11 @@ impl std::hash::Hash for ExtractedTextureKey {
     }
 }
 impl ExtractedTextureKey {
-    pub fn new(data: &Arc<GlyphTextureSource>, atlas: &Arc<FontAtlasSource>, color: Color) -> Self {
+    pub(crate) fn new(
+        data: &Arc<GlyphTextureSource>,
+        atlas: &Arc<FontAtlasSource>,
+        color: Color,
+    ) -> Self {
         Self {
             data: Arc::downgrade(data),
             atlas: Arc::downgrade(atlas),
@@ -155,8 +159,8 @@ impl ExtractedGlyphTextureCache {
     }
 }
 
-pub struct PreparedTextureKey {
-    pub data: Weak<ExtractedGlyphTextureSource>,
+pub(crate) struct PreparedTextureKey {
+    pub(crate) data: Weak<ExtractedGlyphTextureSource>,
 }
 
 impl PartialEq for PreparedTextureKey {
@@ -171,17 +175,17 @@ impl std::hash::Hash for PreparedTextureKey {
     }
 }
 impl PreparedTextureKey {
-    pub fn new(data: &Arc<ExtractedGlyphTextureSource>) -> Self {
+    pub(crate) fn new(data: &Arc<ExtractedGlyphTextureSource>) -> Self {
         Self {
             data: Arc::downgrade(data),
         }
     }
 }
 
-pub type PreparedGlyphTextureCache =
+pub(crate) type PreparedGlyphTextureCache =
     RenderCache<PreparedTextureKey, Arc<PreparedGlyphTextureSource>>;
 impl PreparedGlyphTextureCache {
-    pub fn get_or_create(
+    pub(crate) fn get_or_create(
         &mut self,
         texture: &Arc<ExtractedGlyphTextureSource>,
         render_device: &RenderDevice,
@@ -220,8 +224,8 @@ impl PreparedGlyphTextureCache {
     }
 }
 
-pub struct AtlasKey {
-    pub atlas: Weak<FontAtlasSource>,
+pub(crate) struct AtlasKey {
+    pub(crate) atlas: Weak<FontAtlasSource>,
 }
 
 impl PartialEq for AtlasKey {
@@ -236,16 +240,16 @@ impl std::hash::Hash for AtlasKey {
     }
 }
 impl AtlasKey {
-    pub fn new(atlas: &Arc<FontAtlasSource>) -> Self {
+    pub(crate) fn new(atlas: &Arc<FontAtlasSource>) -> Self {
         Self {
             atlas: Arc::downgrade(atlas),
         }
     }
 }
 
-pub type PreparedAtlasCache = RenderCache<AtlasKey, Arc<AtlasGpuDataSource>>;
+pub(crate) type PreparedAtlasCache = RenderCache<AtlasKey, Arc<AtlasGpuDataSource>>;
 impl PreparedAtlasCache {
-    pub fn get_or_create(
+    pub(crate) fn get_or_create(
         &mut self,
         atlas: &Arc<FontAtlasSource>,
         render_device: &RenderDevice,
@@ -314,7 +318,7 @@ impl PreparedAtlasCache {
     }
 }
 
-pub struct RenderGlyphTextureCachePlugin;
+pub(crate) struct RenderGlyphTextureCachePlugin;
 impl Plugin for RenderGlyphTextureCachePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.init_resource::<ExtractedGlyphTextureCache>()

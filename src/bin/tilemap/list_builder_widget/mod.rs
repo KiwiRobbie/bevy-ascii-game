@@ -7,16 +7,16 @@ use ascii_ui::{
 };
 
 #[derive(Component)]
-pub struct ListBuilderWidget<T: Send + Sync> {
+pub(crate) struct ListBuilderWidget<T: Send + Sync> {
     items: Vec<T>,
-    pub builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+    pub(crate) builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
 }
 
 impl<T> ListBuilderWidget<T>
 where
     T: Send + Sync + 'static,
 {
-    pub fn build<'b, W: ListWidget>(
+    pub(crate) fn build<'b, W: ListWidget>(
         builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
         items: Vec<T>,
         args: W::Args,
@@ -37,18 +37,18 @@ where
         })
     }
 
-    pub fn push<W: ListWidget>(&mut self, list_widget: &mut W, item: T, commands: &mut Commands) {
+    pub(crate) fn push<W: ListWidget>(&mut self, list_widget: &mut W, item: T, commands: &mut Commands) {
         list_widget.push((self.builder)(self.items.len(), &item)(commands));
         self.items.push(item);
     }
-    pub fn pop<W: ListWidget>(&mut self, self_column: &mut W, commands: &mut Commands) {
+    pub(crate) fn pop<W: ListWidget>(&mut self, self_column: &mut W, commands: &mut Commands) {
         if let Some(entity) = self_column.pop() {
             self.items.pop().unwrap();
             commands.entity(entity).despawn();
         }
     }
 
-    pub fn _set(
+    pub(crate) fn _set(
         &mut self,
         self_column: &mut widgets::Column,
         items: Vec<T>,

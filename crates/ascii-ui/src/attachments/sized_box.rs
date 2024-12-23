@@ -13,13 +13,13 @@ impl SizedBox {
             height: Some(height),
         }
     }
-    pub fn horizontal(width: u32) -> Self {
+    pub(crate) fn horizontal(width: u32) -> Self {
         Self {
             width: Some(width),
             height: None,
         }
     }
-    pub fn new(width: u32, height: u32) -> Self {
+    pub(crate) fn new(width: u32, height: u32) -> Self {
         Self {
             width: Some(width),
             height: Some(height),

@@ -11,7 +11,7 @@ use spatial_grid::position::Position;
 
 use crate::{attachments::border::Border, layout::positioned::Positioned};
 
-pub fn border_render(
+pub(crate) fn border_render(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut commands: Commands,
     q_text: Query<(Entity, &Positioned, &Border)>,

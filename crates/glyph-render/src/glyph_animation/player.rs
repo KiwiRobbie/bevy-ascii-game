@@ -16,7 +16,7 @@ pub struct GlyphAnimationPlayer {
     pub frame_timer: f32,
 }
 
-pub fn loop_animation_player(
+pub(crate) fn loop_animation_player(
     mut q_players: Query<(&mut GlyphAnimation, &mut GlyphAnimationPlayer)>,
     time: Res<Time>,
     glyph_animations: Res<Assets<GlyphAnimationSource>>,

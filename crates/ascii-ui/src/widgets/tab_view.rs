@@ -13,14 +13,14 @@ use super::{
 
 #[derive(Debug, Component)]
 pub struct TabView {
-    pub tabs: Vec<String>,
-    pub left: Entity,
-    pub title: Entity,
-    pub right: Entity,
-    pub stack: Entity,
+    pub(crate) tabs: Vec<String>,
+    pub(crate) left: Entity,
+    pub(crate) title: Entity,
+    pub(crate) right: Entity,
+    pub(crate) stack: Entity,
 }
 
-pub fn tab_view_interaction_system(
+pub(crate) fn tab_view_interaction_system(
     q_tab_view: Query<&TabView>,
     mut q_stack: Query<&mut Stack>,
     mut q_text: Query<&mut Text>,

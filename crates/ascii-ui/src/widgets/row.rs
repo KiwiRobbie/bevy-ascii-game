@@ -21,10 +21,10 @@ use crate::{
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct Row {
-    pub children: Vec<Entity>,
+    pub(crate) children: Vec<Entity>,
 }
 #[derive(Debug, Default)]
-pub struct RowLogic;
+pub(crate) struct RowLogic;
 impl WidgetLayoutLogic for RowLogic {
     fn layout(
         &self,

@@ -32,14 +32,15 @@ use super::{
     PlayerBundle,
 };
 
-pub fn player_reset_system(mut commands: Commands, q_player: Query<Entity, With<ResetMarker>>) {
+pub(crate) fn player_reset_system(
+    mut commands: Commands,
+    q_player: Query<Entity, With<ResetMarker>>,
+) {
     for player in q_player.iter() {
         commands.entity(player).insert((
             Position(IVec2::new(10, 10)),
             Remainder(Vec2::ZERO),
-            Velocity {
-                ..Default::default()
-            },
+            Velocity(Vec2::ZERO),
         ));
     }
 }
@@ -50,13 +51,13 @@ pub fn create_player_with_gamepad(
     gamepad: Entity,
     glyph_buffer: Entity,
 ) {
-    create_player(commands, server)
+    create_player_with_keyboard(commands, server)
         .insert(PlayerInputController(gamepad))
         .insert(TargetGlyphBuffer(glyph_buffer))
         .insert(GamePhysicsGridMarker);
 }
 
-pub fn create_player<'a>(
+pub fn create_player_with_keyboard<'a>(
     commands: &'a mut Commands,
     server: &Res<AssetServer>,
 ) -> bevy::ecs::system::EntityCommands<'a> {
@@ -65,7 +66,7 @@ pub fn create_player<'a>(
         PlayerBundle {
             actor: ActorPhysicsBundle {
                 position: SpatialBundle {
-                    position: Position(IVec2::new(10, 10)),
+                    position: IVec2::new(10, 10).into(),
                     ..Default::default()
                 },
                 collider: Collider {

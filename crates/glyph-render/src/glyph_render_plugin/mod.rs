@@ -11,7 +11,7 @@ use bevy::{
     },
 };
 use bytemuck::{cast_slice_mut, Pod, Zeroable};
-pub use node::GlyphGenerationNode;
+pub(crate) use node::GlyphGenerationNode;
 use spatial_grid::grid::SpatialGrid;
 use swash::FontRef;
 
@@ -32,7 +32,7 @@ mod raster_descriptors;
 mod render_resources;
 
 #[derive(RenderLabel, Hash, Debug, PartialEq, Eq, Clone)]
-pub struct GlyphGeneration;
+pub(crate) struct GlyphGeneration;
 
 pub struct GlyphRenderPlugin;
 const MAIN_GRAPH_2D: bevy::core_pipeline::core_2d::graph::Core2d =
@@ -73,12 +73,12 @@ impl Plugin for GlyphRenderPlugin {
 }
 
 #[derive(Clone, ShaderType)]
-pub struct GlyphUniforms {
-    pub color: Vec4,
-    pub width: u32,
-    pub height: u32,
-    pub advance: u32,
-    pub line_spacing: u32,
+pub(crate) struct GlyphUniforms {
+    pub(crate) color: Vec4,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) advance: u32,
+    pub(crate) line_spacing: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -175,14 +175,14 @@ impl From<Vec<String>> for GlyphTexture {
 
 #[derive(Clone)]
 pub struct ExtractedGlyphTextureSource {
-    pub data: Box<[u8]>,
+    pub(crate) data: Box<[u8]>,
 
-    pub width: u32,
-    pub height: u32,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 impl ExtractedGlyphTextureSource {
-    pub fn from_text_data(
+    pub(crate) fn from_text_data(
         text: &Vec<String>,
         atlas: &FontAtlasSource,
         font: FontRef,
@@ -220,7 +220,7 @@ impl ExtractedGlyphTextureSource {
         }
     }
 
-    pub fn from_texture_data(
+    pub(crate) fn from_texture_data(
         texture: &GlyphTextureSource,
         atlas: &FontAtlasSource,
         font: FontRef,
@@ -263,22 +263,22 @@ pub struct GlyphSolidColor {
 }
 
 #[derive(Component, DerefMut, Deref)]
-pub struct GpuGlyphTexture(pub Arc<PreparedGlyphTextureSource>);
+pub(crate) struct GpuGlyphTexture(pub(crate) Arc<PreparedGlyphTextureSource>);
 
-pub struct PreparedGlyphTextureSource {
-    pub buffer_texture: Texture,
-    pub width: u32,
-    pub height: u32,
+pub(crate) struct PreparedGlyphTextureSource {
+    pub(crate) buffer_texture: Texture,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 #[derive(Component)]
-pub struct GlyphTextureInfo {
-    pub width: u32,
-    pub height: u32,
+pub(crate) struct GlyphTextureInfo {
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 #[derive(ShaderType)]
-pub struct GlyphModelUniform {
+pub(crate) struct GlyphModelUniform {
     model: Mat4,
 }
 
@@ -291,10 +291,10 @@ impl GlyphModelUniform {
 }
 
 #[derive(Component, Deref)]
-pub struct ExtractedAtlas(pub Arc<FontAtlasSource>);
+pub(crate) struct ExtractedAtlas(pub(crate) Arc<FontAtlasSource>);
 
 #[derive(Component, Deref)]
-pub struct GlyphModelUniformBuffer(pub UniformBuffer<GlyphModelUniform>);
+pub(crate) struct GlyphModelUniformBuffer(pub(crate) UniformBuffer<GlyphModelUniform>);
 
 #[derive(Debug, Component, Clone)]
 pub struct GlyphSpriteMirrored;
@@ -320,20 +320,20 @@ fn prepare_atlas_buffers(
 #[derive(ShaderType, Pod, Clone, Copy, Zeroable)]
 #[repr(C)]
 
-pub struct GpuGlyphItem {
-    pub start: UVec2,
-    pub size: UVec2,
-    pub offset: IVec2,
-    pub padding: Vec2,
-    pub color: Vec4,
+pub(crate) struct GpuGlyphItem {
+    pub(crate) start: UVec2,
+    pub(crate) size: UVec2,
+    pub(crate) offset: IVec2,
+    pub(crate) padding: Vec2,
+    pub(crate) color: Vec4,
 }
 
 #[derive(Component, Deref)]
-pub struct AtlasGpuData(pub Arc<AtlasGpuDataSource>);
+pub(crate) struct AtlasGpuData(pub(crate) Arc<AtlasGpuDataSource>);
 
-pub struct AtlasGpuDataSource {
-    pub data: Texture,
-    pub uvs: Texture,
+pub(crate) struct AtlasGpuDataSource {
+    pub(crate) data: Texture,
+    pub(crate) uvs: Texture,
 }
 
 fn prepare_buffers(
@@ -504,12 +504,12 @@ impl FromWorld for GlyphPipelineData {
 }
 
 #[derive(Component, Deref, DerefMut)]
-pub struct GlyphRenderUniformBuffer(pub UniformBuffer<GlyphRenderUniforms>);
+pub(crate) struct GlyphRenderUniformBuffer(pub(crate) UniformBuffer<GlyphRenderUniforms>);
 #[derive(Clone, ShaderType)]
-pub struct GlyphRenderUniforms {
-    pub position: IVec2,
-    pub size: UVec2,
-    pub target_size: UVec2,
-    pub depth: f32,
-    pub padding: f32,
+pub(crate) struct GlyphRenderUniforms {
+    pub(crate) position: IVec2,
+    pub(crate) size: UVec2,
+    pub(crate) target_size: UVec2,
+    pub(crate) depth: f32,
+    pub(crate) padding: f32,
 }

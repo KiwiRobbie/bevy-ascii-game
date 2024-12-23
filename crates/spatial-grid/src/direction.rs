@@ -8,13 +8,13 @@ pub enum Direction {
     NegY,
 }
 
-pub enum DirectionCompare {
+pub(crate) enum DirectionCompare {
     Equal,
     Perpendicular,
     Opposite,
 }
 impl Direction {
-    pub fn compare(&self, other: &Self) -> DirectionCompare {
+    pub(crate) fn compare(&self, other: &Self) -> DirectionCompare {
         match (self, other) {
             (Direction::NegX, Direction::NegX) => DirectionCompare::Equal,
             (Direction::PosX, Direction::PosX) => DirectionCompare::Equal,

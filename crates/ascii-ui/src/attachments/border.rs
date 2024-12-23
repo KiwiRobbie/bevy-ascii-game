@@ -4,12 +4,12 @@ use super::padding::{EdgeInsets, Padding};
 
 #[derive(Debug, Component, Clone)]
 pub struct Border {
-    pub top: Option<char>,
-    pub bottom: Option<char>,
-    pub left: Option<char>,
-    pub right: Option<char>,
+    pub(crate) top: Option<char>,
+    pub(crate) bottom: Option<char>,
+    pub(crate) left: Option<char>,
+    pub(crate) right: Option<char>,
 
-    pub corners: [Option<char>; 4],
+    pub(crate) corners: [Option<char>; 4],
 }
 
 impl Border {
@@ -33,7 +33,7 @@ impl Border {
         let b = pos.y == size.y - 1;
         return (l, r, t, b);
     }
-    pub fn top(character: char) -> Self {
+    pub(crate) fn top(character: char) -> Self {
         Self {
             top: Some(character),
             bottom: None,
@@ -42,7 +42,7 @@ impl Border {
             corners: [Some(character), Some(character), None, None],
         }
     }
-    pub fn bottom(character: char) -> Self {
+    pub(crate) fn bottom(character: char) -> Self {
         Self {
             top: None,
             bottom: Some(character),
@@ -51,7 +51,7 @@ impl Border {
             corners: [None, None, Some(character), Some(character)],
         }
     }
-    pub fn left(character: char) -> Self {
+    pub(crate) fn left(character: char) -> Self {
         Self {
             top: None,
             bottom: None,
@@ -60,7 +60,7 @@ impl Border {
             corners: [Some(character), None, None, Some(character)],
         }
     }
-    pub fn right(character: char) -> Self {
+    pub(crate) fn right(character: char) -> Self {
         Self {
             top: None,
             bottom: None,
@@ -70,7 +70,7 @@ impl Border {
         }
     }
 
-    pub fn create_data(&self, size: UVec2) -> Vec<String> {
+    pub(crate) fn create_data(&self, size: UVec2) -> Vec<String> {
         (0..size.y)
             .map(|y| {
                 (0..size.x)

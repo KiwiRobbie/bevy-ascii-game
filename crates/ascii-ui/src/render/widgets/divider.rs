@@ -11,7 +11,7 @@ use spatial_grid::position::Position;
 
 use crate::{layout::positioned::Positioned, widgets::divider::Divider};
 
-pub fn divider_render(
+pub(crate) fn divider_render(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut commands: Commands,
     q_text: Query<(Entity, &Positioned, &Divider)>,

@@ -21,9 +21,9 @@ pub struct Checkbox {
 pub struct CheckboxEnabledMarker;
 
 #[derive(Debug, Component)]
-pub struct CheckboxDisabledMarker;
+pub(crate) struct CheckboxDisabledMarker;
 
-pub fn checkbox_interaction_system(
+pub(crate) fn checkbox_interaction_system(
     mut commands: Commands,
     q_checkboxes: Query<(
         Entity,

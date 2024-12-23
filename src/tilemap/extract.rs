@@ -26,9 +26,9 @@ use super::{
 };
 
 #[derive(Component)]
-pub struct ExtractedTileMapTileMarker;
+pub(crate) struct ExtractedTileMapTileMarker;
 
-pub fn extract_tilemaps(
+pub(crate) fn extract_tilemaps(
     mut commands: Commands,
     q_existing_tiles: Query<Entity, With<ExtractedTileMapTileMarker>>,
     atlas_cache: Extract<Res<FontAtlasCache>>,

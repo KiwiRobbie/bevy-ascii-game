@@ -67,7 +67,7 @@ fn player_controller_input_buttons(
         }
     }
 }
-pub struct PlayerControllerInputPlugin;
+pub(crate) struct PlayerControllerInputPlugin;
 
 impl Plugin for PlayerControllerInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {

@@ -7,10 +7,10 @@ use bevy::{
 use grid_physics::{free::FreeGrounded, velocity::Velocity};
 
 #[derive(Component, Debug, Default, Clone)]
-pub struct PlayerWalkSpeed {
-    pub speed: f32,
+pub(crate) struct PlayerWalkSpeed {
+    pub(crate) speed: f32,
 }
-pub fn player_walk_system(
+pub(crate) fn player_walk_system(
     mut q_player: Query<
         (
             // &mut Movement,

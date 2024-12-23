@@ -12,7 +12,7 @@ use crate::player::{
     PlayerMarker,
 };
 
-pub mod horse;
+pub(crate) mod horse;
 
 pub struct HorsePlugin;
 impl Plugin for HorsePlugin {
@@ -40,16 +40,16 @@ pub struct MountOrigin {
 pub struct MountableMarker;
 
 #[derive(Debug, Component)]
-pub struct RiderMount {
-    pub mount: Entity,
+pub(crate) struct RiderMount {
+    pub(crate) mount: Entity,
 }
 
 #[derive(Debug, Component)]
-pub struct MountRider {
+pub(crate) struct MountRider {
     rider: Entity,
 }
 
-pub fn mount_interaction_system(
+pub(crate) fn mount_interaction_system(
     q_mounts: Query<(Entity, &PlayerInteractActive), With<MountableMarker>>,
     mut commands: Commands,
 ) {
@@ -70,7 +70,7 @@ pub fn mount_interaction_system(
     }
 }
 
-pub fn update_rider_position(
+pub(crate) fn update_rider_position(
     q_mount: Query<
         (&Position, &MountOrigin, &MountRider),
         (With<MountMarker>, Without<PlayerMarker>),
@@ -89,16 +89,16 @@ mod mount_inputs {
     use bevy::prelude::Component;
 
     #[derive(Debug, Component, Default)]
-    pub struct Movement {
-        pub horizontal: f32,
-        pub vertical: f32,
+    pub(crate) struct Movement {
+        pub(crate) horizontal: f32,
+        pub(crate) vertical: f32,
     }
 
     #[derive(Debug, Component)]
-    pub struct JumpMarker;
+    pub(crate) struct JumpMarker;
 }
 
-pub fn transfer_player_inputs(
+pub(crate) fn transfer_player_inputs(
     mut q_mount: Query<
         (Entity, &MountRider, &mut mount_inputs::Movement),
         (With<MountMarker>, Without<PlayerMarker>),
@@ -125,7 +125,7 @@ pub fn transfer_player_inputs(
     }
 }
 
-pub fn horse_movement_system(
+pub(crate) fn horse_movement_system(
     mut q_horse_movement: Query<(&mut Velocity, &mount_inputs::Movement)>,
 ) {
     for (mut velocity, input) in q_horse_movement.iter_mut() {

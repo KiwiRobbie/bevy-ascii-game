@@ -2,8 +2,8 @@ use bevy::reflect::{Reflect, Struct};
 
 #[derive(Debug, Reflect, Default)]
 struct TestStruct {
-    pub a: f32,
-    pub b: String,
+    pub(crate) a: f32,
+    pub(crate) b: String,
 }
 
 fn main() {

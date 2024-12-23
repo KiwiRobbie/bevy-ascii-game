@@ -22,7 +22,7 @@ pub type FilterActors = (With<Actor>, Without<Solid>);
 pub struct Actor;
 
 impl Actor {
-    pub fn move_x(
+    pub(crate) fn move_x(
         amount: f32,
         actor_position: &mut Position,
         actor_remainder: &mut Remainder,
@@ -47,7 +47,7 @@ impl Actor {
         }
         None
     }
-    pub fn move_y(
+    pub(crate) fn move_y(
         amount: f32,
         actor_position: &mut Position,
         actor_remainder: &mut Remainder,
@@ -73,7 +73,7 @@ impl Actor {
         None
     }
 
-    pub fn test_move_x(
+    pub(crate) fn test_move_x(
         amount: f32,
         actor_position: &Position,
         actor_remainder: &Remainder,
@@ -88,7 +88,7 @@ impl Actor {
             collision_cache,
         )
     }
-    pub fn test_move_y(
+    pub(crate) fn test_move_y(
         amount: f32,
         actor_position: &Position,
         actor_remainder: &Remainder,

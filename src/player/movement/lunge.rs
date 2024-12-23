@@ -22,23 +22,23 @@ use grid_physics::{
 use super::{direction::PlayerDirection, MovementFilter};
 
 #[derive(Debug, Component)]
-pub struct PlayerLunging {
-    pub timer: f32,
-    pub direction: Vec2,
-    pub speed: f32,
+pub(crate) struct PlayerLunging {
+    pub(crate) timer: f32,
+    pub(crate) direction: Vec2,
+    pub(crate) speed: f32,
 }
 
 #[derive(Debug, Component)]
-pub struct PlayerLungeCooldown {
-    pub timer: f32,
+pub(crate) struct PlayerLungeCooldown {
+    pub(crate) timer: f32,
 }
 
 #[derive(Debug, Component, Clone)]
-pub struct PlayerLungeSettings {
-    pub speed: f32,
-    pub duration: f32,
-    pub cooldown: f32,
-    pub exit_velocity: f32,
+pub(crate) struct PlayerLungeSettings {
+    pub(crate) speed: f32,
+    pub(crate) duration: f32,
+    pub(crate) cooldown: f32,
+    pub(crate) exit_velocity: f32,
 }
 
 impl Default for PlayerLungeSettings {
@@ -52,7 +52,7 @@ impl Default for PlayerLungeSettings {
     }
 }
 
-pub fn player_lunge_start_system(
+pub(crate) fn player_lunge_start_system(
     mut commands: Commands,
     q_player: Query<
         (Entity, &PlayerDirection, &PlayerLungeSettings),
@@ -76,7 +76,7 @@ pub fn player_lunge_start_system(
             .remove::<FreeMarker>();
     }
 }
-pub fn player_lunge_update_system(
+pub(crate) fn player_lunge_update_system(
     mut commands: Commands,
     mut q_player_lunging: Query<
         (
@@ -119,7 +119,7 @@ pub fn player_lunge_update_system(
     }
 }
 
-pub fn player_lunge_cooldown_update(
+pub(crate) fn player_lunge_cooldown_update(
     mut commands: Commands,
     mut q_player_cooldown: Query<(Entity, &mut PlayerLungeCooldown, Option<&FreeGrounded>)>,
     time: Res<Time>,

@@ -13,15 +13,15 @@ use self::{
     reset::player_reset_system,
 };
 
-pub mod animation;
+pub(crate) mod animation;
 pub mod input;
 pub mod interaction;
-pub mod movement;
+pub(crate) mod movement;
 pub mod reset;
-pub mod sword;
+pub(crate) mod sword;
 
 #[derive(Component, Default, Clone)]
-pub struct PlayerMarker;
+pub(crate) struct PlayerMarker;
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
@@ -36,10 +36,10 @@ impl Plugin for PlayerPlugin {
 }
 
 #[derive(Bundle, Default, Clone)]
-pub struct PlayerBundle {
-    pub marker: PlayerMarker,
-    pub input: PlayerInputBundle,
-    pub movement: PlayerMovementBundle,
-    pub actor: ActorPhysicsBundle,
-    pub interaction_source: InteractionSource,
+pub(crate) struct PlayerBundle {
+    pub(crate) marker: PlayerMarker,
+    pub(crate) input: PlayerInputBundle,
+    pub(crate) movement: PlayerMovementBundle,
+    pub(crate) actor: ActorPhysicsBundle,
+    pub(crate) interaction_source: InteractionSource,
 }

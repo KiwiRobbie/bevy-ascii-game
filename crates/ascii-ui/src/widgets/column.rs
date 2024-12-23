@@ -22,7 +22,7 @@ pub struct Column {
     pub children: Vec<Entity>,
 }
 #[derive(Debug, Default)]
-pub struct ColumnLogic;
+pub(crate) struct ColumnLogic;
 impl WidgetLayoutLogic for ColumnLogic {
     fn layout(
         &self,

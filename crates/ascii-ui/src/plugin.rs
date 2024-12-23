@@ -15,7 +15,7 @@ impl Plugin for UiPlugin {
     }
 }
 
-pub struct UiTypesPlugin;
+pub(crate) struct UiTypesPlugin;
 impl Plugin for UiTypesPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.register_type::<Container>()

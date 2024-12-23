@@ -1,17 +1,17 @@
 use bevy::{asset::Asset, math::UVec2, reflect::TypePath};
 
 #[derive(serde::Deserialize, Asset, TypePath)]
-pub struct GlyphAnimationMeta {
-    pub name: String,
-    pub size: (u32, u32),
+pub(crate) struct GlyphAnimationMeta {
+    pub(crate) name: String,
+    pub(crate) size: (u32, u32),
 
     // #[serde(default)]
-    // pub default_name: Option<String>,
-    pub frames: Vec<(FrameMeta, MirroredFrame)>,
+    // pub(crate) default_name: Option<String>,
+    pub(crate) frames: Vec<(FrameMeta, MirroredFrame)>,
 }
 
 #[derive(serde::Deserialize, Default, Clone)]
-pub enum MirroredFrame {
+pub(crate) enum MirroredFrame {
     #[default]
     None,
     Auto(#[serde(default)] i32, #[serde(default)] i32),
@@ -19,23 +19,23 @@ pub enum MirroredFrame {
 }
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone)]
-pub struct FrameMeta {
-    pub asset: String,
+pub(crate) struct FrameMeta {
+    pub(crate) asset: String,
 
     #[serde(default)]
-    pub start: FrameIndex,
+    pub(crate) start: FrameIndex,
 
     #[serde(default)]
-    pub size: (u32, u32),
+    pub(crate) size: (u32, u32),
 
     #[serde(default)]
-    pub offset: (i32, i32),
+    pub(crate) offset: (i32, i32),
 
     #[serde(default)]
-    pub frame_count: CountDirection,
+    pub(crate) frame_count: CountDirection,
 }
 
-pub fn create_data(
+pub(crate) fn create_data(
     frame: &FrameMeta,
     data: &[String],
     cursor: UVec2,
@@ -64,7 +64,7 @@ pub fn create_data(
     frame_data
 }
 #[derive(serde::Deserialize, Clone)]
-pub enum FrameIndex {
+pub(crate) enum FrameIndex {
     Pixel(u32, u32),
     Frame(u32, u32),
     NextY,
@@ -72,13 +72,13 @@ pub enum FrameIndex {
 }
 
 #[derive(serde::Deserialize, Clone, Debug)]
-pub enum CountDirection {
+pub(crate) enum CountDirection {
     Single,
     X(u32),
     Y(u32),
 }
 impl CountDirection {
-    pub fn count(&self) -> u32 {
+    pub(crate) fn count(&self) -> u32 {
         match self {
             Self::Single => 1,
             Self::X(x) => *x,

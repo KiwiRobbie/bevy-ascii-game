@@ -10,10 +10,10 @@ pub mod tilemap;
 pub mod tileset;
 pub mod widgets;
 
-pub mod utils {
+pub(crate) mod utils {
     use bevy::prelude::*;
 
-    pub fn clear_component<T: Component>(
+    pub(crate) fn clear_component<T: Component>(
         q_focused: Query<Entity, With<T>>,
         mut commands: Commands,
     ) {

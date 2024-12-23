@@ -3,26 +3,26 @@ use std::ops::RangeInclusive;
 use bevy::math::UVec2;
 
 #[derive(Debug, Clone)]
-pub struct Constraint {
-    pub width: Option<RangeInclusive<u32>>,
-    pub height: Option<RangeInclusive<u32>>,
+pub(crate) struct Constraint {
+    pub(crate) width: Option<RangeInclusive<u32>>,
+    pub(crate) height: Option<RangeInclusive<u32>>,
 }
 
 impl Constraint {
-    pub fn remove_x_bounds(&self) -> Self {
+    pub(crate) fn remove_x_bounds(&self) -> Self {
         Self {
             width: None,
             height: self.height.clone(),
         }
     }
 
-    pub fn remove_y_bounds(&self) -> Self {
+    pub(crate) fn remove_y_bounds(&self) -> Self {
         Self {
             width: self.width.clone(),
             height: None,
         }
     }
-    pub fn constrain(&self, mut size: UVec2) -> UVec2 {
+    pub(crate) fn constrain(&self, mut size: UVec2) -> UVec2 {
         if let Some(width) = &self.width {
             size.x = *(width.start().clamp(&size.x, width.end()));
         }
@@ -32,7 +32,7 @@ impl Constraint {
         return size;
     }
 
-    pub fn max(&self) -> UVec2 {
+    pub(crate) fn max(&self) -> UVec2 {
         let x = if let Some(x) = &self.width {
             *x.end()
         } else {
@@ -47,7 +47,7 @@ impl Constraint {
 
         UVec2 { x, y }
     }
-    pub fn from_max(size: UVec2) -> Self {
+    pub(crate) fn from_max(size: UVec2) -> Self {
         Self {
             width: Some(0..=size.x),
             height: Some(0..=size.y),

@@ -23,7 +23,7 @@ pub struct Text {
 }
 #[derive(Debug, Default)]
 
-pub struct TextLogic;
+pub(crate) struct TextLogic;
 impl WidgetLayoutLogic for TextLogic {
     fn layout(
         &self,
@@ -49,13 +49,13 @@ impl WidgetLayoutLogic for TextLogic {
 
 #[derive(Bundle)]
 pub struct TextBundle<T: Bundle> {
-    pub text: Text,
-    pub layout: WidgetLayout,
-    pub render: RenderBundle,
-    pub attachments: T,
+    pub(crate) text: Text,
+    pub(crate) layout: WidgetLayout,
+    pub(crate) render: RenderBundle,
+    pub(crate) attachments: T,
 }
 impl<T: Bundle> TextBundle<T> {
-    pub fn new(text: String, attachments: T) -> Self {
+    pub(crate) fn new(text: String, attachments: T) -> Self {
         Self {
             layout: WidgetLayout::new::<TextLogic>(),
             render: RenderBundle::default(),

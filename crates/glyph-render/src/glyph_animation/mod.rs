@@ -8,27 +8,27 @@ use bevy::{
     reflect::TypePath,
 };
 
-use crate::glyph_render_plugin::GlyphTextureSource;
-
 use self::loader::GlyphAnimationAssetLoader;
+use crate::glyph_render_plugin::GlyphTextureSource;
 
 mod loader;
 pub mod player;
+
 #[derive(Asset, TypePath)]
 pub struct GlyphAnimationSource {
-    pub name: String,
-    pub size: UVec2,
-    pub frames: Vec<(GlyphAnimationFrame, Option<GlyphAnimationFrame>)>,
+    pub(crate) name: String,
+    pub(crate) size: UVec2,
+    pub(crate) frames: Vec<(GlyphAnimationFrame, Option<GlyphAnimationFrame>)>,
 }
 
 #[derive(Clone, Debug)]
-pub struct GlyphAnimationFrame {
-    pub source: Arc<GlyphTextureSource>,
-    pub offset: IVec2,
+pub(crate) struct GlyphAnimationFrame {
+    pub(crate) source: Arc<GlyphTextureSource>,
+    pub(crate) offset: IVec2,
 }
 
 impl GlyphAnimationFrame {
-    pub fn new(data: Vec<String>, offset: IVec2) -> Self {
+    pub(crate) fn new(data: Vec<String>, offset: IVec2) -> Self {
         Self {
             source: Arc::new((&data).into()),
             offset,

@@ -9,7 +9,7 @@ use crate::remainder::Remainder;
 pub struct Position(pub IVec2);
 
 impl Position {
-    pub const ZERO: Self = Self(IVec2::ZERO);
+    pub(crate) const ZERO: Self = Self(IVec2::ZERO);
     pub fn offset(self, offset: IVec2) -> Self {
         Self(*self + offset)
     }
@@ -22,7 +22,7 @@ pub struct SpatialBundle {
 }
 
 impl SpatialBundle {
-    pub fn offset(&mut self, delta: Vec2) {
+    pub(crate) fn offset(&mut self, delta: Vec2) {
         *self.remainder += delta;
         let delta = self.remainder.round();
         *self.remainder -= delta;

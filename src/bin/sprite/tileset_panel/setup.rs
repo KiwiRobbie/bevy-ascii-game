@@ -28,13 +28,13 @@ use crate::list_builder_widget::ListBuilderWidget;
 use super::{state::TilesetPanelState, update::TilesetHandles};
 
 #[derive(Debug, Component)]
-pub struct ItemMutateButton {
-    pub target: Entity,
-    pub mode: MutateMode,
+pub(crate) struct ItemMutateButton {
+    pub(crate) target: Entity,
+    pub(crate) mode: MutateMode,
 }
 
 #[derive(Debug)]
-pub enum MutateMode {
+pub(crate) enum MutateMode {
     Add,
     Remove,
 }
@@ -124,10 +124,10 @@ pub(super) fn setup_ui(
 }
 
 #[derive(Debug, Component)]
-pub struct SaveTilemapButton;
+pub(crate) struct SaveTilemapButton;
 
 #[derive(Debug, Component)]
-pub struct DebugMenuMarker;
+pub(crate) struct DebugMenuMarker;
 
 fn build_tileset_ui<'a>(
     source: &TilesetSource,
@@ -162,7 +162,7 @@ fn build_tileset_ui<'a>(
     ])
 }
 #[derive(Debug, Component, Clone)]
-pub struct TilesetTileId {
-    pub tileset: Handle<TilesetSource>,
-    pub tile: u32,
+pub(crate) struct TilesetTileId {
+    pub(crate) tileset: Handle<TilesetSource>,
+    pub(crate) tile: u32,
 }

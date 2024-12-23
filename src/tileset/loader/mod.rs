@@ -1,4 +1,4 @@
-pub mod meta;
+pub(crate) mod meta;
 
 use std::sync::Arc;
 
@@ -17,7 +17,7 @@ use self::meta::TilesetMeta;
 use super::asset::TilesetSource;
 
 #[derive(Default)]
-pub struct TilesetLoader {}
+pub(crate) struct TilesetLoader {}
 impl TilesetLoader {
     fn parse_bytes(bytes: Vec<u8>) -> Vec<String> {
         bytes

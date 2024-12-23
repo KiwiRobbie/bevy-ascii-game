@@ -1,5 +1,5 @@
-pub mod attachments;
-pub mod bundle;
-pub mod clear;
-pub mod plugin;
-pub mod widgets;
+pub(crate) mod attachments;
+pub(crate) mod bundle;
+pub(crate) mod clear;
+pub(crate) mod plugin;
+pub(crate) mod widgets;

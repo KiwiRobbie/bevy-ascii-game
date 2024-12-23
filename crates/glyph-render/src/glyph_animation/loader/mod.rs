@@ -6,7 +6,7 @@ use bevy::{
 
 use text_util::text_mirror::mirror_lines;
 
-pub mod meta;
+pub(crate) mod meta;
 
 use self::meta::{
     create_data, CountDirection, FrameIndex, FrameMeta, GlyphAnimationMeta, MirroredFrame,
@@ -15,7 +15,7 @@ use self::meta::{
 use super::{GlyphAnimationFrame, GlyphAnimationSource};
 
 #[derive(Default)]
-pub struct GlyphAnimationAssetLoader {}
+pub(crate) struct GlyphAnimationAssetLoader {}
 impl GlyphAnimationAssetLoader {
     fn parse_bytes(bytes: Vec<u8>) -> Vec<String> {
         bytes

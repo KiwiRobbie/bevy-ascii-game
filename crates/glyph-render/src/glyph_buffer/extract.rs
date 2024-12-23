@@ -28,7 +28,7 @@ use crate::{
 
 use super::{GlyphBuffer, TargetGlyphBuffer};
 
-pub fn extract_glyph_buffers(
+pub(crate) fn extract_glyph_buffers(
     mut commands: Commands,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,

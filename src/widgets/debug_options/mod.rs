@@ -15,7 +15,7 @@ use grid_physics::sets::EnablePhysicsSystems;
 
 use crate::debug::{DebugCollisions, DebugPositions, DebugUi};
 
-pub struct DebugOptionsPlugin;
+pub(crate) struct DebugOptionsPlugin;
 impl Plugin for DebugOptionsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(Update, update_values);
@@ -24,10 +24,10 @@ impl Plugin for DebugOptionsPlugin {
 
 #[derive(Component, Default, Resource)]
 pub struct DebugOptions {
-    pub position_checkbox: Option<Entity>,
-    pub colliders_checkbox: Option<Entity>,
-    pub ui_checkbox: Option<Entity>,
-    pub pause_checkbox: Option<Entity>,
+    pub(crate) position_checkbox: Option<Entity>,
+    pub(crate) colliders_checkbox: Option<Entity>,
+    pub(crate) ui_checkbox: Option<Entity>,
+    pub(crate) pause_checkbox: Option<Entity>,
 }
 
 impl DebugOptions {

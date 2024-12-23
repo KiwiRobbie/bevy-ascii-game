@@ -7,7 +7,7 @@ use glyph_render::glyph_sprite::GlyphSprite;
 
 use super::bundle::RenderWidgetMarker;
 
-pub fn clear_sprites(
+pub(crate) fn clear_sprites(
     mut commands: Commands,
     q_ui_sprites: Query<Entity, (With<RenderWidgetMarker>, With<GlyphSprite>)>,
 ) {

@@ -1,9 +1,9 @@
 use bevy::ecs::{entity::Entity, system::Resource};
 
 #[derive(Debug, Resource)]
-pub struct DebugMenuState {
-    pub enabled: bool,
-    pub root_widget: Option<Entity>,
+pub(crate) struct DebugMenuState {
+    pub(crate) enabled: bool,
+    pub(crate) root_widget: Option<Entity>,
 }
 
 impl Default for DebugMenuState {

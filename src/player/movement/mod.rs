@@ -16,12 +16,12 @@ use self::{
 
 use super::PlayerMarker;
 
-pub mod direction;
-pub mod jump;
-pub mod lunge;
-pub mod walk;
+pub(crate) mod direction;
+pub(crate) mod jump;
+pub(crate) mod lunge;
+pub(crate) mod walk;
 
-pub struct PlayerMovementPlugin;
+pub(crate) struct PlayerMovementPlugin;
 impl Plugin for PlayerMovementPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
@@ -42,14 +42,14 @@ impl Plugin for PlayerMovementPlugin {
 }
 
 #[derive(Component, Default, Clone)]
-pub struct PlayerMovementMarker;
+pub(crate) struct PlayerMovementMarker;
 
 #[derive(Bundle, Default, Clone)]
-pub struct PlayerMovementBundle {
-    pub marker: PlayerMovementMarker,
-    pub walk_speed: PlayerWalkSpeed,
-    pub jump_velocity: PlayerJumpVelocity,
-    pub lunge_settings: PlayerLungeSettings,
-    pub direction: PlayerDirection,
+pub(crate) struct PlayerMovementBundle {
+    pub(crate) marker: PlayerMovementMarker,
+    pub(crate) walk_speed: PlayerWalkSpeed,
+    pub(crate) jump_velocity: PlayerJumpVelocity,
+    pub(crate) lunge_settings: PlayerLungeSettings,
+    pub(crate) direction: PlayerDirection,
 }
 type MovementFilter = (With<PlayerMarker>, With<PlayerMovementMarker>);

@@ -62,7 +62,7 @@ pub(super) fn apply_gravity_to_free(
 pub struct FreeGrounded;
 
 #[derive(Debug, Component, Default)]
-pub struct FreeAirborne;
+pub(crate) struct FreeAirborne;
 
 pub(super) fn update_free_actor_state(
     mut commands: Commands,

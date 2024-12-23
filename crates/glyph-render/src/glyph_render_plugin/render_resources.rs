@@ -7,13 +7,13 @@ use bevy::{
 use super::GlyphUniforms;
 
 #[derive(Component, Deref, DerefMut)]
-pub struct GlyphUniformBuffer(pub UniformBuffer<GlyphUniforms>);
+pub(crate) struct GlyphUniformBuffer(pub(crate) UniformBuffer<GlyphUniforms>);
 
 #[derive(Component, Deref, DerefMut)]
-pub struct GlyphStorageTexture(pub Texture);
+pub(crate) struct GlyphStorageTexture(pub(crate) Texture);
 
 #[derive(Component)]
-pub struct GlyphBufferData {
-    pub buffer: Texture,
-    // pub vertex: Buffer,
+pub(crate) struct GlyphBufferData {
+    pub(crate) buffer: Texture,
+    // pub(crate) vertex: Buffer,
 }

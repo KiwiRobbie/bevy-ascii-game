@@ -1,20 +1,20 @@
 use bevy::{asset::Asset, reflect::TypePath};
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone)]
-pub struct TilesetMeta {
-    pub display_name: String,
-    pub id: String,
-    pub size: (u32, u32),
-    pub assets: Vec<TileSourceMeta>,
+pub(crate) struct TilesetMeta {
+    pub(crate) display_name: String,
+    pub(crate) id: String,
+    pub(crate) size: (u32, u32),
+    pub(crate) assets: Vec<TileSourceMeta>,
 }
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone)]
-pub struct TileSourceMeta {
-    pub asset: String,
-    pub tiles: AssetTiles,
+pub(crate) struct TileSourceMeta {
+    pub(crate) asset: String,
+    pub(crate) tiles: AssetTiles,
 }
 
 #[derive(serde::Deserialize, Asset, TypePath, Clone)]
-pub enum AssetTiles {
+pub(crate) enum AssetTiles {
     All(String),
 }

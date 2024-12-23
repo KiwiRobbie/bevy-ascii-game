@@ -33,7 +33,7 @@ fn debug_active(
     }
 }
 
-pub struct UiDebugPlugin;
+pub(crate) struct UiDebugPlugin;
 impl Plugin for UiDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
@@ -45,4 +45,4 @@ impl Plugin for UiDebugPlugin {
 }
 
 #[derive(Debug, Resource, DerefMut, Deref, Default)]
-pub struct DebugUi(pub bool);
+pub(crate) struct DebugUi(pub(crate) bool);

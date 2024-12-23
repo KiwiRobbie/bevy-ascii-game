@@ -100,8 +100,8 @@ pub(super) fn update_list_builder(
     }
 }
 #[derive(Debug, Component)]
-pub struct TilesetHandles {
-    pub handles: Vec<Handle<TilesetSource>>,
+pub(crate) struct TilesetHandles {
+    pub(crate) handles: Vec<Handle<TilesetSource>>,
 }
 
 pub(super) fn update_tilesets_system(

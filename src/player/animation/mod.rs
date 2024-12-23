@@ -14,7 +14,7 @@ use super::{
     PlayerMarker,
 };
 
-pub fn set_animation_target(
+pub(crate) fn set_animation_target(
     mut q_players: Query<
         (
             &mut GlyphAnimationGraphTarget,

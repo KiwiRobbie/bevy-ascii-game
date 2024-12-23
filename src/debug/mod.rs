@@ -5,8 +5,8 @@ use self::{spatial::SpatialDebugPlugin, ui::UiDebugPlugin};
 mod spatial;
 mod ui;
 
-pub use spatial::{DebugCollisions, DebugPositions};
-pub use ui::DebugUi;
+pub(crate) use spatial::{DebugCollisions, DebugPositions};
+pub(crate) use ui::DebugUi;
 
 pub struct DebugPlugin;
 impl Plugin for DebugPlugin {

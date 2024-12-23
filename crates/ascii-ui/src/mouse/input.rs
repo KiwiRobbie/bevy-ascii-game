@@ -17,12 +17,12 @@ use bevy::{
 };
 
 #[derive(Debug, Default, Resource, DerefMut, Deref)]
-pub struct MouseInput(pub Option<MouseInputFrame>);
+pub struct MouseInput(pub(crate) Option<MouseInputFrame>);
 
 #[derive(Debug, Default)]
 pub struct MouseInputFrame {
-    pub world_position: Option<Vec3>,
-    pub buttons: Option<ButtonInput<MouseButton>>,
+    pub(crate) world_position: Option<Vec3>,
+    pub(crate) buttons: Option<ButtonInput<MouseButton>>,
     pub scroll: Option<Vec2>,
 }
 
@@ -30,10 +30,10 @@ impl MouseInput {
     pub fn world_position(&self) -> Option<Vec3> {
         self.as_ref().and_then(|f| f.world_position)
     }
-    pub fn buttons(&self) -> Option<&ButtonInput<MouseButton>> {
+    pub(crate) fn buttons(&self) -> Option<&ButtonInput<MouseButton>> {
         self.as_ref().and_then(|f| f.buttons.as_ref())
     }
-    pub fn scroll(&self) -> Option<Vec2> {
+    pub(crate) fn scroll(&self) -> Option<Vec2> {
         self.as_ref().and_then(|f| f.scroll)
     }
     pub fn consume(&mut self) -> Option<MouseInputFrame> {
@@ -45,19 +45,19 @@ impl MouseInput {
             .map(|buttons| buttons.pressed(input))
             .unwrap_or(false)
     }
-    pub fn just_pressed(&self, input: MouseButton) -> bool {
+    pub(crate) fn just_pressed(&self, input: MouseButton) -> bool {
         self.buttons()
             .map(|buttons| buttons.just_pressed(input))
             .unwrap_or(false)
     }
-    pub fn just_released(&self, input: MouseButton) -> bool {
+    pub(crate) fn just_released(&self, input: MouseButton) -> bool {
         self.buttons()
             .map(|buttons| buttons.just_released(input))
             .unwrap_or(false)
     }
 }
 
-pub fn update_mouse_position(
+pub(crate) fn update_mouse_position(
     q_windows: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,

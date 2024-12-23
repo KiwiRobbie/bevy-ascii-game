@@ -19,7 +19,7 @@ pub mod player;
 pub mod plugin;
 
 #[derive(Default)]
-pub struct GlyphAnimationGraphAssetLoader {}
+pub(crate) struct GlyphAnimationGraphAssetLoader {}
 
 impl AssetLoader for GlyphAnimationGraphAssetLoader {
     type Asset = GlyphAnimationGraphSource;
@@ -86,13 +86,13 @@ impl AssetLoader for GlyphAnimationGraphAssetLoader {
     }
 }
 
-pub struct GlyphAnimationTransition {
-    pub transitions: Option<Vec<Handle<GlyphAnimationSource>>>,
-    pub destination: Handle<GlyphAnimationSource>,
+pub(crate) struct GlyphAnimationTransition {
+    pub(crate) transitions: Option<Vec<Handle<GlyphAnimationSource>>>,
+    pub(crate) destination: Handle<GlyphAnimationSource>,
 }
 
 impl GlyphAnimationGraphSource {
-    pub fn traverse_named(
+    pub(crate) fn traverse_named(
         &self,
         src: String,
         dest: String,
@@ -111,7 +111,7 @@ impl GlyphAnimationGraphSource {
         Ok(self.traverse(src, dest))
     }
 
-    pub fn traverse(&self, src: usize, dest: usize) -> GlyphAnimationTransition {
+    pub(crate) fn traverse(&self, src: usize, dest: usize) -> GlyphAnimationTransition {
         let mut visited: HashSet<usize> = HashSet::new();
         let mut queue = VecDeque::<(usize, Vec<Handle<GlyphAnimationSource>>)>::new();
 
@@ -184,18 +184,18 @@ struct GlyphAnimationGraphState {
 }
 
 #[derive(Clone, Debug)]
-pub struct GlyphAnimationGraphTransition {
+pub(crate) struct GlyphAnimationGraphTransition {
     to: usize,
     animation: Option<Handle<GlyphAnimationSource>>,
 }
 
 #[derive(Debug, Component, Clone)]
-pub struct GlyphAnimationGraph {
-    pub source: Handle<GlyphAnimationGraphSource>,
+pub(crate) struct GlyphAnimationGraph {
+    pub(crate) source: Handle<GlyphAnimationGraphSource>,
 }
 
 impl GlyphAnimationGraph {
-    pub fn new(graph: Handle<GlyphAnimationGraphSource>) -> Self {
+    pub(crate) fn new(graph: Handle<GlyphAnimationGraphSource>) -> Self {
         Self { source: graph }
     }
 }

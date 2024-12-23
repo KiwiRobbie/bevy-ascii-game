@@ -7,10 +7,10 @@ use super::{
 
 #[derive(Debug, Bundle, Clone)]
 pub struct GlyphAnimationGraphBundle {
-    pub graph: GlyphAnimationGraph,
-    pub current: GlyphAnimationGraphCurrent,
-    pub settings: GlyphAnimationGraphSettings,
-    pub target: GlyphAnimationGraphTarget,
+    pub(crate) graph: GlyphAnimationGraph,
+    pub(crate) current: GlyphAnimationGraphCurrent,
+    pub(crate) settings: GlyphAnimationGraphSettings,
+    pub(crate) target: GlyphAnimationGraphTarget,
 }
 impl GlyphAnimationGraphBundle {
     pub fn from_source(source: Handle<GlyphAnimationGraphSource>) -> Self {

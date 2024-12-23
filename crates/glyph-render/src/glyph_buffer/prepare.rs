@@ -27,7 +27,7 @@ use crate::{
 };
 
 use super::{GlyphBuffer, TargetBufferTexture, TargetGlyphBuffer};
-pub fn prepare_glyph_buffers(
+pub(crate) fn prepare_glyph_buffers(
     mut commands: Commands,
     render_device: Res<RenderDevice>,
     render_queue: Res<RenderQueue>,

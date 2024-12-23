@@ -18,7 +18,7 @@ use crate::{
 
 use super::{inspector::InspectorTab, state::DebugMenuState};
 
-pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
+pub(crate) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
     let debug_menu_state = &mut *menu_state;
 
     let settings_tab = Column::build(vec![
@@ -57,4 +57,4 @@ pub fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) 
 }
 
 #[derive(Debug, Component)]
-pub struct DebugMenuMarker;
+pub(crate) struct DebugMenuMarker;

@@ -1,3 +1,3 @@
 pub mod asset;
-pub mod loader;
+pub(crate) mod loader;
 pub mod plugin;

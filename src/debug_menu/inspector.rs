@@ -26,10 +26,10 @@ use crate::player::{
 };
 
 #[derive(Debug, Component, Default)]
-pub struct InspectorTab {
+pub(crate) struct InspectorTab {
     target: Option<Entity>,
 }
-pub fn inspector_init_system(
+pub(crate) fn inspector_init_system(
     q_player: Query<Entity, With<PlayerInputKeyboardMarker>>,
     mut q_inspector: Query<&mut InspectorTab>,
 ) {
@@ -72,8 +72,8 @@ fn float_ui<T: std::fmt::Display + 'static>(data: &dyn Any, commands: &mut Comma
 }
 
 #[derive(Debug, Clone)]
-pub struct EcsUiFor {
-    pub fn_readonly: BuildEcsUi,
+pub(crate) struct EcsUiFor {
+    pub(crate) fn_readonly: BuildEcsUi,
 }
 
 fn add<T: 'static>(type_registry: &mut TypeRegistry, fn_readonly: BuildEcsUi) {
@@ -84,7 +84,7 @@ fn add<T: 'static>(type_registry: &mut TypeRegistry, fn_readonly: BuildEcsUi) {
 }
 
 #[derive(Resource)]
-pub struct TypeRegistryResource(pub TypeRegistry);
+pub(crate) struct TypeRegistryResource(pub(crate) TypeRegistry);
 impl Default for TypeRegistryResource {
     fn default() -> Self {
         let mut type_registry = TypeRegistry::default();
@@ -113,7 +113,7 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
     components.get_info(component_id)
 }
 
-pub fn inspector_fetch_system(
+pub(crate) fn inspector_fetch_system(
     mut commands: Commands,
     mut q_inspector: Query<(Entity, &InspectorTab, &widgets::Column)>,
     world: &World,
@@ -216,7 +216,7 @@ pub fn inspector_fetch_system(
     }
 }
 
-pub struct InspectorPlugin;
+pub(crate) struct InspectorPlugin;
 impl Plugin for InspectorPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(

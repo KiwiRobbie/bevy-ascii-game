@@ -27,7 +27,7 @@ pub mod input;
 pub struct IntractableMarker;
 
 #[derive(Debug, Component)]
-pub struct ScrollableMarker;
+pub(crate) struct ScrollableMarker;
 
 #[derive(Debug, Component)]
 pub struct ActiveMarker;
@@ -36,11 +36,11 @@ pub struct ActiveMarker;
 pub struct TriggeredMarker;
 
 #[derive(Debug, Component)]
-pub struct ScrollInteraction {
-    pub distance: Vec2,
+pub(crate) struct ScrollInteraction {
+    pub(crate) distance: Vec2,
 }
 
-pub struct InteractionPlugin;
+pub(crate) struct InteractionPlugin;
 impl Plugin for InteractionPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
@@ -56,7 +56,7 @@ impl Plugin for InteractionPlugin {
     }
 }
 
-pub fn mouse_interaction(
+pub(crate) fn mouse_interaction(
     mut commands: Commands,
     q_intractable: Query<
         (

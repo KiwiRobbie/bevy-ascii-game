@@ -8,7 +8,7 @@ use bevy::{
 
 use self::loader::GlyphTextureLoader;
 
-pub mod loader;
+pub(crate) mod loader;
 
 #[derive(Component, Clone)]
 pub struct GlyphSprite {

@@ -33,7 +33,7 @@ impl Default for FontSize {
     }
 }
 #[derive(Resource, DerefMut, Deref, Clone)]
-pub struct DefaultFont(pub Handle<CustomFontSource>);
+pub(crate) struct DefaultFont(pub(crate) Handle<CustomFontSource>);
 
 impl FromWorld for DefaultFont {
     fn from_world(world: &mut bevy::prelude::World) -> Self {
@@ -47,7 +47,7 @@ impl FromWorld for DefaultFont {
 pub struct CustomFont(pub Handle<CustomFontSource>);
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-pub struct CustomFontCacheKey(pub CacheKey);
+pub struct CustomFontCacheKey(pub(crate) CacheKey);
 
 #[derive(Asset, TypePath)]
 pub struct CustomFontSource {
@@ -60,7 +60,7 @@ pub struct CustomFontSource {
 }
 
 impl CustomFontSource {
-    pub fn from_bytes(data: &[u8], index: usize) -> Option<Self> {
+    pub(crate) fn from_bytes(data: &[u8], index: usize) -> Option<Self> {
         // Create a temporary font reference for the first font in the file.
         // This will do some basic validation, compute the necessary offset
         // and generate a fresh cache key for us.
@@ -74,7 +74,7 @@ impl CustomFontSource {
             key,
         })
     }
-    pub fn from_file(path: &str, index: usize) -> Option<Self> {
+    pub(crate) fn from_file(path: &str, index: usize) -> Option<Self> {
         // Read the full font file
         let data = std::fs::read(path).ok()?;
         Self::from_bytes(&data, index)
@@ -100,7 +100,7 @@ impl CustomFontSource {
 }
 
 #[derive(Default)]
-pub struct CustomFontLoader;
+pub(crate) struct CustomFontLoader;
 
 impl AssetLoader for CustomFontLoader {
     type Asset = CustomFontSource;

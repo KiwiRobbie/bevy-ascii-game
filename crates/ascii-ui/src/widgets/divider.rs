@@ -19,11 +19,11 @@ use crate::{
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct Divider {
-    pub character: char,
+    pub(crate) character: char,
 }
 
 #[derive(Debug, Default)]
-pub struct DividerLogic;
+pub(crate) struct DividerLogic;
 impl WidgetLayoutLogic for DividerLogic {
     fn layout(
         &self,
@@ -44,20 +44,20 @@ impl WidgetLayoutLogic for DividerLogic {
 }
 
 #[derive(Bundle)]
-pub struct DividerBundle {
-    pub divider: Divider,
-    pub layout: WidgetLayout,
-    pub render: RenderBundle,
+pub(crate) struct DividerBundle {
+    pub(crate) divider: Divider,
+    pub(crate) layout: WidgetLayout,
+    pub(crate) render: RenderBundle,
 }
 impl DividerBundle {
-    pub fn new(character: char) -> Self {
+    pub(crate) fn new(character: char) -> Self {
         Self {
             layout: WidgetLayout::new::<DividerLogic>(),
             render: RenderBundle::default(),
             divider: Divider { character },
         }
     }
-    pub fn spawn(commands: &mut Commands, character: char) -> Entity {
+    pub(crate) fn spawn(commands: &mut Commands, character: char) -> Entity {
         commands.spawn(Self::new(character)).id()
     }
 }

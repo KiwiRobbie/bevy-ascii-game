@@ -18,7 +18,7 @@ use spatial_grid::{
 
 use grid_physics::{actor::Actor, collision::Collider, solid::Solid, velocity::Velocity};
 
-pub struct SpatialDebugPlugin;
+pub(crate) struct SpatialDebugPlugin;
 impl Plugin for SpatialDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
@@ -34,10 +34,10 @@ impl Plugin for SpatialDebugPlugin {
 }
 
 #[derive(Debug, Resource, Default, DerefMut, Deref)]
-pub struct DebugCollisions(pub bool);
+pub(crate) struct DebugCollisions(pub(crate) bool);
 
 #[derive(Debug, Resource, DerefMut, Deref, Default)]
-pub struct DebugPositions(pub bool);
+pub(crate) struct DebugPositions(pub(crate) bool);
 
 fn debug_collision_system(
     mut gizmos: Gizmos,

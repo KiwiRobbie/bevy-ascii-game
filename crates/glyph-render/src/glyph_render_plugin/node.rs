@@ -56,7 +56,7 @@ struct TextureQueryFilter(
     With<TargetGlyphBuffer>,
 );
 
-pub struct GlyphGenerationNode {
+pub(crate) struct GlyphGenerationNode {
     q_buffers: QueryState<BufferQueryData>,
     q_textures: QueryState<TextureQueryData>,
     q_view: QueryState<&'static ViewTarget>,
@@ -65,7 +65,7 @@ pub struct GlyphGenerationNode {
 }
 
 impl GlyphGenerationNode {
-    pub fn new(world: &mut World) -> Self {
+    pub(crate) fn new(world: &mut World) -> Self {
         Self {
             q_view: world.query(),
             q_buffers: world.query(),

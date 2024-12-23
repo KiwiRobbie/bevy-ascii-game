@@ -8,16 +8,16 @@ use glyph_render::{
 };
 
 #[derive(Debug, Component)]
-pub struct RenderWidgetMarker;
+pub(crate) struct RenderWidgetMarker;
 
 #[derive(Bundle)]
 pub struct RenderBundle {
-    pub render_widget_marker: RenderWidgetMarker,
-    pub font_atlas_user: FontAtlasUser,
-    pub character_set: CharacterSet,
-    pub font_size: FontSize,
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
+    pub(crate) render_widget_marker: RenderWidgetMarker,
+    pub(crate) font_atlas_user: FontAtlasUser,
+    pub(crate) character_set: CharacterSet,
+    pub(crate) font_size: FontSize,
+    pub(crate) transform: Transform,
+    pub(crate) global_transform: GlobalTransform,
 }
 
 impl Default for RenderBundle {

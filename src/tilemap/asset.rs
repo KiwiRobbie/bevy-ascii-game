@@ -12,15 +12,15 @@ use super::chunk::{TilemapChunk, EMPTY_TILE};
 
 #[derive(Debug, Asset, TypePath, Clone)]
 pub struct TilemapSource {
-    pub chunk_size: UVec2,
+    pub(crate) chunk_size: UVec2,
     pub tile_size: UVec2,
-    pub tileset_names: HashMap<String, usize>,
-    pub tilesets: Vec<Handle<TilesetSource>>,
+    pub(crate) tileset_names: HashMap<String, usize>,
+    pub(crate) tilesets: Vec<Handle<TilesetSource>>,
     pub chunk_handles: HashMap<IVec2, Handle<TilemapChunk>>,
 }
 
 impl TilemapSource {
-    pub fn chunk_id_index(&self, pos: IVec2) -> (IVec2, u32) {
+    pub(crate) fn chunk_id_index(&self, pos: IVec2) -> (IVec2, u32) {
         let chunk_sub_pos = pos.rem_euclid(self.chunk_size.as_ivec2()).as_uvec2();
         (
             pos.div_euclid(self.chunk_size.as_ivec2()),

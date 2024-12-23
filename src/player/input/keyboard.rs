@@ -90,7 +90,7 @@ fn player_keyboard_input_buttons(
         }
     }
 }
-pub struct PlayerKeyboardInputPlugin;
+pub(crate) struct PlayerKeyboardInputPlugin;
 
 impl Plugin for PlayerKeyboardInputPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
