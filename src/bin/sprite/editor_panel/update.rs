@@ -1,49 +1,22 @@
-use std::{ffi::OsStr, path::Path};
-
 use ascii_ui::{
     attachments::Root,
-    widgets::{self, button::ButtonJustPressedMarker},
+    widgets::{self, SingleChildWidget},
 };
-use bevy::{
-    asset::{
-        io::AssetSourceId,
-        saver::{AssetSaver, SavedAsset},
-        AssetEvent, AssetServer, Assets, ErasedLoadedAsset, Handle, LoadedAsset,
-    },
-    ecs::{
-        component::Component,
-        event::EventReader,
-        query::With,
-        system::{Commands, Query, Res, ResMut},
-    },
-    input::{gamepad::GamepadButton, keyboard::KeyCode, ButtonInput},
-    prelude::Gamepad,
-    tasks::IoTaskPool,
-};
+use bevy::prelude::*;
+
 use glyph_render::glyph_buffer::GlyphBuffer;
 
 use spatial_grid::grid::SpatialGrid;
 
-use bevy_ascii_game::{
-    physics_grids::UiPhysicsGrid,
-    tilemap::{
-        asset::TilemapSource,
-        chunk::TilemapChunk,
-        component::Tilemap,
-        loader::ChunkSettings,
-        saver::{ChunkSaver, TilemapSaver},
-    },
-    tileset::asset::TilesetSource,
-};
+use bevy_ascii_game::{physics_grids::UiPhysicsGrid, tileset::asset::TilesetSource};
 
-use super::{
-    setup::{DebugMenuMarker, ItemMutateButton, SaveTilemapButton},
-    state::TilesetPanelState,
-};
+use crate::tools::FocusedToolUi;
+
+use super::{setup::DebugMenuMarker, state::EditorPanelState};
 
 pub(super) fn toggle_menu(
     keyboard: Res<ButtonInput<KeyCode>>,
-    mut state: ResMut<TilesetPanelState>,
+    mut state: ResMut<EditorPanelState>,
     gamepads: Query<&Gamepad>,
     mut q_root: Query<&mut Root>,
 ) {
@@ -80,26 +53,6 @@ pub(super) fn update_position(
     }
 }
 
-pub(super) fn update_list_builder(
-    mut commands: Commands,
-    mut q_list_builder: Query<(
-        &mut widgets::ListBuilderWidget<usize>,
-        &mut widgets::FlexWidget,
-    )>,
-    q_buttons: Query<&ItemMutateButton, (With<ButtonJustPressedMarker>, With<widgets::Button>)>,
-) {
-    for item in q_buttons.iter() {
-        let (mut builder, mut column) = q_list_builder.get_mut(item.target).unwrap();
-        match item.mode {
-            super::setup::MutateMode::Add => {
-                builder.push(&mut *column, 0, &mut commands);
-            }
-            super::setup::MutateMode::Remove => {
-                builder.pop(&mut *column, &mut commands);
-            }
-        }
-    }
-}
 #[derive(Debug, Component)]
 pub(crate) struct TilesetHandles {
     pub(crate) handles: Vec<Handle<TilesetSource>>,
@@ -131,85 +84,16 @@ pub(super) fn update_tilesets_system(
     }
 }
 
-pub(super) fn save_tilemap_system(
-    q_buttons: Query<
-        (),
-        (
-            With<SaveTilemapButton>,
-            With<ButtonJustPressedMarker>,
-            With<widgets::Button>,
-        ),
-    >,
-    q_tilemap: Query<&Tilemap>,
-    tilemaps: Res<Assets<TilemapSource>>,
-    chunks: Res<Assets<TilemapChunk>>,
-    server: Res<AssetServer>,
+pub(super) fn update_editor_ui(
+    q_editor_state: Res<EditorPanelState>,
+    q_focused: Query<Entity, With<FocusedToolUi>>,
+    mut q_container: Query<&mut SingleChildWidget>,
 ) {
-    if q_buttons.iter().next().is_none() {
-        return;
-    }
-    let Some(tilemap) = q_tilemap
-        .get_single()
-        .ok()
-        .and_then(|h| tilemaps.get(h.id()).cloned())
-    else {
-        return;
+    if let Ok(focused_tool_entity) = q_focused.get_single() {
+        if let Some(container_entity) = q_editor_state.tool_container {
+            if let Ok(mut container) = q_container.get_mut(container_entity) {
+                container.child = Some(focused_tool_entity);
+            }
+        }
     };
-
-    let server = server.clone();
-
-    for (chunk_id, chunk) in tilemap.chunk_handles.iter() {
-        let (chunk_id, chunk) = (*chunk_id, chunks.get(chunk.id()).unwrap().clone());
-        let loaded: LoadedAsset<_> = chunk.into();
-        let erased: ErasedLoadedAsset = loaded.into();
-        let server = server.clone();
-        IoTaskPool::get()
-            .spawn(async move {
-                let asset_source = server.get_source(AssetSourceId::default()).unwrap();
-                let chunk_label =
-                    format!("tilemaps/output/{}_{}.chunk.bin", chunk_id.x, chunk_id.y);
-
-                let output = asset_source
-                    .writer()
-                    .unwrap()
-                    .write(Path::new(OsStr::new(&chunk_label)));
-                let mut output = output.await.unwrap();
-
-                ChunkSaver
-                    .save(
-                        &mut output,
-                        SavedAsset::from_loaded(&erased).unwrap(),
-                        &ChunkSettings::default(),
-                    )
-                    .await
-                    .unwrap();
-            })
-            .detach();
-    }
-
-    IoTaskPool::get()
-        .spawn(async move {
-            let output = server
-                .get_source(AssetSourceId::default())
-                .unwrap()
-                .writer()
-                .unwrap()
-                .write(Path::new("tilemaps/output.tilemap.ron"));
-            let loaded: LoadedAsset<_> = tilemap.clone().into();
-            let erased: ErasedLoadedAsset = loaded.into();
-
-            let mut output = output.await.unwrap();
-
-            dbg!(
-                TilemapSaver
-                    .save(
-                        &mut output,
-                        SavedAsset::from_loaded(&erased).unwrap(),
-                        &Default::default(),
-                    )
-                    .await
-            )
-            .unwrap();
-        })
-        .detach();
 }

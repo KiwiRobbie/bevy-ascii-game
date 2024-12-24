@@ -41,9 +41,6 @@ name = "mirror"
 [[bin]]
 name = "tilemap"
 
-[[bin]]
-name = "reflection"
-
 # # Enable a small amount of optimization in debug mode
 # [profile.dev]
 # opt-level = 0

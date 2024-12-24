@@ -49,7 +49,6 @@ pub fn update_glyph_buffer_entities(
         let target = **source_target;
 
         let mut target = q_buffers.get_mut(target).unwrap();
-
         target.textures.insert(source_entity);
     }
 }

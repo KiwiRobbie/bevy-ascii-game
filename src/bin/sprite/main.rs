@@ -2,28 +2,15 @@ use std::sync::Arc;
 
 use ascii_ui::mouse::input::MouseInput;
 use bevy::{
-    app::{App, PluginGroup, Startup, Update},
-    asset::{AssetServer, Assets},
-    color::{palettes::css::RED, Color},
-    core_pipeline::{bloom::Bloom, core_2d::Camera2d},
-    ecs::{
-        event::EventReader,
-        query::With,
-        system::{Commands, Local, Query, Res, ResMut},
-    },
+    color::palettes::css::RED,
+    core_pipeline::bloom::Bloom,
     input::{
         keyboard::{Key, KeyboardInput},
-        mouse::{MouseButton, MouseMotion},
-        ButtonInput,
+        mouse::MouseMotion,
     },
-    math::{IVec2, UVec2, Vec2},
-    prelude::{ClearColorConfig, Component, Without},
-    render::{
-        camera::{Camera, CameraRenderGraph},
-        texture::ImagePlugin,
-    },
-    window::{PrimaryWindow, Window, WindowPlugin, WindowResolution},
-    DefaultPlugins,
+    prelude::*,
+    render::camera::CameraRenderGraph,
+    window::{PrimaryWindow, WindowResolution},
 };
 
 use bevy_ascii_game::{
@@ -52,8 +39,11 @@ use spatial_grid::{
     remainder::Remainder,
     PositionPropagationPlugin,
 };
+use tools::EditorToolsPlugin;
 
 mod editor_panel;
+mod input;
+mod tools;
 
 fn main() {
     let mut app = App::new();
@@ -67,8 +57,9 @@ fn main() {
                 }),
                 ..Default::default()
             }),
+        EditorToolsPlugin,
         PositionPropagationPlugin,
-        PlayerPlugin,
+        // PlayerPlugin,
         (
             GlyphRenderPlugin,
             GlyphAnimationPlugin,
@@ -164,7 +155,6 @@ fn setup_system(
 }
 
 fn mouse_zoom_system(
-    // mut ev_scroll: EventReader<MouseWheel>,
     mut mouse_input: ResMut<MouseInput>,
     mut size: Local<f32>,
     mut q_glyph_buffer: Query<
@@ -173,7 +163,6 @@ fn mouse_zoom_system(
     >,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    // let distance = mouse_input.scroll().unwrap_or_default().y;
     let distance = mouse_input
         .consume()
         .unwrap_or_default()
@@ -227,7 +216,6 @@ fn mouse_pan_system(
 
 fn keyboard_pan_system(
     mut evr_kbd: EventReader<KeyboardInput>,
-    // keyboard: Res<ButtonInput<KeyCode>>,
     mut q_cursor: Query<
         (&mut Position, &mut Remainder),
         (With<EditorCursorMarker>, Without<SpatialGrid>),

@@ -20,7 +20,7 @@ use crate::{
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct SingleChildWidget {
-    pub(crate) child: Option<Entity>,
+    pub child: Option<Entity>,
 }
 
 #[derive(Debug, Default)]
@@ -33,7 +33,10 @@ impl WidgetLayoutLogic for ContainerLogic {
         world: &World,
         commands: &mut Commands,
     ) -> UVec2 {
-        let container = world.get::<SingleChildWidget>(entity).cloned().unwrap_or_default();
+        let container = world
+            .get::<SingleChildWidget>(entity)
+            .cloned()
+            .unwrap_or_default();
 
         let padding = world
             .get::<Padding>(entity)

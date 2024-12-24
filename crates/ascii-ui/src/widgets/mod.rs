@@ -23,3 +23,17 @@ pub use scrolling_view::ScrollingView;
 pub use tab_view::TabView;
 pub use text::Text;
 pub use texture::Texture;
+
+#[macro_export]
+macro_rules! row {
+    ($($item:expr),*$(,)?) => {
+        ascii_ui::widgets::FlexWidget::row(vec![$($item),*])
+    };
+}
+
+#[macro_export]
+macro_rules! col {
+    ($($item:expr),*$(,)?) => {
+        ascii_ui::widgets::FlexWidget::column(vec![$($item),*])
+    };
+}
