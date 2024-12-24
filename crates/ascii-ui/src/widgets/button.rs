@@ -42,8 +42,16 @@ pub(crate) fn button_interaction_system(
     }
 }
 impl Button {
-    pub fn build<'a>(label: String) -> WidgetBuilderFn<'a> {
-        widgets::Text::build(format!("[ {label} ]")).with((
+    pub fn build<'a>(label: impl Into<&'a str>) -> WidgetBuilderFn<'a> {
+        widgets::Text::build(format!("[ {} ]", label.into())).with((
+            attachments::MainAxisAlignment::SpaceBetween,
+            InteractableMarker,
+            Button {},
+        ))
+    }
+
+    pub fn build_raw<'a>(label: impl Into<String>) -> WidgetBuilderFn<'a> {
+        widgets::Text::build(label.into()).with((
             attachments::MainAxisAlignment::SpaceBetween,
             InteractableMarker,
             Button {},

@@ -69,13 +69,13 @@ impl TabView {
             let title = widgets::Text::build("[ Tab View ]")(commands);
             let right = widgets::Text::build("->").with(InteractableMarker)(commands);
 
-            let stack = widgets::Container::build(None)
+            let stack = widgets::SingleChildWidget::build(None)
                 .with((attachments::StackBuilder::new(tab_entities, 0),))(
                 commands
             );
 
-            widgets::Column::build(vec![
-                widgets::Row::build(vec![
+            widgets::FlexWidget::column(vec![
+                widgets::FlexWidget::row(vec![
                     WidgetBuilderFn::entity(left),
                     WidgetBuilderFn::entity(title),
                     WidgetBuilderFn::entity(right),

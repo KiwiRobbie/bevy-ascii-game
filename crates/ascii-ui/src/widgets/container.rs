@@ -8,7 +8,7 @@ use bevy::{
 };
 
 use crate::{
-    attachments::{self, padding::Padding},
+    attachments::{self, padding::Padding, SizedBox},
     layout::{
         constraint::Constraint,
         positioned::Positioned,
@@ -19,7 +19,7 @@ use crate::{
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct Container {
+pub struct SingleChildWidget {
     pub(crate) child: Option<Entity>,
 }
 
@@ -33,16 +33,20 @@ impl WidgetLayoutLogic for ContainerLogic {
         world: &World,
         commands: &mut Commands,
     ) -> UVec2 {
-        let container = world
-            .get::<Container>(entity)
-            .expect("Container Logic without Container!");
+        let container = world.get::<SingleChildWidget>(entity).cloned().unwrap_or_default();
 
         let padding = world
             .get::<Padding>(entity)
             .map(|p| p.clone())
             .unwrap_or_default();
 
-        let constraint = padding.0.shrink_constraint(constraint);
+        let sized_box = world
+            .get::<SizedBox>(entity)
+            .map(|p| p.clone())
+            .unwrap_or_default();
+
+        let constraint = constraint.intersect(&sized_box.as_max_constraint());
+        let constraint = padding.0.shrink_constraint(&constraint);
 
         if let Some(child) = world
             .get::<attachments::stack::Stack>(entity)
@@ -67,12 +71,16 @@ impl WidgetLayoutLogic for ContainerLogic {
             return padding.0.inflate(size);
         }
 
-        return constraint.max();
+        return UVec2::new(
+            sized_box.width.unwrap_or(constraint.max().x),
+            sized_box.height.unwrap_or(constraint.max().y),
+        );
     }
+
     fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
-        let container = world
-            .get::<Container>(entity)
-            .expect("Root logic without Root!");
+        let Some(container) = world.get::<SingleChildWidget>(entity) else {
+            return vec![];
+        };
 
         let child = world
             .get::<attachments::stack::Stack>(entity)
@@ -83,7 +91,7 @@ impl WidgetLayoutLogic for ContainerLogic {
     }
 }
 
-impl Container {
+impl SingleChildWidget {
     pub fn build<'a>(child: Option<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             let child = child.map(|child| child(commands));

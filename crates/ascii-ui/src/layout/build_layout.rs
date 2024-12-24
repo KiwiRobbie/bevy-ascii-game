@@ -16,7 +16,7 @@ use spatial_grid::grid::PhysicsGridMember;
 use crate::{
     attachments::Root,
     layout::{constraint::Constraint, positioned::Positioned, widget_layout::WidgetLayout},
-    widgets::{container::Container, ScrollingView},
+    widgets::{container::SingleChildWidget, ScrollingView},
 };
 
 use super::render_clip::ClipRegion;
@@ -36,7 +36,7 @@ pub(crate) fn clear_layout(
 
 pub(crate) fn build_layout(
     mut commands: Commands,
-    q_root: Query<(Entity, &WidgetLayout, &Root), With<Container>>,
+    q_root: Query<(Entity, &WidgetLayout, &Root), With<SingleChildWidget>>,
     world: &World,
 ) {
     for (entity, widget, root) in q_root.iter() {

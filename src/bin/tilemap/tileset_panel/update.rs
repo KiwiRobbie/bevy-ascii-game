@@ -84,7 +84,7 @@ pub(super) fn update_position(
 
 pub(super) fn update_list_builder(
     mut commands: Commands,
-    mut q_list_builder: Query<(&mut ListBuilderWidget<usize>, &mut widgets::Column)>,
+    mut q_list_builder: Query<(&mut ListBuilderWidget<usize>, &mut widgets::FlexWidget)>,
     q_buttons: Query<&ItemMutateButton, (With<ButtonJustPressedMarker>, With<widgets::Button>)>,
 ) {
     for item in q_buttons.iter() {
@@ -108,7 +108,7 @@ pub(super) fn update_tilesets_system(
     mut commands: Commands,
     mut q_list_builder: Query<(
         &mut ListBuilderWidget<(TilesetSource, Handle<TilesetSource>)>,
-        &mut widgets::Column,
+        &mut widgets::FlexWidget,
         &TilesetHandles,
     )>,
     mut ev_tilesets: EventReader<AssetEvent<TilesetSource>>,
@@ -119,7 +119,7 @@ pub(super) fn update_tilesets_system(
             let tileset = tilesets.get(*id).unwrap().clone();
             for (mut builder, mut column, TilesetHandles { handles }) in q_list_builder.iter_mut() {
                 if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
-                    builder.push::<widgets::Column>(
+                    builder.push::<widgets::FlexWidget>(
                         &mut column,
                         (tileset.clone(), handle.clone()),
                         &mut commands,

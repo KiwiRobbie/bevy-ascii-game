@@ -1,7 +1,7 @@
 use ascii_ui::{
     layout::delete_layout_recursive,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
-    widgets,
+    widgets, FlexDirection,
 };
 use bevy::{
     ecs::component::{ComponentId, ComponentInfo},
@@ -106,7 +106,7 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
 
 pub(crate) fn inspector_fetch_system(
     mut commands: Commands,
-    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::Column)>,
+    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::FlexWidget)>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
 ) {
@@ -170,7 +170,7 @@ pub(crate) fn inspector_fetch_system(
                                 }
 
                                 inspector_widgets
-                                    .push(widgets::Row::build(field_widgets)(&mut commands));
+                                    .push(widgets::FlexWidget::row(field_widgets)(&mut commands));
                             }
                         }
                         ReflectRef::TupleStruct(reflected) => {
@@ -196,13 +196,17 @@ pub(crate) fn inspector_fetch_system(
 
             commands
                 .entity(inspector_entity)
-                .insert((widgets::column::Column {
+                .insert((widgets::FlexWidget {
                     children: inspector_widgets,
+                    direction: FlexDirection::Vertical,
                 },));
         } else {
             commands
                 .entity(inspector_entity)
-                .insert(widgets::column::Column { children: vec![] });
+                .insert(widgets::FlexWidget {
+                    children: vec![],
+                    direction: FlexDirection::Vertical,
+                });
         }
     }
 }

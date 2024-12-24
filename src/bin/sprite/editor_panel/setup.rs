@@ -1,10 +1,9 @@
-use std::sync::Arc;
-
 use ascii_ui::{
-    attachments::{self, MainAxisAlignment},
+    attachments::{self, Flex, MainAxisAlignment},
     mouse::InteractableMarker,
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{self, Column, Container, Divider},
+    widgets::{self, Divider, FlexWidget, SingleChildWidget},
+    FlexDirection,
 };
 use bevy::{
     asset::{AssetServer, Handle},
@@ -21,9 +20,6 @@ use bevy_ascii_game::{
     tileset::asset::TilesetSource,
     widgets::{DebugOptions, InfoCounts},
 };
-use glyph_render::glyph_render_plugin::GlyphTextureSource;
-
-use crate::list_builder_widget::ListBuilderWidget;
 
 use super::{state::TilesetPanelState, update::TilesetHandles};
 
@@ -46,7 +42,7 @@ pub(super) fn setup_ui(
 ) {
     let menu_state = &mut *menu_state;
 
-    let settings_tab = Column::build(vec![
+    let settings_tab = FlexWidget::column(vec![
         InfoCounts::build(),
         Divider::build('-'),
         DebugOptions::build(),
@@ -56,10 +52,10 @@ pub(super) fn setup_ui(
         let mut rows = vec![];
         let mut list_builder = Entity::PLACEHOLDER;
         rows.push(
-            ListBuilderWidget::build::<widgets::Column>(
+            widgets::ListBuilderWidget::build::<widgets::FlexWidget>(
                 Box::new(|_, i: &usize| widgets::Text::build(format!("{}", i))),
                 vec![0, 2, 5],
-                (),
+                FlexDirection::Vertical,
             )
             .save_id(&mut list_builder)
             .apply(&mut commands),
@@ -67,12 +63,12 @@ pub(super) fn setup_ui(
 
         rows.push(widgets::Divider::build('-'));
         rows.push(
-            widgets::Row::build(vec![
-                widgets::Button::build("+".into()).with(ItemMutateButton {
+            widgets::FlexWidget::row(vec![
+                widgets::Button::build("+").with(ItemMutateButton {
                     target: list_builder,
                     mode: MutateMode::Add,
                 }),
-                widgets::Button::build("-".into()).with(ItemMutateButton {
+                widgets::Button::build("-").with(ItemMutateButton {
                     target: list_builder,
                     mode: MutateMode::Remove,
                 }),
@@ -81,16 +77,18 @@ pub(super) fn setup_ui(
         );
         rows.push(widgets::Divider::build('-'));
 
-        widgets::Column::build(rows)
+        widgets::FlexWidget::column(rows)
     }(&mut commands);
 
     let tileset_tab = {
-        widgets::Column::build(vec![
-            widgets::Button::build("Save".into()).with(SaveTilemapButton),
-            ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
+        widgets::FlexWidget::column(vec![
+            widgets::Button::build("Save").with(SaveTilemapButton),
+            widgets::ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<
+                widgets::FlexWidget,
+            >(
                 Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
                 vec![],
-                (),
+                FlexDirection::Vertical,
             )
             .with(TilesetHandles {
                 handles: vec![server.load("tilesets/cave.tileset.ron")],
@@ -98,7 +96,7 @@ pub(super) fn setup_ui(
         ])
     }(&mut commands);
 
-    Container::build(Some(widgets::TabView::build(vec![
+    SingleChildWidget::build(Some(widgets::TabView::build(vec![
         ("Settings", settings_tab),
         ("List Builder", list_builder_tab),
         ("Tileset", tileset_tab),
@@ -133,32 +131,47 @@ fn build_tileset_ui<'a>(
     source: &TilesetSource,
     handle: Handle<TilesetSource>,
 ) -> WidgetBuilderFn<'a> {
-    let tile_size = source.tile_size;
-    widgets::Column::build(vec![
-        widgets::Text::build(source.display_name.clone()),
-        widgets::Text::build(format!(
-            "id: '{}', size: {}x{}",
-            source.id.clone(),
-            source.tile_size.x,
-            source.tile_size.y
-        )),
+    widgets::FlexWidget::column(vec![
+        widgets::FlexWidget::row(vec![
+            widgets::Divider::build('=').with(Flex::new(1)),
+            widgets::Text::build(" Layers "),
+            widgets::Divider::build('=').with(Flex::new(1)),
+        ]),
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
+        widgets::FlexWidget::row(vec![
+            widgets::Checkbox::build(),
+            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            widgets::Text::build("background").with(Flex::new(1)),
+            widgets::Button::build_raw("^"),
+            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            widgets::Button::build_raw("v"),
+        ]),
+        widgets::FlexWidget::row(vec![
+            widgets::Checkbox::build(),
+            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            widgets::Text::build("layer 1").with(Flex::new(1)),
+            widgets::Button::build_raw("^"),
+            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            widgets::Button::build_raw("v"),
+        ])
+        .with(attachments::MainAxisAlignment::SpaceBetween),
+        widgets::FlexWidget::row(vec![
+            widgets::Checkbox::build(),
+            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            widgets::Text::build("layer 2").with(Flex::new(1)),
+            widgets::Button::build_raw("^"),
+            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            widgets::Button::build_raw("v"),
+        ])
+        .with(attachments::MainAxisAlignment::SpaceBetween),
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
+        widgets::FlexWidget::row(vec![
+            widgets::SingleChildWidget::build(Some(widgets::Text::build("New Layer")))
+                .with(attachments::Flex::new(1))
+                .with(attachments::Padding::symmetric(1, 0)),
+            widgets::Button::build("Create"),
+        ]),
         widgets::Divider::build('-'),
-        widgets::Container::build(Some(
-            widgets::ScrollingView::build(vec![ListBuilderWidget::build::<widgets::Grid>(
-                Box::new(move |index, item: &Arc<GlyphTextureSource>| {
-                    widgets::Texture::build(item.data.clone(), tile_size).with((
-                        InteractableMarker,
-                        TilesetTileId {
-                            tile: index as u32,
-                            tileset: handle.clone(),
-                        },
-                    ))
-                }),
-                source.tiles.clone(),
-                source.tile_size,
-            )])
-            .with((attachments::SizedBox::vertical(26),)),
-        )),
     ])
 }
 #[derive(Debug, Component, Clone)]

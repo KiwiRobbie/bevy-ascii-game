@@ -1,6 +1,6 @@
 use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{Column, Text},
+    widgets::{FlexWidget, Text},
 };
 use bevy::{
     app::{Plugin, Update},
@@ -36,7 +36,7 @@ impl InfoCounts {
     pub fn build<'a>() -> WidgetBuilderFn<'a> {
         Box::new(|commands: &mut Commands| {
             let mut info = InfoCounts::default();
-            Column::build(vec![
+            FlexWidget::column(vec![
                 Text::build("").save_id(&mut info.fps_text),
                 Text::build("").save_id(&mut info.entity_text),
                 Text::build("").save_id(&mut info.actor_text),

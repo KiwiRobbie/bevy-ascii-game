@@ -3,6 +3,19 @@ use bevy::{ecs::component::Component, math::UVec2};
 use crate::layout::constraint::Constraint;
 #[derive(Debug, Component, Default, Clone)]
 pub struct Padding(pub EdgeInsets);
+impl Padding {
+    pub fn symmetric(x: u32, y: u32) -> Self {
+        Self(EdgeInsets::symmetric(x, y))
+    }
+    pub fn all(amount: u32) -> Self {
+        Self(EdgeInsets {
+            top: amount,
+            bottom: amount,
+            left: amount,
+            right: amount,
+        })
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct EdgeInsets {
@@ -40,12 +53,12 @@ impl EdgeInsets {
 }
 
 impl EdgeInsets {
-    pub fn symmetric(horizontal: u32, vertical: u32) -> Self {
+    pub fn symmetric(x: u32, y: u32) -> Self {
         Self {
-            top: vertical,
-            bottom: vertical,
-            left: horizontal,
-            right: horizontal,
+            top: y,
+            bottom: y,
+            left: x,
+            right: x,
         }
     }
 }

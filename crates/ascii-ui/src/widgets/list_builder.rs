@@ -1,28 +1,28 @@
-use bevy::ecs::{component::Component, entity::Entity, system::Commands};
+use bevy::prelude::*;
 
-use ascii_ui::{
-    list_widget::ListWidget,
+use crate::{
+    list_widget::ListWidgetExtension,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
     widgets,
 };
 
 #[derive(Component)]
-pub(crate) struct ListBuilderWidget<T: Send + Sync> {
+pub struct ListBuilderWidget<T: Send + Sync> {
     items: Vec<T>,
-    pub(crate) builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+    pub builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
 }
 
 impl<T> ListBuilderWidget<T>
 where
     T: Send + Sync + 'static,
 {
-    pub(crate) fn build<'b, W: ListWidget>(
+    pub fn build<'b, W: ListWidgetExtension>(
         builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
         items: Vec<T>,
         args: W::Args,
     ) -> WidgetBuilderFn<'b>
     where
-        <W as ListWidget>::Args: 'b,
+        <W as ListWidgetExtension>::Args: 'b,
     {
         Box::new(move |commands| {
             W::build(
@@ -37,20 +37,25 @@ where
         })
     }
 
-    pub(crate) fn push<W: ListWidget>(&mut self, list_widget: &mut W, item: T, commands: &mut Commands) {
+    pub fn push<W: ListWidgetExtension>(
+        &mut self,
+        list_widget: &mut W,
+        item: T,
+        commands: &mut Commands,
+    ) {
         list_widget.push((self.builder)(self.items.len(), &item)(commands));
         self.items.push(item);
     }
-    pub(crate) fn pop<W: ListWidget>(&mut self, self_column: &mut W, commands: &mut Commands) {
+    pub fn pop<W: ListWidgetExtension>(&mut self, self_column: &mut W, commands: &mut Commands) {
         if let Some(entity) = self_column.pop() {
             self.items.pop().unwrap();
             commands.entity(entity).despawn();
         }
     }
 
-    pub(crate) fn _set(
+    pub fn _set(
         &mut self,
-        self_column: &mut widgets::Column,
+        self_column: &mut widgets::FlexWidget,
         items: Vec<T>,
         commands: &mut Commands,
     ) {

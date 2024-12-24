@@ -1,6 +1,6 @@
 use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{checkbox::CheckboxEnabledMarker, Checkbox, Column},
+    widgets::{checkbox::CheckboxEnabledMarker, Checkbox, FlexWidget},
 };
 use bevy::{
     app::{Plugin, Update},
@@ -34,11 +34,11 @@ impl DebugOptions {
     pub fn build<'a>() -> WidgetBuilderFn<'a> {
         Box::new(|commands: &mut Commands| {
             let mut options = DebugOptions::default();
-            Column::build(vec![
-                Checkbox::build("Debug Position").save_id(&mut options.position_checkbox),
-                Checkbox::build("Debug Colliders").save_id(&mut options.colliders_checkbox),
-                Checkbox::build("Debug ECS UI").save_id(&mut options.ui_checkbox),
-                Checkbox::build("Pause Physics").save_id(&mut options.pause_checkbox),
+            FlexWidget::column(vec![
+                Checkbox::build_labeled("Debug Position").save_id(&mut options.position_checkbox),
+                Checkbox::build_labeled("Debug Colliders").save_id(&mut options.colliders_checkbox),
+                Checkbox::build_labeled("Debug ECS UI").save_id(&mut options.ui_checkbox),
+                Checkbox::build_labeled("Pause Physics").save_id(&mut options.pause_checkbox),
             ])
             .apply(commands)
             .with(options)(commands)

@@ -1,7 +1,7 @@
 use ascii_ui::{
     attachments,
     widget_builder::{WidgetBuilder, WidgetSaver},
-    widgets::{self, Column, Container, Divider, TabView, Text},
+    widgets::{self, Divider, FlexWidget, SingleChildWidget, TabView, Text},
 };
 use bevy::{
     ecs::{
@@ -21,16 +21,16 @@ use super::{inspector::InspectorTab, state::DebugMenuState};
 pub(crate) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
     let debug_menu_state = &mut *menu_state;
 
-    let settings_tab = Column::build(vec![
+    let settings_tab = FlexWidget::column(vec![
         InfoCounts::build(),
         Divider::build('-'),
         DebugOptions::build(),
     ])(&mut commands);
 
-    let inspector_tab = Column::build(vec![widgets::Text::build("text")])
+    let inspector_tab = FlexWidget::column(vec![widgets::Text::build("text")])
         .with((InspectorTab::default(),))(&mut commands);
 
-    Container::build(Some(Column::build(vec![
+    SingleChildWidget::build(Some(FlexWidget::column(vec![
         Text::build("[F3 Debug Menu]"),
         Divider::build('='),
         TabView::build(vec![

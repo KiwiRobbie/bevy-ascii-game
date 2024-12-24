@@ -1,46 +1,16 @@
-use bevy::{
-    ecs::{
-        bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
-        system::Commands, world::World,
-    },
-    math::UVec2,
-    reflect::Reflect,
-};
+use bevy::prelude::*;
 
 use crate::{
-    layout::{
-        constraint::Constraint,
-        widget_layout::{WidgetLayout, WidgetLayoutLogic},
-    },
-    render::bundle::RenderBundle,
+    attachments::SizedBox, layout::widget_layout::WidgetLayout, render::bundle::RenderBundle,
     widget_builder::WidgetBuilderFn,
 };
+
+use super::{container::ContainerLogic, SingleChildWidget};
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct Divider {
     pub(crate) character: char,
-}
-
-#[derive(Debug, Default)]
-pub(crate) struct DividerLogic;
-impl WidgetLayoutLogic for DividerLogic {
-    fn layout(
-        &self,
-        _entity: Entity,
-        constraint: &Constraint,
-        _world: &World,
-        _commands: &mut Commands,
-    ) -> UVec2 {
-        return UVec2 {
-            x: *constraint.width.as_ref().unwrap().end(),
-            y: 1,
-        };
-    }
-
-    fn children(&self, _entity: Entity, _world: &World) -> Vec<Entity> {
-        vec![]
-    }
 }
 
 #[derive(Bundle)]
@@ -55,9 +25,11 @@ impl Divider {
         Box::new(move |commands| {
             commands
                 .spawn((
+                    SingleChildWidget { child: None },
+                    SizedBox::vertical(1),
                     Self { character },
                     RenderBundle::default(),
-                    WidgetLayout::new::<DividerLogic>(),
+                    WidgetLayout::new::<ContainerLogic>(),
                 ))
                 .id()
         })

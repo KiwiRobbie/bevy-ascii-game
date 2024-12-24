@@ -9,7 +9,7 @@ pub struct Constraint {
 }
 
 impl Constraint {
-    pub fn _remove_x_bounds(&self) -> Self {
+    pub fn remove_x_bounds(&self) -> Self {
         Self {
             width: None,
             height: self.height.clone(),
@@ -51,6 +51,24 @@ impl Constraint {
         Self {
             width: Some(0..=size.x),
             height: Some(0..=size.y),
+        }
+    }
+
+    fn intersect_axis(
+        a: &Option<RangeInclusive<u32>>,
+        b: &Option<RangeInclusive<u32>>,
+    ) -> Option<RangeInclusive<u32>> {
+        match (a, b) {
+            (None, None) => None,
+            (None, Some(b)) => Some(b.clone()),
+            (Some(a), None) => Some(a.clone()),
+            (Some(a), Some(b)) => Some(*a.start().max(b.start())..=*a.end().min(b.end())),
+        }
+    }
+    pub fn intersect(&self, other: &Self) -> Self {
+        Self {
+            width: Self::intersect_axis(&self.width, &other.width),
+            height: Self::intersect_axis(&self.height, &other.height),
         }
     }
 }

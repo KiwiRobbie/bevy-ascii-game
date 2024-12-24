@@ -34,6 +34,7 @@ use bevy_ascii_game::{
     tileset::plugin::TilesetPlugin,
     widgets::UiSectionsPlugin,
 };
+use editor_panel::plugin::TilesetPanelPlugin;
 use glyph_render::{
     atlas::FontAtlasPlugin,
     font::{font_load_system, FontSize},
@@ -51,10 +52,9 @@ use spatial_grid::{
     remainder::Remainder,
     PositionPropagationPlugin,
 };
-use tileset_panel::plugin::TilesetPanelPlugin;
 
-mod list_builder_widget;
-mod tileset_panel;
+mod editor_panel;
+
 fn main() {
     let mut app = App::new();
     app.add_plugins((
@@ -110,7 +110,7 @@ fn setup_system(
     ))));
     commands
         .spawn((
-            Tilemap(server.load("tilemaps/output.tilemap.ron")),
+            Tilemap(server.load("tilemaps/sprite.tilemap.ron")),
             SolidPhysicsBundle {
                 position: SpatialBundle::from(IVec2::new(20, 10)),
                 ..Default::default()

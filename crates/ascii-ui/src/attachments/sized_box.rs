@@ -1,6 +1,8 @@
 use bevy::ecs::component::Component;
 
-#[derive(Debug, Component, Clone)]
+use crate::layout::constraint::Constraint;
+
+#[derive(Debug, Component, Clone, Default)]
 pub struct SizedBox {
     pub width: Option<u32>,
     pub height: Option<u32>,
@@ -23,6 +25,12 @@ impl SizedBox {
         Self {
             width: Some(width),
             height: Some(height),
+        }
+    }
+    pub fn as_max_constraint(&self) -> Constraint {
+        Constraint {
+            width: self.width.map(|x| 0..=x),
+            height: self.height.map(|x| 0..=x),
         }
     }
 }

@@ -30,7 +30,7 @@ use spatial_grid::{
     position::{Position, SpatialBundle},
 };
 
-use crate::tileset_panel::setup::TilesetTileId;
+use crate::editor_panel::setup::TilesetTileId;
 
 pub(crate) struct BrushPlugin;
 impl Plugin for BrushPlugin {

@@ -52,10 +52,10 @@ pub(crate) fn checkbox_interaction_system(
     }
 }
 impl Checkbox {
-    pub fn build<'a>(label: impl Into<String> + 'a) -> WidgetBuilderFn<'a> {
+    pub fn build_labeled<'a>(label: impl Into<String> + 'a) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             let mut toggle_text = Entity::PLACEHOLDER;
-            widgets::Row::build(vec![
+            widgets::FlexWidget::row(vec![
                 widgets::Text::build(label),
                 widgets::Text::build("[ ]").save_id(&mut toggle_text),
             ])
@@ -67,6 +67,21 @@ impl Checkbox {
                     checkbox: toggle_text,
                 },
             ))(commands)
+        })
+    }
+    pub fn build<'a>() -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let mut toggle_text = Entity::PLACEHOLDER;
+            widgets::Text::build("[ ]")
+                .save_id(&mut toggle_text)
+                .apply(commands)
+                .with((
+                    attachments::MainAxisAlignment::SpaceBetween,
+                    InteractableMarker,
+                    Checkbox {
+                        checkbox: toggle_text,
+                    },
+                ))(commands)
         })
     }
 }

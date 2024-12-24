@@ -4,7 +4,8 @@ use ascii_ui::{
     attachments::{self, MainAxisAlignment},
     mouse::InteractableMarker,
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{self, Column, Container, Divider},
+    widgets::{self, Divider, FlexWidget, SingleChildWidget},
+    FlexDirection,
 };
 use bevy::{
     asset::{AssetServer, Handle},
@@ -46,7 +47,7 @@ pub(super) fn setup_ui(
 ) {
     let menu_state = &mut *menu_state;
 
-    let settings_tab = Column::build(vec![
+    let settings_tab = FlexWidget::column(vec![
         InfoCounts::build(),
         Divider::build('-'),
         DebugOptions::build(),
@@ -56,10 +57,10 @@ pub(super) fn setup_ui(
         let mut rows = vec![];
         let mut list_builder = Entity::PLACEHOLDER;
         rows.push(
-            ListBuilderWidget::build::<widgets::Column>(
+            ListBuilderWidget::build::<widgets::FlexWidget>(
                 Box::new(|_, i: &usize| widgets::Text::build(format!("{}", i))),
                 vec![0, 2, 5],
-                (),
+                FlexDirection::Vertical,
             )
             .save_id(&mut list_builder)
             .apply(&mut commands),
@@ -67,12 +68,12 @@ pub(super) fn setup_ui(
 
         rows.push(widgets::Divider::build('-'));
         rows.push(
-            widgets::Row::build(vec![
-                widgets::Button::build("+".into()).with(ItemMutateButton {
+            widgets::FlexWidget::row(vec![
+                widgets::Button::build("+").with(ItemMutateButton {
                     target: list_builder,
                     mode: MutateMode::Add,
                 }),
-                widgets::Button::build("-".into()).with(ItemMutateButton {
+                widgets::Button::build("-").with(ItemMutateButton {
                     target: list_builder,
                     mode: MutateMode::Remove,
                 }),
@@ -81,24 +82,26 @@ pub(super) fn setup_ui(
         );
         rows.push(widgets::Divider::build('-'));
 
-        widgets::Column::build(rows)
+        widgets::FlexWidget::column(rows)
     }(&mut commands);
 
     let tileset_tab = {
-        widgets::Column::build(vec![
-            widgets::Button::build("Save".into()).with(SaveTilemapButton),
-            ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::Column>(
-                Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
-                vec![],
-                (),
-            )
-            .with(TilesetHandles {
-                handles: vec![server.load("tilesets/bridge.tileset.ron")],
-            }),
-        ])
+        widgets::FlexWidget::column(vec![
+                widgets::Button::build("Save").with(SaveTilemapButton),
+                ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<
+                    widgets::FlexWidget,
+                >(
+                    Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
+                    vec![],
+                    FlexDirection::Vertical,
+                )
+                .with(TilesetHandles {
+                    handles: vec![server.load("tilesets/bridge.tileset.ron")],
+                }),
+            ])
     }(&mut commands);
 
-    Container::build(Some(widgets::TabView::build(vec![
+    SingleChildWidget::build(Some(widgets::TabView::build(vec![
         ("Settings", settings_tab),
         ("List Builder", list_builder_tab),
         ("Tileset", tileset_tab),
@@ -134,7 +137,7 @@ fn build_tileset_ui<'a>(
     handle: Handle<TilesetSource>,
 ) -> WidgetBuilderFn<'a> {
     let tile_size = source.tile_size;
-    widgets::Column::build(vec![
+    widgets::FlexWidget::column(vec![
         widgets::Text::build(source.display_name.clone()),
         widgets::Text::build(format!(
             "id: '{}', size: {}x{}",
@@ -143,7 +146,7 @@ fn build_tileset_ui<'a>(
             source.tile_size.y
         )),
         widgets::Divider::build('-'),
-        widgets::Container::build(Some(
+        widgets::SingleChildWidget::build(Some(
             widgets::ScrollingView::build(vec![ListBuilderWidget::build::<widgets::Grid>(
                 Box::new(move |index, item: &Arc<GlyphTextureSource>| {
                     if item.data.len() == (tile_size.x * tile_size.y) as usize {
