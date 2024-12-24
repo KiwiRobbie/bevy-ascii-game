@@ -152,8 +152,8 @@ pub(crate) fn interaction_color_system(
     for (entity, focused, active) in q_interactable.iter() {
         let color = match (focused, active) {
             (false, false) => css::WHITE,
-            (true, false) => css::ORANGE_RED,
-            (_, true) => css::GREEN,
+            (true, false) => Srgba::new(4.0, 4.0, 4.0, 1.0),
+            (_, true) => css::WHITE,
         }
         .into();
         commands.entity(entity).insert(GlyphSolidColor { color });
