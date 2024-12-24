@@ -2,7 +2,7 @@ use ascii_ui::{
     attachments::{self, Flex},
     col,
     mouse::InteractableMarker,
-    row,
+    row, sized_box, text,
     widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, Divider, FlexWidget, SingleChildWidget},
 };
@@ -33,55 +33,59 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPane
     let editor_tab = col![
         row![
             widgets::Divider::build('=').with(Flex::new(1)),
-            widgets::Text::build(" Tools "),
+            text!(" Tools "),
             widgets::Divider::build('=').with(Flex::new(1)),
         ],
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
-        widgets::Text::build(" Type   (T)"),
-        widgets::Text::build(" Insert (R)"),
-        widgets::Text::build(" Draw   (L)"),
-        widgets::Text::build(" Shape  (S)"),
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
+        sized_box!(vertical: 1),
+        text!(" Type   (T)"),
+        text!(" Draw   (D)"),
+        text!(" Shape  (S)"),
+        sized_box!(vertical: 1),
         row![
             widgets::Divider::build('=').with(Flex::new(1)),
-            widgets::Text::build(" Layers "),
+            text!(" Layers "),
             widgets::Divider::build('=').with(Flex::new(1)),
         ],
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
+        sized_box!(vertical: 1),
         row![
             widgets::Checkbox::build(),
-            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
-            widgets::Text::build("background").with(Flex::new(1)),
+            sized_box!(vertical: 1),
+            text!("background").with(Flex::new(1)),
             widgets::Button::build_raw("^"),
-            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            sized_box!(vertical: 1),
             widgets::Button::build_raw("v"),
         ],
         row![
             widgets::Checkbox::build(),
-            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
-            widgets::Text::build("layer 1").with(Flex::new(1)),
+            sized_box!(vertical: 1),
+            text!("layer 1").with(Flex::new(1)),
             widgets::Button::build_raw("^"),
-            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
-            widgets::Button::build_raw("v"),
-        ]
-        .with(attachments::MainAxisAlignment::SpaceBetween),
-        row![
-            widgets::Checkbox::build(),
-            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
-            widgets::Text::build("layer 2").with(Flex::new(1)),
-            widgets::Button::build_raw("^"),
-            widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal(1)),
+            sized_box!(vertical: 1),
             widgets::Button::build_raw("v"),
         ]
         .with(attachments::MainAxisAlignment::SpaceBetween),
+        row![
+            widgets::Checkbox::build(),
+            sized_box!(vertical: 1),
+            text!("layer 2").with(Flex::new(1)),
+            widgets::Button::build_raw("^"),
+            sized_box!(vertical: 1),
+            widgets::Button::build_raw("v"),
+        ]
+        .with(attachments::MainAxisAlignment::SpaceBetween),
         widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
         row![
-            widgets::SingleChildWidget::build(Some(widgets::Text::build("New Layer")))
+            widgets::SingleChildWidget::build(Some(text!("New Layer")))
                 .with(attachments::Flex::new(1))
                 .with(attachments::Padding::symmetric(1, 0)),
             widgets::Button::build("Create"),
         ],
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
+        sized_box!(vertical: 2),
+        text!("Selected Layer"),
+        sized_box!(vertical: 1),
+        text!("Size: 64 x 32"),
+        text!("Name: background"),
+        sized_box!(vertical: 1),
         widgets::SingleChildWidget::build(None).save_id(&mut menu_state.tool_container),
     ](&mut commands);
 

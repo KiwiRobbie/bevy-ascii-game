@@ -1,16 +1,13 @@
-use ascii_ui::{
-    attachments::Root,
-    widgets::{self, SingleChildWidget},
-};
-use bevy::prelude::*;
+use ascii_ui::{attachments::Root, widgets::SingleChildWidget};
+use bevy::{input::keyboard::KeyboardInput, prelude::*};
 
 use glyph_render::glyph_buffer::GlyphBuffer;
 
 use spatial_grid::grid::SpatialGrid;
 
-use bevy_ascii_game::{physics_grids::UiPhysicsGrid, tileset::asset::TilesetSource};
+use bevy_ascii_game::physics_grids::UiPhysicsGrid;
 
-use crate::tools::FocusedToolUi;
+use crate::tools::{text::TypeTool, ExclusiveKeyboardEventHandler, FocusedTool, FocusedToolUi};
 
 use super::{setup::DebugMenuMarker, state::EditorPanelState};
 
@@ -53,47 +50,47 @@ pub(super) fn update_position(
     }
 }
 
-#[derive(Debug, Component)]
-pub(crate) struct TilesetHandles {
-    pub(crate) handles: Vec<Handle<TilesetSource>>,
-}
-
-pub(super) fn update_tilesets_system(
-    mut commands: Commands,
-    mut q_list_builder: Query<(
-        &mut widgets::ListBuilderWidget<(TilesetSource, Handle<TilesetSource>)>,
-        &mut widgets::FlexWidget,
-        &TilesetHandles,
-    )>,
-    mut ev_tilesets: EventReader<AssetEvent<TilesetSource>>,
-    tilesets: Res<Assets<TilesetSource>>,
-) {
-    for ev in ev_tilesets.read() {
-        if let AssetEvent::LoadedWithDependencies { id } = ev {
-            let tileset = tilesets.get(*id).unwrap().clone();
-            for (mut builder, mut column, TilesetHandles { handles }) in q_list_builder.iter_mut() {
-                if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
-                    builder.push::<widgets::FlexWidget>(
-                        &mut column,
-                        (tileset.clone(), handle.clone()),
-                        &mut commands,
-                    )
-                }
-            }
-        };
-    }
-}
-
 pub(super) fn update_editor_ui(
     q_editor_state: Res<EditorPanelState>,
     q_focused: Query<Entity, With<FocusedToolUi>>,
     mut q_container: Query<&mut SingleChildWidget>,
 ) {
-    if let Ok(focused_tool_entity) = q_focused.get_single() {
-        if let Some(container_entity) = q_editor_state.tool_container {
-            if let Ok(mut container) = q_container.get_mut(container_entity) {
-                container.child = Some(focused_tool_entity);
-            }
+    let focused_tool_entity = q_focused.get_single().ok();
+
+    if let Some(container_entity) = q_editor_state.tool_container {
+        if let Ok(mut container) = q_container.get_mut(container_entity) {
+            container.child = focused_tool_entity;
+        }
+    }
+}
+
+pub(super) fn update_editor_shortcuts(
+    mut commands: Commands,
+    q_focused: Query<Entity, With<FocusedTool>>,
+    q_focused_ui: Query<Entity, With<FocusedToolUi>>,
+    q_using_keyboard: Query<(), With<ExclusiveKeyboardEventHandler>>,
+    q_type_tool: Query<(Entity, &TypeTool)>,
+    input_keys: Res<ButtonInput<KeyCode>>,
+) {
+    let clear_focused = |commands: &mut Commands| {
+        for entity in &q_focused {
+            commands.entity(entity).remove::<FocusedTool>();
+        }
+        for entity in &q_focused_ui {
+            commands.entity(entity).remove::<FocusedToolUi>();
         }
     };
+
+    if q_using_keyboard.iter().len() > 0 {
+        return;
+    }
+    if input_keys.just_pressed(KeyCode::KeyT) {
+        if let Ok((tool_entity, tool)) = q_type_tool.get_single() {
+            clear_focused(&mut commands);
+            commands
+                .entity(tool_entity)
+                .insert((FocusedTool, ExclusiveKeyboardEventHandler));
+            commands.entity(tool.ui_entity).insert(FocusedToolUi);
+        }
+    }
 }

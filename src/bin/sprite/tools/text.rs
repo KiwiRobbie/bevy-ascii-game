@@ -8,20 +8,24 @@ use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, button::ButtonJustPressedMarker},
 };
-use bevy::{input::keyboard::KeyboardInput, prelude::*};
-use bevy_ascii_game::physics_grids::{
-    GamePhysicsGrid, GamePhysicsGridMarker, PrimaryGlyphBufferMarker,
+use bevy::{
+    input::keyboard::{Key, KeyboardInput},
+    prelude::*,
 };
+use bevy_ascii_game::physics_grids::{GamePhysicsGrid, GamePhysicsGridMarker};
 use glyph_render::{
     glyph_buffer::TargetGlyphBuffer,
     glyph_render_plugin::{GlyphTexture, GlyphTextureSource},
     glyph_sprite::GlyphSprite,
 };
-use spatial_grid::{depth::Depth, position::Position};
+use spatial_grid::{depth::Depth, global_position::GlobalPosition, position::Position};
 
-use crate::tools::{ExclusiveKeyboardEventHandler, FocusedTool, FocusedToolUi};
+use crate::{
+    layers::{EditorLayer, SelectedEditorLayer},
+    tools::{ExclusiveKeyboardEventHandler, FocusedTool, FocusedToolUi},
+};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub enum TypeMode {
     #[default]
     Regular,
@@ -56,8 +60,7 @@ pub struct TypeToolCursor;
 #[require(Position)]
 pub struct TypeTool {
     mode: TypeMode,
-    active: bool,
-    ui_entity: Entity,
+    pub ui_entity: Entity,
     cursors: [Handle<GlyphTexture>; 3],
 }
 
@@ -115,7 +118,6 @@ fn type_tool_setup(mut commands: Commands, mut glyph_textures: ResMut<Assets<Gly
         TypeTool {
             ui_entity,
             mode: TypeMode::Regular,
-            active: true,
             cursors,
         },
         Position(IVec2::new(-10, 0)),
@@ -167,38 +169,85 @@ fn type_tool_update(
         ),
         (With<FocusedTool>, Without<TypeToolUi>),
     >,
+    mut q_layer: Query<(&mut EditorLayer, &GlobalPosition), With<SelectedEditorLayer>>,
 ) {
-    let Ok((tool_entity, mut tool, mut cursor_position, exclusive)) = q_tool.get_single_mut()
-    else {
+    let Ok((tool_entity, tool, mut cursor_position, exclusive)) = q_tool.get_single_mut() else {
         return;
-    };
-    if tool.active {
-        commands
-            .entity(tool_entity)
-            .insert(ExclusiveKeyboardEventHandler);
-    } else {
-        commands
-            .entity(tool_entity)
-            .remove::<ExclusiveKeyboardEventHandler>();
     };
 
     if exclusive {
+        let mut layer = q_layer.get_single_mut().ok();
+
         for ev in ev_keyboard.read() {
             if ev.state.is_pressed() {
+                enum Input {
+                    None,
+                    Key(char),
+                    Backspace,
+                    Delete,
+                }
+
+                let mut input_character: Input = Input::None;
                 match ev.key_code {
                     KeyCode::Escape => {
-                        tool.active = false;
                         commands
                             .entity(tool_entity)
-                            .remove::<ExclusiveKeyboardEventHandler>();
+                            .remove::<(ExclusiveKeyboardEventHandler, FocusedTool)>();
+                        commands.entity(tool.ui_entity).remove::<FocusedToolUi>();
                     }
 
                     KeyCode::ArrowLeft => cursor_position.x -= 1,
                     KeyCode::ArrowRight => cursor_position.x += 1,
                     KeyCode::ArrowDown => cursor_position.y -= 1,
                     KeyCode::ArrowUp => cursor_position.y += 1,
-                    _ => {}
+                    KeyCode::Space => {
+                        input_character = Input::Key(' ');
+                    }
+                    KeyCode::Backspace => {
+                        input_character = Input::Backspace;
+                    }
+                    KeyCode::Delete => {
+                        input_character = Input::Delete;
+                    }
+                    _ => match &ev.logical_key {
+                        Key::Character(key) => {
+                            if key.chars().count() == 1 {
+                                input_character = key
+                                    .chars()
+                                    .next()
+                                    .map(|character| Input::Key(character))
+                                    .unwrap_or(Input::None);
+                            }
+                        }
+                        _ => {}
+                    },
                 }
+
+                if let Some((ref mut layer, layer_position)) = layer.as_mut() {
+                    match input_character {
+                        Input::Key(character) => {
+                            if layer
+                                .write_character(**cursor_position - ***layer_position, character)
+                                .is_ok()
+                            {
+                                if tool.mode != TypeMode::Inplace {
+                                    cursor_position.x += 1;
+                                }
+                            };
+                        }
+                        Input::Backspace => {
+                            cursor_position.x -= 1;
+                            let _ =
+                                layer.write_character(**cursor_position - ***layer_position, ' ');
+                        }
+                        Input::Delete => {
+                            let _ =
+                                layer.write_character(**cursor_position - ***layer_position, ' ');
+                            cursor_position.x += 1;
+                        }
+                        Input::None => {}
+                    }
+                };
             }
         }
     } else {

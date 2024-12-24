@@ -16,7 +16,6 @@ use bevy::{
 use bevy_ascii_game::{
     debug::DebugPlugin,
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
-    player::PlayerPlugin,
     tilemap::{component::Tilemap, plugin::TilemapPlugin},
     tileset::plugin::TilesetPlugin,
     widgets::UiSectionsPlugin,
@@ -32,6 +31,7 @@ use glyph_render::{
     glyph_sprite::GlyphSprite,
 };
 use grid_physics::{plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
+use layers::{EditorLayer, EditorLayerPlugin, SelectedEditorLayer};
 use spatial_grid::{
     depth::Depth,
     grid::SpatialGrid,
@@ -43,8 +43,8 @@ use tools::EditorToolsPlugin;
 
 mod editor_panel;
 mod input;
+mod layers;
 mod tools;
-
 fn main() {
     let mut app = App::new();
     app.add_plugins((
@@ -57,7 +57,7 @@ fn main() {
                 }),
                 ..Default::default()
             }),
-        EditorToolsPlugin,
+        (EditorToolsPlugin, EditorLayerPlugin),
         PositionPropagationPlugin,
         // PlayerPlugin,
         (
@@ -92,13 +92,12 @@ fn setup_system(
     server: Res<AssetServer>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
-    let editor_buffer = glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
-        64,
-        32,
-        std::iter::repeat('.')
-            .take(64 * 32)
-            .collect::<Box<[char]>>(),
-    ))));
+    commands.spawn((
+        EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
+        SelectedEditorLayer,
+        GamePhysicsGridMarker,
+    ));
+
     commands
         .spawn((
             Tilemap(server.load("tilemaps/sprite.tilemap.ron")),
@@ -136,20 +135,6 @@ fn setup_system(
             },
             Depth(-1.0),
             EditorCursorMarker,
-        ))
-        .insert(GamePhysicsGridMarker);
-
-    commands
-        .spawn((
-            GlyphSprite {
-                texture: editor_buffer,
-                offset: IVec2 { x: 0, y: 0 },
-            },
-            GlyphSolidColor { color: RED.into() },
-            SpatialBundle {
-                ..Default::default()
-            },
-            Depth(-1.0),
         ))
         .insert(GamePhysicsGridMarker);
 }

@@ -37,3 +37,18 @@ macro_rules! col {
         ascii_ui::widgets::FlexWidget::column(vec![$($item),*])
     };
 }
+#[macro_export]
+macro_rules! text {
+    ($item:expr) => {
+        ascii_ui::widgets::Text::build($item)
+    };
+}
+#[macro_export]
+macro_rules! sized_box {
+    (vertical: $size:expr) => {
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical($item))
+    };
+    (horizontal: $size:expr) => {
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal($item))
+    };
+}
