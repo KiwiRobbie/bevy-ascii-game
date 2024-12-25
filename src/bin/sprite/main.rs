@@ -1,7 +1,9 @@
-use ascii_ui::mouse::input::MouseInput;
+use std::{char::DecodeUtf16, f32::consts::PI};
+
+use ascii_ui::{mouse::input::MouseInput, widgets::grid};
 use bevy::{
     core_pipeline::bloom::Bloom,
-    input::mouse::MouseMotion,
+    input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
     render::camera::CameraRenderGraph,
     window::{PrimaryWindow, WindowResolution},
@@ -16,8 +18,8 @@ use bevy_ascii_game::{
 };
 use editor_panel::plugin::TilesetPanelPlugin;
 use glyph_render::{
-    atlas::FontAtlasPlugin,
-    font::{font_load_system, FontSize},
+    atlas::{CharacterSet, FontAtlasCache, FontAtlasPlugin},
+    font::{font_load_system, CustomFont, CustomFontSource, FontSize},
     glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_buffer::GlyphBuffer,
@@ -51,7 +53,6 @@ fn main() {
             }),
         (EditorToolsPlugin, EditorLayerPlugin),
         PositionPropagationPlugin,
-        // PlayerPlugin,
         (
             GlyphRenderPlugin,
             GlyphAnimationPlugin,
@@ -65,36 +66,26 @@ fn main() {
         DebugPlugin,
         UiSectionsPlugin,
     ))
-    .add_systems(Startup, setup_system)
+    .add_systems(Startup, (setup, testing_setup))
     .add_systems(
         Update,
         (
             font_load_system,
             mouse_zoom_system,
             mouse_pan_system,
-            // keyboard_pan_system,
+            testing_update,
         ),
     );
 
     app.run();
 }
 
-fn setup_system(mut commands: Commands) {
+fn setup(mut commands: Commands) {
     commands.spawn((
         EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
         SelectedEditorLayer,
         GamePhysicsGridMarker,
     ));
-
-    // commands
-    //     .spawn((
-    //         Tilemap(server.load("tilemaps/sprite.tilemap.ron")),
-    //         SolidPhysicsBundle {
-    //             position: SpatialBundle::from(IVec2::new(20, 10)),
-    //             ..Default::default()
-    //         },
-    //     ))
-    //     .insert(GamePhysicsGridMarker);
 
     commands.spawn((
         Camera2d,
@@ -106,25 +97,6 @@ fn setup_system(mut commands: Commands) {
         CameraRenderGraph::new(bevy::core_pipeline::core_2d::graph::Core2d),
         Bloom::default(),
     ));
-
-    // commands
-    //     .spawn((
-    //         GlyphSprite {
-    //             texture: glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
-    //                 1,
-    //                 1,
-    //                 Box::new(['#']),
-    //             )))),
-    //             offset: IVec2 { x: 0, y: 0 },
-    //         },
-    //         GlyphSolidColor { color: RED.into() },
-    //         SpatialBundle {
-    //             ..Default::default()
-    //         },
-    //         Depth(-1.0),
-    //         EditorCursorMarker,
-    //     ))
-    //     .insert(GamePhysicsGridMarker);
 }
 
 fn mouse_zoom_system(
@@ -145,10 +117,8 @@ fn mouse_zoom_system(
 
     let factor = (distance / 16.0).exp();
     *size *= factor;
-    dbg!(factor);
     *size = size.clamp(2.0, 128.0);
 
-    dbg!(&size);
     let window = window.get_single().unwrap();
 
     for (mut font_size, mut grid, mut buffer) in q_glyph_buffer.iter_mut() {
@@ -184,6 +154,197 @@ fn mouse_pan_system(
         (position, remainder).offset(
             motion / Vec2::new(font_size.advance() as f32, font_size.line_spacing() as f32),
         );
+    }
+}
+
+#[derive(Debug, Component)]
+pub struct TestingMarker;
+fn testing_setup(mut commands: Commands, server: ResMut<AssetServer>) {
+    commands.spawn((
+        FontSize(14),
+        CustomFont(server.load("FiraCode-Regular.ttf")),
+        CharacterSet::default(),
+        TestingMarker,
+    ));
+}
+
+fn create_target(
+    theta: f32,
+    offset: Vec2,
+    thickness: f32,
+    padding: UVec2,
+    size: UVec2,
+    image_size: UVec2,
+) -> Vec<f32> {
+    let center = padding.as_vec2() + 0.5 * size.as_vec2() + offset;
+
+    let mut image: Vec<f32> = vec![0.; image_size.x as usize * image_size.y as usize];
+
+    for (i, pixel) in image.iter_mut().enumerate() {
+        let x = i % image_size.x as usize;
+        let y = i / image_size.x as usize;
+        let pos = Vec2::new(x as f32, y as f32);
+        let local = Vec2::from_angle(theta).rotate(pos - center);
+
+        let frac = (thickness - local.x.abs()).clamp(0.0, 1.0);
+        *pixel = frac;
+    }
+
+    image
+}
+
+fn testing_update(
+    q_testing: Query<(&CustomFont, &FontSize), With<TestingMarker>>,
+    fonts: Res<Assets<CustomFontSource>>,
+    time: Res<Time>,
+    mut ev_mouse: EventReader<MouseWheel>,
+    mut offset: Local<Vec2>,
+) {
+    for ev in ev_mouse.read() {
+        offset.y += ev.y;
+    }
+
+    let Ok((font, font_size)) = q_testing.get_single() else {
+        return;
+    };
+    let Some(font_source) = fonts.get(font.id()) else {
+        return;
+    };
+    let metrics = font_source.as_ref().metrics(&[]).scale(**font_size as f32);
+    let descent = metrics.descent as i32;
+
+    let grid_size = UVec2::new(font_size.advance(), font_size.line_spacing());
+    let padding_start = grid_size / 4;
+    let padding_end = UVec2::new(grid_size.x / 4, 3 * grid_size.y / 4);
+    let image_size = padding_start + grid_size + padding_end;
+    let image_pixel_count = (image_size.x * image_size.y) as usize;
+
+    let mut context = swash::scale::ScaleContext::new();
+    let mut scaler = context
+        .builder(font_source.as_ref())
+        .hint(false)
+        .size(font_size.0 as f32)
+        .build();
+    let mut render = swash::scale::Render::new(&[
+        swash::scale::Source::Bitmap(swash::scale::StrikeWith::BestFit),
+        swash::scale::Source::Outline,
+    ]);
+    render.format(swash::zeno::Format::Alpha);
+
+    let mut rendered_characters = vec![];
+
+    for character in CharacterSet::default().0 {
+        let glyph_id = font_source.as_ref().charmap().map(character);
+        let Some(image) = render.render(&mut scaler, glyph_id) else {
+            continue;
+        };
+
+        let mut new_image_data: Vec<f32> = vec![0.; image_pixel_count];
+        for (i, value) in image.data.iter().enumerate() {
+            let x = padding_start.x as i32
+                + image.placement.left
+                + (i as i32 % image.placement.width as i32);
+            let y = padding_start.y as i32
+                + (image.placement.top)
+                + (i as i32 / image.placement.width as i32);
+            if !(0 <= x && x < image_size.x as i32 && 0 <= y && y < image_size.y as i32) {
+                dbg!(x, y, image_size);
+                continue;
+            }
+
+            let dst_index = x as usize + y as usize * image_size.x as usize;
+            new_image_data[dst_index] = *value as f32 / 255.;
+        }
+
+        let value: f32 = new_image_data.iter().sum();
+
+        rendered_characters.push((value, character, new_image_data));
+    }
+    rendered_characters.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());
+
+    let min = rendered_characters.first().unwrap().0;
+    let max = rendered_characters.last().unwrap().0;
+    let range = max - min;
+    dbg!(min, max, range);
+
+    for (value, _, _) in rendered_characters.iter_mut() {
+        *value = (*value - min) / range;
+    }
+
+    // let mut characters = String::new();
+    // let mut last_value = 0.;
+
+    // for (value, character, image) in &rendered_characters {
+    //     if *value == last_value {
+    //     } else {
+    //         println!("{last_value}: {characters}");
+    //         characters.clear();
+    //     }
+    //     last_value = *value;
+    //     characters.push(*character);
+    // }
+    // println!("{last_value}: {characters}");
+
+    let mut gradient = String::with_capacity(64);
+    for dst_index in 0..64 {
+        let target = &(dst_index as f32 / 64.);
+        let src_index = match rendered_characters
+            .binary_search_by(|(a, _, _)| a.partial_cmp(target).unwrap())
+        {
+            Ok(i) => i,
+            Err(i) => i,
+        };
+        gradient.push(rendered_characters[src_index].1);
+    }
+    // for (_, _, image) in &rendered_characters {
+    //     print_image(image, image_size);
+    //     println!("=====================================")
+    // }
+
+    let target = create_target(
+        time.elapsed_secs(),
+        *offset,
+        1.5,
+        padding_start,
+        grid_size,
+        image_size,
+    );
+
+    let mut differences: Vec<(f64, &char, &Vec<f32>)> = rendered_characters
+        .iter()
+        .map(|(_, character, image)| (image_difference(&target, &image), character, image))
+        .collect();
+
+    differences.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());
+    print_image(&target, image_size);
+    print_image(differences.first().unwrap().2, image_size);
+}
+
+fn image_difference(a: &[f32], b: &[f32]) -> f64 {
+    assert_eq!(a.len(), b.len());
+    a.iter()
+        .zip(b.iter())
+        .map(|(a, b)| ((a - b) * (a - b)) as f64)
+        .sum()
+}
+
+fn print_image(image: &[f32], size: UVec2) {
+    const GRADIENT: &str = "  `''.--__,~\"\"^!!;+++|\\/?7lt*z14[ny3e5ZkES96AdwODDR%%0QN$$$@@@MW";
+    let gradient_len = GRADIENT.chars().count();
+
+    let (width, height) = (size.x, size.y);
+    let mut row = String::with_capacity(2 * width as usize);
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image[(x + y * width) as usize];
+            let index = (pixel * (gradient_len as f32)).max(0.) as usize;
+            let index = index.clamp(0, gradient_len - 1);
+            let character = GRADIENT.chars().nth(index).unwrap();
+            row.push(character);
+            row.push(character);
+        }
+        println!("{}", row);
+        row.clear();
     }
 }
 

@@ -306,6 +306,7 @@ dependencies = [
  "serde",
  "smol_str",
  "spatial-grid",
+ "swash",
  "text-util",
 ]
 
