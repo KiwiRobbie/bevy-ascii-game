@@ -39,16 +39,16 @@ macro_rules! col {
 }
 #[macro_export]
 macro_rules! text {
-    ($item:expr) => {
-        ascii_ui::widgets::Text::build($item)
+    ($value:expr) => {
+        ascii_ui::widgets::Text::build($value)
     };
 }
 #[macro_export]
 macro_rules! sized_box {
     (vertical: $size:expr) => {
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical($item))
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical($size))
     };
     (horizontal: $size:expr) => {
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal($item))
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal($size))
     };
 }

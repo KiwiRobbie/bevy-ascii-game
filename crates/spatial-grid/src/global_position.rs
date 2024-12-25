@@ -95,7 +95,9 @@ pub(crate) fn propagate_positions(
         };
         let parent_position = global_pos.clone();
         for entity in children {
-            let (entity, position, children) = q_children.get(*entity).unwrap();
+            let Ok((entity, position, children)) = q_children.get(*entity) else {
+                continue;
+            };
 
             propagate_recursive(
                 entity,

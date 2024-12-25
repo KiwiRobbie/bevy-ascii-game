@@ -22,8 +22,10 @@ use spatial_grid::{depth::Depth, global_position::GlobalPosition, position::Posi
 
 use crate::{
     layers::{EditorLayer, SelectedEditorLayer},
-    tools::{ExclusiveKeyboardEventHandler, FocusedTool, FocusedToolUi},
+    tools::{ExclusiveKeyboardEventHandler, FocusedTool},
 };
+
+use super::ToolUiEntity;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub enum TypeMode {
@@ -60,7 +62,7 @@ pub struct TypeToolCursor;
 #[require(Position)]
 pub struct TypeTool {
     mode: TypeMode,
-    pub ui_entity: Entity,
+    cursor_entity: Entity,
     cursors: [Handle<GlyphTexture>; 3],
 }
 
@@ -69,29 +71,36 @@ pub struct TypeToolUi {
     mode_entity: Entity,
 }
 
-fn type_tool_setup(mut commands: Commands, mut glyph_textures: ResMut<Assets<GlyphTexture>>) {
+pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Assets<GlyphTexture>) {
     use ascii_ui::widgets;
+    let root_entity = commands.spawn(()).id();
 
     let mut mode_entity = Entity::PLACEHOLDER;
     let ui_builder = col![
         row![
-            widgets::Divider::build('=').with(Flex::new(1)),
-            widgets::Text::build(" Type Tool "),
-            widgets::Divider::build('=').with(Flex::new(1)),
-        ],
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
+            widgets::Divider::build('=')
+                .with(Flex::new(1))
+                .parent(root_entity),
+            widgets::Text::build(" Type Tool ").parent(root_entity),
+            widgets::Divider::build('=')
+                .with(Flex::new(1))
+                .parent(root_entity),
+        ]
+        .parent(root_entity),
+        widgets::SingleChildWidget::build(None)
+            .with(attachments::SizedBox::vertical(1))
+            .parent(root_entity),
         row![
-            widgets::Text::build("Mode: "),
+            widgets::Text::build("Mode: ").parent(root_entity),
             widgets::Text::build("")
                 .with(InteractableMarker)
+                .parent(root_entity)
                 .save_id(&mut mode_entity)
         ]
+        .parent(root_entity)
     ];
 
-    let ui_entity = ui_builder
-        .apply(&mut commands)
-        .with(TypeToolUi { mode_entity })
-        .with(FocusedToolUi)(&mut commands);
+    let ui_entity = ui_builder.apply(commands).with(TypeToolUi { mode_entity })(commands);
 
     let cursors = [
         glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
@@ -110,34 +119,46 @@ fn type_tool_setup(mut commands: Commands, mut glyph_textures: ResMut<Assets<Gly
             Box::new(['#']),
         )))),
     ];
-    commands.spawn((
-        GlyphSprite {
-            texture: cursors[0].clone(),
-            offset: IVec2 { x: 0, y: 0 },
-        },
-        TypeTool {
-            ui_entity,
-            mode: TypeMode::Regular,
-            cursors,
-        },
-        Position(IVec2::new(-10, 0)),
-        Depth(10.0),
-        FocusedTool,
-        GamePhysicsGridMarker,
-        ExclusiveKeyboardEventHandler,
-    ));
+
+    let cursor_entity = commands
+        .spawn((
+            GlyphSprite {
+                texture: cursors[0].clone(),
+                offset: IVec2 { x: 0, y: 0 },
+            },
+            Position(IVec2::new(-10, 0)),
+            Depth(10.0),
+            GamePhysicsGridMarker,
+        ))
+        .id();
+
+    commands
+        .entity(root_entity)
+        .insert((
+            FocusedTool,
+            ExclusiveKeyboardEventHandler,
+            TypeTool {
+                mode: TypeMode::Regular,
+                cursor_entity,
+                cursors,
+            },
+            ToolUiEntity(ui_entity),
+        ))
+        .add_child(ui_entity)
+        .add_child(cursor_entity);
 }
 
 fn type_tool_cursor_update(
     mut commands: Commands,
     game_grid: Res<GamePhysicsGrid>,
     time: Res<Time>,
-    mut q_tool: Query<
-        (Entity, &TypeTool, &mut GlyphSprite, Has<TargetGlyphBuffer>),
-        (With<FocusedTool>, Without<TypeToolUi>),
-    >,
+    q_tool: Query<(Entity, &TypeTool)>,
+    mut q_cursor: Query<(&mut GlyphSprite, Has<TargetGlyphBuffer>)>,
 ) {
-    let Ok((tool_entity, tool, mut sprite, has_target)) = q_tool.get_single_mut() else {
+    let Ok((tool_entity, tool)) = q_tool.get_single() else {
+        return;
+    };
+    let Ok((mut cursor_sprite, has_target)) = q_cursor.get_mut(tool.cursor_entity) else {
         return;
     };
     if time.elapsed_secs().fract() < 0.5 {
@@ -147,8 +168,8 @@ fn type_tool_cursor_update(
                 .insert(TargetGlyphBuffer(game_grid.unwrap()));
         }
         let active_cursor = &tool.cursors[tool.mode.id()];
-        if &sprite.texture != active_cursor {
-            sprite.texture = active_cursor.clone();
+        if &cursor_sprite.texture != active_cursor {
+            cursor_sprite.texture = active_cursor.clone();
         }
     } else {
         if has_target {
@@ -161,17 +182,16 @@ fn type_tool_update(
     mut commands: Commands,
     mut ev_keyboard: EventReader<KeyboardInput>,
     mut q_tool: Query<
-        (
-            Entity,
-            &mut TypeTool,
-            &mut Position,
-            Has<ExclusiveKeyboardEventHandler>,
-        ),
+        (Entity, &mut TypeTool, Has<ExclusiveKeyboardEventHandler>),
         (With<FocusedTool>, Without<TypeToolUi>),
     >,
+    mut q_cursor: Query<(&mut Position,)>,
     mut q_layer: Query<(&mut EditorLayer, &GlobalPosition), With<SelectedEditorLayer>>,
 ) {
-    let Ok((tool_entity, tool, mut cursor_position, exclusive)) = q_tool.get_single_mut() else {
+    let Ok((tool_entity, tool, exclusive)) = q_tool.get_single_mut() else {
+        return;
+    };
+    let Ok((mut cursor_position,)) = q_cursor.get_mut(tool.cursor_entity) else {
         return;
     };
 
@@ -190,10 +210,7 @@ fn type_tool_update(
                 let mut input_character: Input = Input::None;
                 match ev.key_code {
                     KeyCode::Escape => {
-                        commands
-                            .entity(tool_entity)
-                            .remove::<(ExclusiveKeyboardEventHandler, FocusedTool)>();
-                        commands.entity(tool.ui_entity).remove::<FocusedToolUi>();
+                        commands.entity(tool_entity).despawn_recursive();
                     }
 
                     KeyCode::ArrowLeft => cursor_position.x -= 1,
@@ -256,15 +273,15 @@ fn type_tool_update(
 }
 
 fn type_tool_ui_update(
-    mut q_tool: Query<(&mut TypeTool, &Position), (With<FocusedTool>, Without<TypeToolUi>)>,
+    mut q_tool: Query<(&mut TypeTool, &ToolUiEntity), (With<FocusedTool>, Without<TypeToolUi>)>,
     q_ui_root: Query<&TypeToolUi, Without<TypeTool>>,
     mut q_mode_text: Query<(&mut widgets::Text, Has<ButtonJustPressedMarker>)>,
 ) {
-    let Ok((mut tool, cursor_position)) = q_tool.get_single_mut() else {
+    let Ok((mut tool, ui_entity)) = q_tool.get_single_mut() else {
         return;
     };
 
-    let Ok(tool_ui) = q_ui_root.get(tool.ui_entity) else {
+    let Ok(tool_ui) = q_ui_root.get(**ui_entity) else {
         return;
     };
 
@@ -283,7 +300,7 @@ fn type_tool_ui_update(
 pub struct TextPlugin;
 impl Plugin for TextPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, type_tool_setup).add_systems(
+        app.add_systems(
             Update,
             (
                 type_tool_update,

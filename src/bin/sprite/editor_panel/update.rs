@@ -1,13 +1,15 @@
 use ascii_ui::{attachments::Root, widgets::SingleChildWidget};
-use bevy::{input::keyboard::KeyboardInput, prelude::*};
+use bevy::prelude::*;
 
-use glyph_render::glyph_buffer::GlyphBuffer;
+use glyph_render::{glyph_buffer::GlyphBuffer, glyph_render_plugin::GlyphTexture};
 
 use spatial_grid::grid::SpatialGrid;
 
 use bevy_ascii_game::physics_grids::UiPhysicsGrid;
 
-use crate::tools::{text::TypeTool, ExclusiveKeyboardEventHandler, FocusedTool, FocusedToolUi};
+use crate::tools::{
+    text::spawn_type_tool, ExclusiveKeyboardEventHandler, FocusedTool, ToolUiEntity,
+};
 
 use super::{setup::DebugMenuMarker, state::EditorPanelState};
 
@@ -52,14 +54,14 @@ pub(super) fn update_position(
 
 pub(super) fn update_editor_ui(
     q_editor_state: Res<EditorPanelState>,
-    q_focused: Query<Entity, With<FocusedToolUi>>,
+    q_focused: Query<&ToolUiEntity, With<FocusedTool>>,
     mut q_container: Query<&mut SingleChildWidget>,
 ) {
-    let focused_tool_entity = q_focused.get_single().ok();
+    let focused_tool_ui = q_focused.get_single().ok();
 
     if let Some(container_entity) = q_editor_state.tool_container {
         if let Ok(mut container) = q_container.get_mut(container_entity) {
-            container.child = focused_tool_entity;
+            container.child = focused_tool_ui.map(|entity| **entity);
         }
     }
 }
@@ -67,17 +69,13 @@ pub(super) fn update_editor_ui(
 pub(super) fn update_editor_shortcuts(
     mut commands: Commands,
     q_focused: Query<Entity, With<FocusedTool>>,
-    q_focused_ui: Query<Entity, With<FocusedToolUi>>,
     q_using_keyboard: Query<(), With<ExclusiveKeyboardEventHandler>>,
-    q_type_tool: Query<(Entity, &TypeTool)>,
     input_keys: Res<ButtonInput<KeyCode>>,
+    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
 ) {
     let clear_focused = |commands: &mut Commands| {
         for entity in &q_focused {
-            commands.entity(entity).remove::<FocusedTool>();
-        }
-        for entity in &q_focused_ui {
-            commands.entity(entity).remove::<FocusedToolUi>();
+            commands.entity(entity).despawn_recursive();
         }
     };
 
@@ -85,12 +83,7 @@ pub(super) fn update_editor_shortcuts(
         return;
     }
     if input_keys.just_pressed(KeyCode::KeyT) {
-        if let Ok((tool_entity, tool)) = q_type_tool.get_single() {
-            clear_focused(&mut commands);
-            commands
-                .entity(tool_entity)
-                .insert((FocusedTool, ExclusiveKeyboardEventHandler));
-            commands.entity(tool.ui_entity).insert(FocusedToolUi);
-        }
+        clear_focused(&mut commands);
+        spawn_type_tool(&mut commands, &mut glyph_textures)
     }
 }

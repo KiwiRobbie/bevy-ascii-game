@@ -1,13 +1,7 @@
-use std::sync::Arc;
-
 use ascii_ui::mouse::input::MouseInput;
 use bevy::{
-    color::palettes::css::RED,
     core_pipeline::bloom::Bloom,
-    input::{
-        keyboard::{Key, KeyboardInput},
-        mouse::MouseMotion,
-    },
+    input::mouse::MouseMotion,
     prelude::*,
     render::camera::CameraRenderGraph,
     window::{PrimaryWindow, WindowResolution},
@@ -16,7 +10,7 @@ use bevy::{
 use bevy_ascii_game::{
     debug::DebugPlugin,
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},
-    tilemap::{component::Tilemap, plugin::TilemapPlugin},
+    tilemap::plugin::TilemapPlugin,
     tileset::plugin::TilesetPlugin,
     widgets::UiSectionsPlugin,
 };
@@ -27,15 +21,13 @@ use glyph_render::{
     glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_buffer::GlyphBuffer,
-    glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture, GlyphTextureSource},
-    glyph_sprite::GlyphSprite,
+    glyph_render_plugin::GlyphRenderPlugin,
 };
-use grid_physics::{plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
+use grid_physics::plugin::PhysicsPlugin;
 use layers::{EditorLayer, EditorLayerPlugin, SelectedEditorLayer};
 use spatial_grid::{
-    depth::Depth,
     grid::SpatialGrid,
-    position::{Position, SpatialBundle, SpatialTraits},
+    position::{Position, SpatialTraits},
     remainder::Remainder,
     PositionPropagationPlugin,
 };
@@ -80,33 +72,29 @@ fn main() {
             font_load_system,
             mouse_zoom_system,
             mouse_pan_system,
-            keyboard_pan_system,
+            // keyboard_pan_system,
         ),
     );
 
     app.run();
 }
 
-fn setup_system(
-    mut commands: Commands,
-    server: Res<AssetServer>,
-    mut glyph_textures: ResMut<Assets<GlyphTexture>>,
-) {
+fn setup_system(mut commands: Commands) {
     commands.spawn((
         EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
         SelectedEditorLayer,
         GamePhysicsGridMarker,
     ));
 
-    commands
-        .spawn((
-            Tilemap(server.load("tilemaps/sprite.tilemap.ron")),
-            SolidPhysicsBundle {
-                position: SpatialBundle::from(IVec2::new(20, 10)),
-                ..Default::default()
-            },
-        ))
-        .insert(GamePhysicsGridMarker);
+    // commands
+    //     .spawn((
+    //         Tilemap(server.load("tilemaps/sprite.tilemap.ron")),
+    //         SolidPhysicsBundle {
+    //             position: SpatialBundle::from(IVec2::new(20, 10)),
+    //             ..Default::default()
+    //         },
+    //     ))
+    //     .insert(GamePhysicsGridMarker);
 
     commands.spawn((
         Camera2d,
@@ -119,24 +107,24 @@ fn setup_system(
         Bloom::default(),
     ));
 
-    commands
-        .spawn((
-            GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
-                    1,
-                    1,
-                    Box::new(['#']),
-                )))),
-                offset: IVec2 { x: 0, y: 0 },
-            },
-            GlyphSolidColor { color: RED.into() },
-            SpatialBundle {
-                ..Default::default()
-            },
-            Depth(-1.0),
-            EditorCursorMarker,
-        ))
-        .insert(GamePhysicsGridMarker);
+    // commands
+    //     .spawn((
+    //         GlyphSprite {
+    //             texture: glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
+    //                 1,
+    //                 1,
+    //                 Box::new(['#']),
+    //             )))),
+    //             offset: IVec2 { x: 0, y: 0 },
+    //         },
+    //         GlyphSolidColor { color: RED.into() },
+    //         SpatialBundle {
+    //             ..Default::default()
+    //         },
+    //         Depth(-1.0),
+    //         EditorCursorMarker,
+    //     ))
+    //     .insert(GamePhysicsGridMarker);
 }
 
 fn mouse_zoom_system(
@@ -199,46 +187,43 @@ fn mouse_pan_system(
     }
 }
 
-fn keyboard_pan_system(
-    mut evr_kbd: EventReader<KeyboardInput>,
-    mut q_cursor: Query<
-        (&mut Position, &mut Remainder),
-        (With<EditorCursorMarker>, Without<SpatialGrid>),
-    >,
-    mut q_grid: Query<
-        (&mut Position, &mut Remainder),
-        (With<SpatialGrid>, With<PrimaryGlyphBufferMarker>),
-    >,
-) {
-    let Ok(mut cursor) = q_cursor.get_single_mut() else {
-        return;
-    };
-    let Ok(mut grid) = q_grid.get_single_mut() else {
-        return;
-    };
+// fn keyboard_pan_system(
+//     mut evr_kbd: EventReader<KeyboardInput>,
+//     mut q_cursor: Query<
+//         (&mut Position, &mut Remainder),
+//         (With<EditorCursorMarker>, Without<SpatialGrid>),
+//     >,
+//     mut q_grid: Query<
+//         (&mut Position, &mut Remainder),
+//         (With<SpatialGrid>, With<PrimaryGlyphBufferMarker>),
+//     >,
+// ) {
+//     let Ok(mut cursor) = q_cursor.get_single_mut() else {
+//         return;
+//     };
+//     let Ok(mut grid) = q_grid.get_single_mut() else {
+//         return;
+//     };
 
-    for ev in evr_kbd.read() {
-        if ev.state.is_pressed() {
-            if let Some(offset) = match &ev.logical_key {
-                Key::ArrowLeft => Some(Vec2::NEG_X),
-                Key::ArrowRight => Some(Vec2::X),
-                Key::ArrowDown => Some(Vec2::NEG_Y),
-                Key::ArrowUp => Some(Vec2::Y),
-                Key::Character(ch) => match ch.as_str() {
-                    "h" => Some(Vec2::NEG_X),
-                    "l" => Some(Vec2::X),
-                    "j" => Some(Vec2::NEG_Y),
-                    "k" => Some(Vec2::Y),
-                    _ => None,
-                },
-                _ => None,
-            } {
-                cursor.offset(offset);
-                grid.offset(offset);
-            }
-        }
-    }
-}
-
-#[derive(Component)]
-pub(crate) struct EditorCursorMarker;
+//     for ev in evr_kbd.read() {
+//         if ev.state.is_pressed() {
+//             if let Some(offset) = match &ev.logical_key {
+//                 Key::ArrowLeft => Some(Vec2::NEG_X),
+//                 Key::ArrowRight => Some(Vec2::X),
+//                 Key::ArrowDown => Some(Vec2::NEG_Y),
+//                 Key::ArrowUp => Some(Vec2::Y),
+//                 Key::Character(ch) => match ch.as_str() {
+//                     "h" => Some(Vec2::NEG_X),
+//                     "l" => Some(Vec2::X),
+//                     "j" => Some(Vec2::NEG_Y),
+//                     "k" => Some(Vec2::Y),
+//                     _ => None,
+//                 },
+//                 _ => None,
+//             } {
+//                 cursor.offset(offset);
+//                 grid.offset(offset);
+//             }
+//         }
+//     }
+// }

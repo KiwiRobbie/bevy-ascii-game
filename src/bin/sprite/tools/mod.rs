@@ -8,10 +8,10 @@ pub mod text;
 pub struct FocusedTool;
 
 #[derive(Debug, Component)]
-pub struct FocusedToolUi;
-
-#[derive(Debug, Component)]
 pub struct ExclusiveKeyboardEventHandler;
+
+#[derive(Debug, Component, Deref, DerefMut)]
+pub struct ToolUiEntity(pub Entity);
 
 pub struct EditorToolsPlugin;
 impl Plugin for EditorToolsPlugin {

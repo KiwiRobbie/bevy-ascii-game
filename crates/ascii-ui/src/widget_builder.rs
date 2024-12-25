@@ -1,10 +1,14 @@
-use bevy::ecs::{bundle::Bundle, entity::Entity, system::Commands};
+use bevy::{
+    ecs::{bundle::Bundle, entity::Entity, system::Commands},
+    prelude::BuildChildren,
+};
 
 pub type WidgetBuilderFn<'a> = Box<dyn (FnOnce(&mut Commands) -> Entity) + 'a>;
 
 pub trait WidgetBuilder<'a, 'b> {
     fn entity(entity: Entity) -> WidgetBuilderFn<'a>;
     fn with<B: Bundle>(self, attachments: B) -> WidgetBuilderFn<'a>;
+    fn parent(self, entity: Entity) -> WidgetBuilderFn<'a>;
     fn apply(self, commands: &mut Commands) -> WidgetBuilderFn<'b>;
 }
 
@@ -18,7 +22,13 @@ impl<'a, 'b> WidgetBuilder<'a, 'b> for WidgetBuilderFn<'a> {
             commands.entity(entity).insert(attachments).id()
         })
     }
-
+    fn parent(self, parent: Entity) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands: &mut Commands| {
+            let entity = self(commands);
+            commands.entity(parent).add_child(entity);
+            entity
+        })
+    }
     fn apply(self, commands: &mut Commands) -> WidgetBuilderFn<'b> {
         let entity = self(commands);
         Box::new(move |_: &mut Commands| entity)

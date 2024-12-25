@@ -6,13 +6,7 @@ use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, Divider, FlexWidget, SingleChildWidget},
 };
-use bevy::{
-    ecs::{
-        component::Component,
-        system::{Commands, ResMut},
-    },
-    math::{IVec2, UVec2},
-};
+use bevy::prelude::*;
 
 use bevy_ascii_game::{
     physics_grids::UiPhysicsGridMarker,

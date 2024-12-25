@@ -8,11 +8,14 @@
     "cooldown",
     "debugdump",
     "despawn",
+    "gamepad",
+    "gamepads",
     "Interactable",
     "labeled",
     "rect",
     "Tilemap",
     "tilemaps",
+    "Tileset",
     "tilesets"
   ]
 }

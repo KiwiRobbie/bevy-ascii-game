@@ -3,6 +3,7 @@
 
 pub mod debug;
 pub mod debug_menu;
+pub mod ecs_utils;
 pub mod mount;
 pub mod physics_grids;
 pub mod player;
@@ -11,7 +12,7 @@ pub mod tileset;
 pub mod widgets;
 
 pub(crate) mod utils {
-    use bevy::prelude::*;
+    use bevy::{ecs::entity::EntityHashSet, prelude::*};
 
     pub(crate) fn clear_component<T: Component>(
         q_focused: Query<Entity, With<T>>,
