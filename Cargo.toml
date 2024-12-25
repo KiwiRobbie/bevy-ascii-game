@@ -2,7 +2,7 @@
 name = "bevy-ascii-game"
 version = "0.1.0"
 edition = "2021"
-default-run = "bevy-ascii-game"
+default-run = "main"
 
 [dependencies]
 anyhow = "1.0.79"
@@ -40,6 +40,11 @@ name = "mirror"
 
 [[bin]]
 name = "tilemap"
+
+
+[[bin]]
+name = "main"
+
 
 # # Enable a small amount of optimization in debug mode
 # [profile.dev]

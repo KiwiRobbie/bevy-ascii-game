@@ -22,7 +22,7 @@ use bevy::{
         camera::{Camera, CameraRenderGraph, ClearColorConfig},
         texture::ImagePlugin,
     },
-    window::{Window, WindowPlugin},
+    window::{Window, WindowPlugin, WindowResolution},
     DefaultPlugins,
 };
 
@@ -67,6 +67,7 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     present_mode: bevy::window::PresentMode::AutoNoVsync,
+                    resolution: WindowResolution::default().with_scale_factor_override(1.0),
                     ..Default::default()
                 }),
                 ..Default::default()
