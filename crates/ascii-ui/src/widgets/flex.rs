@@ -13,10 +13,14 @@ use crate::{
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
+#[require(MultiChildWidget)]
 pub struct FlexWidget {
     pub direction: FlexDirection,
-    pub children: Vec<Entity>,
 }
+
+#[derive(Component, Debug, Clone, Reflect, Default, Deref, DerefMut)]
+#[reflect(Component)]
+pub struct MultiChildWidget(pub Vec<Entity>);
 
 impl FlexDirection {
     pub fn main_axis(&self) -> UVec2 {
@@ -56,6 +60,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
         let flex_widget = world
             .get::<FlexWidget>(entity)
             .expect("Flex Widget Logic missing Flex Component!");
+        let children = &**world.get::<MultiChildWidget>(entity).unwrap();
         let flex_dir = flex_widget.direction.clone();
 
         let child_constraint = match flex_dir {
@@ -65,10 +70,9 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
 
         let mut child_total_space: u32 = 0;
         let mut child_total_flex: u32 = 0;
-        let mut children: Vec<(Entity, UVec2, Flex)> =
-            Vec::with_capacity(flex_widget.children.len());
+        let mut child_layout_data: Vec<(Entity, UVec2, Flex)> = Vec::with_capacity(children.len());
 
-        for &child in &flex_widget.children {
+        for &child in children {
             let layout = get_layout(child, world);
             let child_size = layout
                 .logic
@@ -85,7 +89,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
                 0 => child_total_space += main_axis_size,
                 _ => child_total_flex += flex.factor,
             };
-            children.push((child, size, flex));
+            child_layout_data.push((child, size, flex));
         }
 
         let main_axis_space = match flex_dir {
@@ -103,7 +107,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
             (None, _) => (0, 0),
         };
 
-        let num_children = children.len() as u32;
+        let num_children = child_layout_data.len() as u32;
         let (spacing, extra_spaces) = {
             match main_axis_alignment {
                 MainAxisAlignment::SpaceBetween => (
@@ -131,7 +135,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
         let mut remaining_flex = child_total_flex;
         let mut remaining_flex_space = total_flex_space;
 
-        for (index, (child, size, flex)) in children.iter().enumerate() {
+        for (index, (child, size, flex)) in child_layout_data.iter().enumerate() {
             if flex.factor > 0 {
                 let flex_space = (remaining_flex_space * flex.factor) / remaining_flex;
                 remaining_flex -= flex.factor;
@@ -158,7 +162,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
                 cursor_pos += main_axis * size.as_ivec2();
 
                 if main_axis_alignment == MainAxisAlignment::SpaceBetween
-                    && index + 1 != children.len()
+                    && index + 1 != child_layout_data.len()
                 {
                     let extra = index < extra_spaces;
                     cursor_pos += main_axis * spacing as i32;
@@ -173,11 +177,28 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
     }
 
     fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
-        world
-            .get::<FlexWidget>(entity)
-            .expect("Row logic without Row!")
-            .children
-            .clone()
+        let children = &**world
+            .get::<MultiChildWidget>(entity)
+            .expect("Row logic without Row!");
+        return children.clone();
+    }
+}
+
+impl MultiChildWidget {
+    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let children_entities = children
+                .into_iter()
+                .map(|child| (child)(commands))
+                .collect();
+
+            commands
+                .spawn((
+                    MultiChildWidget(children_entities),
+                    WidgetLayout::new::<FlexLayoutLogic>(),
+                ))
+                .id()
+        })
     }
 }
 
@@ -194,10 +215,8 @@ impl FlexWidget {
 
             commands
                 .spawn((
-                    Self {
-                        direction,
-                        children: children_entities,
-                    },
+                    Self { direction },
+                    MultiChildWidget(children_entities),
                     WidgetLayout::new::<FlexLayoutLogic>(),
                 ))
                 .id()

@@ -78,26 +78,17 @@ pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Asse
     let mut mode_entity = Entity::PLACEHOLDER;
     let ui_builder = col![
         row![
-            widgets::Divider::build('=')
-                .with(Flex::new(1))
-                .parent(root_entity),
-            widgets::Text::build(" Type Tool ").parent(root_entity),
-            widgets::Divider::build('=')
-                .with(Flex::new(1))
-                .parent(root_entity),
-        ]
-        .parent(root_entity),
-        widgets::SingleChildWidget::build(None)
-            .with(attachments::SizedBox::vertical(1))
-            .parent(root_entity),
+            widgets::Divider::build('=').with(Flex::new(1)),
+            widgets::Text::build(" Type Tool "),
+            widgets::Divider::build('=').with(Flex::new(1)),
+        ],
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
         row![
             widgets::Text::build("Mode: ").parent(root_entity),
             widgets::Text::build("")
                 .with(InteractableMarker)
-                .parent(root_entity)
                 .save_id(&mut mode_entity)
-        ]
-        .parent(root_entity)
+        ],
     ];
 
     let ui_entity = ui_builder.apply(commands).with(TypeToolUi { mode_entity })(commands);

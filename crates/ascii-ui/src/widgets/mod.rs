@@ -16,7 +16,7 @@ pub use button::Button;
 pub use checkbox::Checkbox;
 pub use container::SingleChildWidget;
 pub use divider::Divider;
-pub use flex::FlexWidget;
+pub use flex::{FlexWidget, MultiChildWidget};
 pub use grid::Grid;
 pub use list_builder::ListBuilderWidget;
 pub use scrolling_view::ScrollingView;

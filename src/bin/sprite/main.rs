@@ -93,21 +93,21 @@ fn setup(mut commands: Commands) {
         ))
         .id();
 
-    let bg_entity = commands
-        .spawn((
-            EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
-            SelectedEditorLayer,
-            GamePhysicsGridMarker,
-            Depth(0.0),
-        ))
-        .id();
+    // let bg_entity = commands
+    //     .spawn((
+    //         EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
+    //         SelectedEditorLayer,
+    //         GamePhysicsGridMarker,
+    //         Depth(0.0),
+    //     ))
+    //     .id();
 
     commands
         .spawn(EditorLayers::new(vec![
             EditorLayerItem::new(fg_entity, "foreground"),
-            EditorLayerItem::new(bg_entity, "background"),
+            // EditorLayerItem::new(bg_entity, "background"),
         ]))
-        .add_children(&[fg_entity, bg_entity]);
+        .add_children(&[fg_entity]);
 
     commands.spawn((
         Camera2d,

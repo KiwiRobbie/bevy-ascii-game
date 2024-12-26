@@ -1,7 +1,8 @@
 use ascii_ui::{
     layout::delete_layout_recursive,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
-    widgets, FlexDirection,
+    widgets::{self, MultiChildWidget},
+    FlexDirection,
 };
 use bevy::{
     ecs::component::{ComponentId, ComponentInfo},
@@ -106,13 +107,13 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
 
 pub(crate) fn inspector_fetch_system(
     mut commands: Commands,
-    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::FlexWidget)>,
+    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::MultiChildWidget)>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
 ) {
     let type_registry = &type_registry.0;
 
-    for (inspector_entity, inspector, column) in q_inspector.iter_mut() {
+    for (inspector_entity, inspector, column_children) in q_inspector.iter_mut() {
         if let Some(target) = inspector.target {
             let mut inspector_widgets = vec![];
             inspector_widgets.push(widgets::Text::build(format!("Entity: {:?}", target))(
@@ -190,23 +191,20 @@ pub(crate) fn inspector_fetch_system(
                 }
             }
 
-            for entity in column.children.iter() {
+            for entity in &**column_children {
                 delete_layout_recursive(*entity, &mut commands, world);
             }
 
-            commands
-                .entity(inspector_entity)
-                .insert((widgets::FlexWidget {
-                    children: inspector_widgets,
+            commands.entity(inspector_entity).insert((
+                widgets::FlexWidget {
                     direction: FlexDirection::Vertical,
-                },));
+                },
+                MultiChildWidget(inspector_widgets),
+            ));
         } else {
             commands
                 .entity(inspector_entity)
-                .insert(widgets::FlexWidget {
-                    children: vec![],
-                    direction: FlexDirection::Vertical,
-                });
+                .insert(MultiChildWidget(vec![]));
         }
     }
 }

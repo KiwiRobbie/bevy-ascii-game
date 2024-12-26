@@ -3,7 +3,7 @@ use bevy::ecs::{component::Component, entity::Entity, system::Commands};
 use ascii_ui::{
     list_widget::ListWidgetExtension,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
-    widgets,
+    widgets::{self, MultiChildWidget},
 };
 
 #[derive(Component)]
@@ -38,41 +38,37 @@ where
         })
     }
 
-    pub(crate) fn push<W: ListWidgetExtension>(
+    pub(crate) fn push(
         &mut self,
-        list_widget: &mut W,
+        list_widget: &mut MultiChildWidget,
         item: T,
         commands: &mut Commands,
     ) {
         list_widget.push((self.builder)(self.items.len(), &item)(commands));
         self.items.push(item);
     }
-    pub(crate) fn pop<W: ListWidgetExtension>(
-        &mut self,
-        self_column: &mut W,
-        commands: &mut Commands,
-    ) {
+    pub(crate) fn pop(&mut self, self_column: &mut MultiChildWidget, commands: &mut Commands) {
         if let Some(entity) = self_column.pop() {
             self.items.pop().unwrap();
             commands.entity(entity).despawn();
         }
     }
 
-    pub(crate) fn _set(
-        &mut self,
-        self_column: &mut widgets::FlexWidget,
-        items: Vec<T>,
-        commands: &mut Commands,
-    ) {
-        self.items = items;
-        for entity in self_column.children.iter() {
-            commands.entity(*entity).despawn();
-        }
-        self_column.children = self
-            .items
-            .iter()
-            .enumerate()
-            .map(|(index, item)| (self.builder)(index, item)(commands))
-            .collect();
-    }
+    // pub(crate) fn _set(
+    //     &mut self,
+    //     self_column: &mut widgets::FlexWidget,
+    //     items: Vec<T>,
+    //     commands: &mut Commands,
+    // ) {
+    //     self.items = items;
+    //     for entity in self_column.children.iter() {
+    //         commands.entity(*entity).despawn();
+    //     }
+    //     self_column.children = self
+    //         .items
+    //         .iter()
+    //         .enumerate()
+    //         .map(|(index, item)| (self.builder)(index, item)(commands))
+    //         .collect();
+    // }
 }
