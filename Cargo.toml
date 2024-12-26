@@ -33,6 +33,7 @@ smol_str = "0.2.2"
 bevy_rand = { version = "0.8", features = ["rand_chacha", "wyrand"] }
 rand_core = "0.6.4"
 swash = "0.1.8"
+itertools = "0.13.0"
 
 [lib]
 

@@ -301,6 +301,7 @@ dependencies = [
  "bevy_rand",
  "glyph-render",
  "grid-physics",
+ "itertools",
  "rand_core",
  "ron",
  "serde",

@@ -26,8 +26,10 @@ use glyph_render::{
     glyph_render_plugin::GlyphRenderPlugin,
 };
 use grid_physics::plugin::PhysicsPlugin;
+use itertools::Duplicates;
 use layers::{EditorLayer, EditorLayerPlugin, SelectedEditorLayer};
 use spatial_grid::{
+    global_position::GlobalPosition,
     grid::SpatialGrid,
     position::{Position, SpatialTraits},
     remainder::Remainder,
@@ -168,7 +170,7 @@ fn testing_setup(mut commands: Commands, server: ResMut<AssetServer>) {
     ));
 }
 
-fn create_target(
+fn create_target_angle_offset(
     theta: f32,
     offset: Vec2,
     thickness: f32,
@@ -193,14 +195,55 @@ fn create_target(
     image
 }
 
+fn create_target_endpoints(
+    start: Vec2,
+    end: Vec2,
+    thickness: f32,
+    padding: UVec2,
+    size: UVec2,
+    image_size: UVec2,
+) -> Vec<f32> {
+    dbg!(start, end);
+    let pixel_start = start * size.as_vec2() + padding.as_vec2();
+    let pixel_end = end * size.as_vec2() + padding.as_vec2();
+
+    let mut image: Vec<f32> = vec![0.; image_size.x as usize * image_size.y as usize];
+
+    for (i, pixel) in image.iter_mut().enumerate() {
+        let x = i % image_size.x as usize;
+        let y = i / image_size.x as usize;
+        let pixel_pos = Vec2::new(x as f32, y as f32);
+
+        let line_length = (pixel_end - pixel_start).length();
+        let primary_axis = (pixel_end - pixel_start) / line_length;
+        let pixel_local_pos = pixel_pos - pixel_start;
+        let t = primary_axis.dot(pixel_local_pos).clamp(0., line_length);
+
+        let orthogonal_component = pixel_local_pos - primary_axis * t;
+        let distance = orthogonal_component.length();
+
+        let frac = (thickness - distance).clamp(0.0, 1.0);
+        *pixel = frac;
+    }
+
+    image
+}
+
 fn testing_update(
     q_testing: Query<(&CustomFont, &FontSize), With<TestingMarker>>,
     fonts: Res<Assets<CustomFontSource>>,
     time: Res<Time>,
-    mut ev_mouse: EventReader<MouseWheel>,
+    q_physics_grid: Query<
+        (&SpatialGrid, &GlobalPosition, &GlobalTransform),
+        With<PrimaryGlyphBufferMarker>,
+    >,
+
+    mut ev_mouse_wheel: EventReader<MouseWheel>,
+    mouse_input: Res<MouseInput>,
     mut offset: Local<Vec2>,
+    mut q_layer: Query<(&mut EditorLayer, &GlobalPosition), With<SelectedEditorLayer>>,
 ) {
-    for ev in ev_mouse.read() {
+    for ev in ev_mouse_wheel.read() {
         offset.y += ev.y;
     }
 
@@ -210,8 +253,6 @@ fn testing_update(
     let Some(font_source) = fonts.get(font.id()) else {
         return;
     };
-    let metrics = font_source.as_ref().metrics(&[]).scale(**font_size as f32);
-    let descent = metrics.descent as i32;
 
     let grid_size = UVec2::new(font_size.advance(), font_size.line_spacing());
     let padding_start = grid_size / 4;
@@ -233,7 +274,7 @@ fn testing_update(
 
     let mut rendered_characters = vec![];
 
-    for character in CharacterSet::default().0 {
+    for character in "!\"'()*+,-./:;=IJLT_´`fijlrt{|}~".chars() {
         let glyph_id = font_source.as_ref().charmap().map(character);
         let Some(image) = render.render(&mut scaler, glyph_id) else {
             continue;
@@ -256,75 +297,157 @@ fn testing_update(
             new_image_data[dst_index] = *value as f32 / 255.;
         }
 
-        let value: f32 = new_image_data.iter().sum();
-
-        rendered_characters.push((value, character, new_image_data));
-    }
-    rendered_characters.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());
-
-    let min = rendered_characters.first().unwrap().0;
-    let max = rendered_characters.last().unwrap().0;
-    let range = max - min;
-    dbg!(min, max, range);
-
-    for (value, _, _) in rendered_characters.iter_mut() {
-        *value = (*value - min) / range;
+        rendered_characters.push((character, new_image_data));
     }
 
-    // let mut characters = String::new();
-    // let mut last_value = 0.;
+    let Some(world_cursor_position) = mouse_input.world_position() else {
+        return;
+    };
+    dbg!(world_cursor_position);
+    let Ok((grid, buffer_position, transform)) = q_physics_grid.get_single() else {
+        return;
+    };
 
-    // for (value, character, image) in &rendered_characters {
-    //     if *value == last_value {
-    //     } else {
-    //         println!("{last_value}: {characters}");
-    //         characters.clear();
-    //     }
-    //     last_value = *value;
-    //     characters.push(*character);
-    // }
-    // println!("{last_value}: {characters}");
+    let grid_cursor_position =
+        ((transform.compute_matrix().inverse() * world_cursor_position.extend(1.0)).xy()
+            / grid.step.as_vec2()
+            + 0.5)
+            .as_ivec2()
+            + **buffer_position;
+    dbg!(grid_cursor_position);
+    let start = Vec2::new(16.0, 0.0);
+    let end = grid_cursor_position.as_vec2();
 
-    let mut gradient = String::with_capacity(64);
-    for dst_index in 0..64 {
-        let target = &(dst_index as f32 / 64.);
-        let src_index = match rendered_characters
-            .binary_search_by(|(a, _, _)| a.partial_cmp(target).unwrap())
-        {
-            Ok(i) => i,
-            Err(i) => i,
-        };
-        gradient.push(rendered_characters[src_index].1);
+    let (mut layer, layer_pos) = q_layer.get_single_mut().unwrap();
+    layer.clear_characters(' ');
+    for pos in dda_iter(start, end) {
+        let local_start = start - pos.as_vec2();
+        let local_end = end - pos.as_vec2();
+
+        // let target = create_target_endpoints(
+        //     local_start,
+        //     local_end,
+        //     1.5,
+        //     padding_start,
+        //     grid_size,
+        //     image_size,
+        // );
+        // print_image(&target, image_size);
+        // let character = find_best_character(&target, 'x');
+        let _ = layer.write_character(pos, 'x');
     }
-    // for (_, _, image) in &rendered_characters {
-    //     print_image(image, image_size);
-    //     println!("=====================================")
-    // }
+    let start = Vec2::new(0.0, 16.0);
+    for pos in dda_iter(start, end) {
+        let local_start = start - pos.as_vec2();
+        let local_end = end - pos.as_vec2();
 
-    let target = create_target(
-        time.elapsed_secs(),
-        *offset,
-        1.5,
-        padding_start,
-        grid_size,
-        image_size,
-    );
+        // let target = create_target_endpoints(
+        //     local_start,
+        //     local_end,
+        //     1.5,
+        //     padding_start,
+        //     grid_size,
+        //     image_size,
+        // );
+        // print_image(&target, image_size);
+        let _ = layer.write_character(pos, '#');
+    }
+    // let target = create_target_angle_offset(
+    //     time.elapsed_secs(),
+    //     *offset,
+    //     1.5,
+    //     padding_start,
+    //     grid_size,
+    //     image_size,
+    // );
 
-    let mut differences: Vec<(f64, &char, &Vec<f32>)> = rendered_characters
-        .iter()
-        .map(|(_, character, image)| (image_difference(&target, &image), character, image))
-        .collect();
+    // let mut differences: Vec<(f64, &char, &Vec<f32>)> = rendered_characters
+    //     .iter()
+    //     .map(|(_, character, image)| (image_difference(&target, &image), character, image))
+    //     .filter(|(diff, _, _)| diff.is_finite())
+    //     .collect();
 
-    differences.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());
-    print_image(&target, image_size);
-    print_image(differences.first().unwrap().2, image_size);
+    // differences.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());
+    // print_image(&target, image_size);
+    // print_image(differences.first().unwrap().2, image_size);
 }
 
-fn image_difference(a: &[f32], b: &[f32]) -> f64 {
-    assert_eq!(a.len(), b.len());
-    a.iter()
-        .zip(b.iter())
-        .map(|(a, b)| ((a - b) * (a - b)) as f64)
+fn find_best_character(target: &[f32], rendered_characters: &[(char, Vec<f32>)]) -> char {
+    let mut differences: Vec<(f64, &char)> = rendered_characters
+        .iter()
+        .map(|(character, image)| (image_difference(&target, &image), character))
+        .filter(|(diff, _)| diff.is_finite())
+        .collect();
+
+    differences.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+    return differences.first().map(|(_, c)| **c).unwrap_or('x');
+}
+
+enum DdaAxis {
+    X,
+    Y,
+}
+enum DdaDirection {
+    Inc,
+    Dec,
+}
+
+// Origin: smallest coordinate
+// Axis:  primary axis
+// Direction: Is secondary axis increasing or decreasing?
+struct DdaItem {
+    origin: IVec2,
+    axis: DdaAxis,
+    direction: DdaDirection,
+}
+
+fn dda_iter(start: Vec2, end: Vec2) -> impl Iterator<Item = IVec2> {
+    let delta = end - start;
+
+    if delta.abs().x > delta.abs().y {
+        let (start, end) = match start.x > end.x {
+            true => (end, start),
+            false => (start, end),
+        };
+        let delta = end - start;
+
+        let x_min = start.x.floor() as i32;
+        let x_max = end.x.ceil() as i32;
+        let m = delta.y / delta.x;
+        itertools::Either::Left(
+            (x_min..x_max).map(move |x| IVec2::new(x, (start.y + m * (x as f32 - start.x)) as i32)),
+        )
+    } else {
+        let (start, end) = match start.y > end.y {
+            true => (end, start),
+            false => (start, end),
+        };
+        let delta = end - start;
+
+        let y_min = start.y.floor() as i32;
+        let y_max = end.y.ceil() as i32;
+        let m = delta.x / delta.y;
+        itertools::Either::Right(
+            (y_min..y_max).map(move |y| IVec2::new((start.x + m * (y as f32 - start.y)) as i32, y)),
+        )
+    }
+}
+
+fn pixel_difference(target: f32, image: f32) -> f32 {
+    let difference = target - image;
+    if difference < 0. {
+        difference * difference * 4.
+    } else {
+        difference * difference
+    }
+}
+
+fn image_difference(target: &[f32], image: &[f32]) -> f64 {
+    assert_eq!(target.len(), image.len());
+    target
+        .iter()
+        .zip(image.iter())
+        .map(|(&a, &b)| pixel_difference(a, b) as f64)
         .sum()
 }
 

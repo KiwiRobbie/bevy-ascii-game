@@ -23,7 +23,8 @@ use grid_physics::{collision::Collider, plugin::PhysicsUpdateSet, velocity::Velo
 use parallax::parallax_system;
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::{Position, SpatialBundle},
+    position::{Position, SpatialBundle, SpatialTraits},
+    remainder::Remainder,
 };
 
 use crate::player::PlayerMarker;
@@ -123,21 +124,24 @@ fn create_physics_grids(
 
 pub(crate) fn grid_translate(
     q_player: Query<
-        (&Position, &Velocity, &Collider),
+        (&Position, &Remainder, &Velocity, &Collider),
         (With<PlayerMarker>, Without<PrimaryGlyphBufferMarker>),
     >,
     mut q_primary_buffer: Query<
-        (&mut Position, &GlyphBuffer),
+        (&mut Position, &mut Remainder, &GlyphBuffer),
         (Without<PlayerMarker>, With<PrimaryGlyphBufferMarker>),
     >,
-    mut prediction_offset: Local<Vec2>,
+    mut prediction_offset_current: Local<IVec2>,
+    mut prediction_offset_target: Local<Vec2>,
     time: Res<Time>,
 ) {
-    let Ok((mut position, &GlyphBuffer { textures: _, size })) = q_primary_buffer.get_single_mut()
+    let Ok((mut position, remainder, &GlyphBuffer { textures: _, size })) =
+        q_primary_buffer.get_single_mut()
     else {
         return;
     };
-    let Ok((player_pos, player_velocity, collider)) = q_player.get_single() else {
+    let Ok((player_pos, player_remainder, player_velocity, collider)) = q_player.get_single()
+    else {
         return;
     };
     let Some(aabb) = collider.aabb() else { return };
@@ -150,22 +154,40 @@ pub(crate) fn grid_translate(
     let clamped_velocity =
         (1.0 * **player_velocity).abs().min(0.5 * size.as_vec2()) * player_velocity.signum();
 
-    *prediction_offset = damp(*prediction_offset, clamped_velocity, 2.0, time.delta_secs());
+    *prediction_offset_target = damp(
+        *prediction_offset_target,
+        clamped_velocity,
+        2.0,
+        4.0,
+        time.delta_secs(),
+    );
 
-    let predicted_position = **player_pos + prediction_offset.as_ivec2() - **position;
-    let predicted_center = predicted_position + aabb.start + aabb.size.as_ivec2() / 2;
+    let difference = *prediction_offset_target - prediction_offset_current.as_vec2();
+    if difference.x.abs() >= 1.0 {
+        prediction_offset_current.x += difference.x.round() as i32;
+    }
+    if difference.y.abs() >= 1.0 {
+        prediction_offset_current.y += difference.y.round() as i32;
+    }
+
+    let predicted_position = **player_pos - **position + *prediction_offset_current;
+    let predicted_center = predicted_position + aabb.start + aabb.size.as_ivec2();
 
     let lower_screen_pos = predicted_position;
     let upper_screen_pos = size.as_ivec2() - lower_screen_pos - aabb.size.as_ivec2();
 
-    let y_delta = predicted_center.y - y_target;
-    let x_delta = (lower_screen_pos.x - x_padding).min(0) - (upper_screen_pos.x - x_padding).min(0);
-
-    **position += IVec2::new(x_delta, y_delta);
+    let delta = IVec2::new(
+        (lower_screen_pos.x - x_padding).min(0) - (upper_screen_pos.x - x_padding).min(0),
+        predicted_center.y - y_target,
+    );
+    **position += delta;
 }
 
-fn damp(a: Vec2, b: Vec2, lambda: f32, dt: f32) -> Vec2 {
-    Vec2::lerp(a, b, 1.0 - (-lambda * dt).exp())
+fn damp(a: Vec2, b: Vec2, lambda: f32, base_speed: f32, dt: f32) -> Vec2 {
+    let distance = a.distance(b);
+    let step = dt * base_speed / distance;
+    let t = (1.0 - (-lambda * dt).exp()).max(step);
+    Vec2::lerp(a, b, t.clamp(0., 1.))
 }
 
 pub struct PhysicsGridPlugin;

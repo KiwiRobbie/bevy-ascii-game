@@ -61,7 +61,11 @@ impl EditorLayer {
     pub fn get_offset(&self) -> IVec2 {
         self.offset
     }
-
+    pub fn clear_characters(&mut self, clear_character: char) {
+        for character in &mut self.data {
+            *character = clear_character;
+        }
+    }
     pub fn write_character(&mut self, position: IVec2, character: char) -> Result<(), ()> {
         let pos =
             position * IVec2::new(1, -1) + self.size.as_ivec2().with_x(0) - IVec2::Y - self.offset;

@@ -60,7 +60,8 @@ fn update_info_count(
 ) {
     for state in q_info_counts.iter() {
         if let Some(entity) = state.fps_text {
-            q_text.get_mut(entity).unwrap().text = format!("FPS: {:0.2}", 1.0 / time.delta_secs());
+            q_text.get_mut(entity).unwrap().text =
+                format!("FPS: {:0.2}", dbg!(1.0 / time.delta_secs()));
         }
         apply_count((&mut q_text, state.entity_text), "Entity Count", &q_entity);
         apply_count((&mut q_text, state.actor_text), "Actor  Count", &q_actor);
