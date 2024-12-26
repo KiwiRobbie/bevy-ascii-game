@@ -41,10 +41,6 @@ impl WidgetLayoutLogic for TextLogic {
             y: 1,
         };
     }
-
-    fn children(&self, _entity: Entity, _world: &World) -> Vec<Entity> {
-        vec![]
-    }
 }
 
 #[derive(Bundle)]

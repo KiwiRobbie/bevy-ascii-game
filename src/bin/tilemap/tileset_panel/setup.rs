@@ -15,6 +15,7 @@ use bevy::{
         system::{Commands, Res, ResMut},
     },
     math::{IVec2, UVec2},
+    prelude::World,
 };
 
 use bevy_ascii_game::{
@@ -40,70 +41,34 @@ pub(crate) enum MutateMode {
     Remove,
 }
 
-pub(super) fn setup_ui(
-    mut commands: Commands,
-    mut menu_state: ResMut<TilesetPanelState>,
-    server: Res<AssetServer>,
-) {
+pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPanelState>) {
     let menu_state = &mut *menu_state;
 
-    let settings_tab = FlexWidget::column(vec![
-        InfoCounts::build(),
-        Divider::build('-'),
-        DebugOptions::build(),
-    ])(&mut commands);
+    let settings_tab = Box::new(|commands: &mut Commands| {
+        FlexWidget::column(vec![
+            InfoCounts::build(),
+            Divider::build('-'),
+            DebugOptions::build(),
+        ])(commands)
+    });
 
-    let list_builder_tab = {
-        let mut rows = vec![];
-        let mut list_builder = Entity::PLACEHOLDER;
-        rows.push(
-            ListBuilderWidget::build::<widgets::FlexWidget>(
-                Box::new(|_, i: &usize| widgets::Text::build(format!("{}", i))),
-                vec![0, 2, 5],
-                FlexDirection::Vertical,
-            )
-            .save_id(&mut list_builder)
-            .apply(&mut commands),
-        );
+    let tileset_tab = Box::new(|commands: &mut Commands| {
+        // let server = world.resource::<AssetServer>();
 
-        rows.push(widgets::Divider::build('-'));
-        rows.push(
-            widgets::FlexWidget::row(vec![
-                widgets::Button::build("+").with(ItemMutateButton {
-                    target: list_builder,
-                    mode: MutateMode::Add,
-                }),
-                widgets::Button::build("-").with(ItemMutateButton {
-                    target: list_builder,
-                    mode: MutateMode::Remove,
-                }),
-            ])
-            .with(MainAxisAlignment::SpaceAround),
-        );
-        rows.push(widgets::Divider::build('-'));
-
-        widgets::FlexWidget::column(rows)
-    }(&mut commands);
-
-    let tileset_tab = {
         widgets::FlexWidget::column(vec![
-                widgets::Button::build("Save").with(SaveTilemapButton),
-                ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<
-                    widgets::FlexWidget,
-                >(
-                    Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
-                    vec![],
-                    FlexDirection::Vertical,
-                )
-                .with(TilesetHandles {
-                    handles: vec![server.load("tilesets/bridge.tileset.ron")],
-                }),
-            ])
-    }(&mut commands);
+            widgets::Button::build("Save").with(SaveTilemapButton),
+            ListBuilderWidget::<(TilesetSource, Handle<TilesetSource>)>::build::<widgets::FlexWidget>(
+                Box::new(|_, (source, handle)| build_tileset_ui(source, handle.clone())),
+                vec![],
+                FlexDirection::Vertical,
+            ), // .with(TilesetHandles {
+               //     handles: vec![server.load("tilesets/bridge.tileset.ron")],
+               // }),
+        ])(commands)
+    });
 
     SingleChildWidget::build(Some(widgets::TabView::build(vec![
         ("Settings", settings_tab),
-        ("List Builder", list_builder_tab),
         ("Tileset", tileset_tab),
     ])))
     .with((

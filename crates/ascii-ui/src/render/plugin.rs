@@ -29,7 +29,7 @@ impl Plugin for RenderPlugin {
             (
                 clear_sprites,
                 (text_render, divider_render, border_render, texture_render),
-                apply_clipping,
+                // apply_clipping,
             )
                 .chain()
                 .in_set(UiRenderSet)

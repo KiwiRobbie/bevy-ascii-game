@@ -9,6 +9,7 @@ use bevy::{
         system::{Commands, ResMut},
     },
     math::{IVec2, UVec2},
+    prelude::World,
 };
 
 use crate::{
@@ -21,14 +22,18 @@ use super::{inspector::InspectorTab, state::DebugMenuState};
 pub(crate) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
     let debug_menu_state = &mut *menu_state;
 
-    let settings_tab = FlexWidget::column(vec![
-        InfoCounts::build(),
-        Divider::build('-'),
-        DebugOptions::build(),
-    ])(&mut commands);
-
-    let inspector_tab = FlexWidget::column(vec![widgets::Text::build("text")])
-        .with((InspectorTab::default(),))(&mut commands);
+    let settings_tab = Box::new(|commands: &mut Commands| {
+        FlexWidget::column(vec![
+            InfoCounts::build(),
+            Divider::build('-'),
+            DebugOptions::build(),
+        ])(commands)
+    });
+    let inspector_tab = Box::new(|commands: &mut Commands| {
+        FlexWidget::column(vec![widgets::Text::build("text")]).with((InspectorTab::default(),))(
+            commands,
+        )
+    });
 
     SingleChildWidget::build(Some(FlexWidget::column(vec![
         Text::build("[F3 Debug Menu]"),

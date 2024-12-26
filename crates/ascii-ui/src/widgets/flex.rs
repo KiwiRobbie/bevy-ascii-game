@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use spatial_grid::position::Position;
 
 use crate::{
     attachments::{Flex, MainAxisAlignment},
@@ -7,7 +8,7 @@ use crate::{
         positioned::Positioned,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    widget_builder::WidgetBuilderFn,
+    widget_builder::{WidgetBuilder, WidgetBuilderFn},
     FlexDirection,
 };
 
@@ -18,9 +19,10 @@ pub struct FlexWidget {
     pub direction: FlexDirection,
 }
 
-#[derive(Component, Debug, Clone, Reflect, Default, Deref, DerefMut)]
+#[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct MultiChildWidget(pub Vec<Entity>);
+#[require(Position)]
+pub struct MultiChildWidget;
 
 impl FlexDirection {
     pub fn main_axis(&self) -> UVec2 {
@@ -60,7 +62,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
         let flex_widget = world
             .get::<FlexWidget>(entity)
             .expect("Flex Widget Logic missing Flex Component!");
-        let children = &**world.get::<MultiChildWidget>(entity).unwrap();
+        let children = &**world.get::<Children>(entity).unwrap();
         let flex_dir = flex_widget.direction.clone();
 
         let child_constraint = match flex_dir {
@@ -175,28 +177,19 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
         }
         return cursor_pos.as_uvec2() + cross_axis.as_uvec2() * cross_axis_size;
     }
-
-    fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
-        let children = &**world
-            .get::<MultiChildWidget>(entity)
-            .expect("Row logic without Row!");
-        return children.clone();
-    }
 }
 
 impl MultiChildWidget {
     pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
-            let children_entities = children
+            let children_entities: Vec<Entity> = children
                 .into_iter()
                 .map(|child| (child)(commands))
                 .collect();
 
             commands
-                .spawn((
-                    MultiChildWidget(children_entities),
-                    WidgetLayout::new::<FlexLayoutLogic>(),
-                ))
+                .spawn((MultiChildWidget, WidgetLayout::new::<FlexLayoutLogic>()))
+                .add_children(&children_entities)
                 .id()
         })
     }
@@ -207,20 +200,8 @@ impl FlexWidget {
         direction: FlexDirection,
         children: Vec<WidgetBuilderFn<'a>>,
     ) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
-            let children_entities = children
-                .into_iter()
-                .map(|child| (child)(commands))
-                .collect();
-
-            commands
-                .spawn((
-                    Self { direction },
-                    MultiChildWidget(children_entities),
-                    WidgetLayout::new::<FlexLayoutLogic>(),
-                ))
-                .id()
-        })
+        MultiChildWidget::build(children)
+            .with((Self { direction }, WidgetLayout::new::<FlexLayoutLogic>()))
     }
 
     pub fn row<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {

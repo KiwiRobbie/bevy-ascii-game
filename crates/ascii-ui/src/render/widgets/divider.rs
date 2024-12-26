@@ -17,15 +17,12 @@ pub(crate) fn divider_render(
     q_text: Query<(Entity, &Positioned, &Divider)>,
 ) {
     for (entity, positioned, divider) in q_text.iter() {
-        commands.entity(entity).insert((
-            Position(positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32),
-            GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::from(vec![divider
-                    .character
-                    .to_string()
-                    .repeat(positioned.size.x as usize)])),
-                offset: IVec2::ZERO,
-            },
-        ));
+        commands.entity(entity).insert((GlyphSprite {
+            texture: glyph_textures.add(GlyphTexture::from(vec![divider
+                .character
+                .to_string()
+                .repeat(positioned.size.x as usize)])),
+            offset: IVec2::ZERO,
+        },));
     }
 }

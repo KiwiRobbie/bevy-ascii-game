@@ -16,6 +16,7 @@ use bevy_ascii_game::{
     tileset::plugin::TilesetPlugin,
     widgets::UiSectionsPlugin,
 };
+use bevy_remote_inspector::RemoteInspectorPlugins;
 use editor_panel::plugin::TilesetPanelPlugin;
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasCache, FontAtlasPlugin},
@@ -79,7 +80,7 @@ fn main() {
             testing_update,
         ),
     );
-
+    app.add_plugins(RemoteInspectorPlugins);
     app.run();
 }
 

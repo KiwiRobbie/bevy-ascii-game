@@ -85,12 +85,6 @@ impl WidgetLayoutLogic for ScrollingViewLogic {
 
         return constraint.max();
     }
-    fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
-        let scrolling_view = world
-            .get::<ScrollingView>(entity)
-            .expect("ScrollingView logic without ScrollingView!");
-        scrolling_view.children.clone()
-    }
 }
 
 impl ScrollingView {

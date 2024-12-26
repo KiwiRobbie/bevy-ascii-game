@@ -1,12 +1,13 @@
+use crate::remainder::Remainder;
 use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::prelude::ReflectComponent;
 use bevy_ecs::{bundle::Bundle, component::Component, world::Mut};
 use bevy_math::{IVec2, Vec2};
 use bevy_reflect::Reflect;
 
-use crate::remainder::Remainder;
-
 #[derive(Component, Default, Debug, Clone, Copy, Reflect, Deref, DerefMut)]
 #[require(crate::global_position::GlobalPosition)]
+#[reflect(Component)]
 pub struct Position(pub IVec2);
 
 impl Position {

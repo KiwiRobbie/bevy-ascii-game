@@ -35,10 +35,6 @@ impl WidgetLayoutLogic for TextureLogic {
 
         return texture.size;
     }
-
-    fn children(&self, _entity: Entity, _world: &World) -> Vec<Entity> {
-        vec![]
-    }
 }
 
 impl Texture {

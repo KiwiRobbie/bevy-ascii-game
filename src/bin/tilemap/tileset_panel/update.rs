@@ -2,7 +2,7 @@ use std::{ffi::OsStr, path::Path};
 
 use ascii_ui::{
     attachments::Root,
-    widgets::{self, button::ButtonJustPressedMarker},
+    widgets::{self, button::ButtonJustPressedMarker, MultiChildWidget},
 };
 use bevy::{
     asset::{
@@ -17,7 +17,7 @@ use bevy::{
         system::{Commands, Query, Res, ResMut},
     },
     input::{gamepad::GamepadButton, keyboard::KeyCode, ButtonInput},
-    prelude::Gamepad,
+    prelude::{Children, Entity, Gamepad},
     tasks::IoTaskPool,
 };
 use glyph_render::glyph_buffer::GlyphBuffer;
@@ -84,20 +84,20 @@ pub(super) fn update_position(
 
 pub(super) fn update_list_builder(
     mut commands: Commands,
-    mut q_list_builder: Query<(
-        &mut ListBuilderWidget<usize>,
-        &mut widgets::MultiChildWidget,
-    )>,
+    mut q_list_builder: Query<
+        (&mut ListBuilderWidget<usize>, &Children),
+        With<widgets::MultiChildWidget>,
+    >,
     q_buttons: Query<&ItemMutateButton, (With<ButtonJustPressedMarker>, With<widgets::Button>)>,
 ) {
     for item in q_buttons.iter() {
-        let (mut builder, mut column) = q_list_builder.get_mut(item.target).unwrap();
+        let (mut builder, children) = q_list_builder.get_mut(item.target).unwrap();
         match item.mode {
             super::setup::MutateMode::Add => {
-                builder.push(&mut *column, 0, &mut commands);
+                builder.push(item.target, 0, &mut commands);
             }
             super::setup::MutateMode::Remove => {
-                builder.pop(&mut *column, &mut commands);
+                builder.pop(children, &mut commands);
             }
         }
     }
@@ -109,21 +109,26 @@ pub(crate) struct TilesetHandles {
 
 pub(super) fn update_tilesets_system(
     mut commands: Commands,
-    mut q_list_builder: Query<(
-        &mut ListBuilderWidget<(TilesetSource, Handle<TilesetSource>)>,
-        &mut widgets::MultiChildWidget,
-        &TilesetHandles,
-    )>,
+    mut q_list_builder: Query<
+        (
+            Entity,
+            &mut ListBuilderWidget<(TilesetSource, Handle<TilesetSource>)>,
+            &TilesetHandles,
+        ),
+        With<MultiChildWidget>,
+    >,
     mut ev_tilesets: EventReader<AssetEvent<TilesetSource>>,
     tilesets: Res<Assets<TilesetSource>>,
 ) {
     for ev in ev_tilesets.read() {
         if let AssetEvent::LoadedWithDependencies { id } = ev {
             let tileset = tilesets.get(*id).unwrap().clone();
-            for (mut builder, mut column, TilesetHandles { handles }) in q_list_builder.iter_mut() {
+            for (list_widget_entity, mut builder, TilesetHandles { handles }) in
+                q_list_builder.iter_mut()
+            {
                 if let Some(handle) = handles.iter().find(|handle| &handle.id() == id) {
                     builder.push(
-                        &mut column,
+                        list_widget_entity,
                         (tileset.clone(), handle.clone()),
                         &mut commands,
                     )

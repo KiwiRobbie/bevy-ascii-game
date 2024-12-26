@@ -1,4 +1,6 @@
+use crate::position::{Position, SpatialTraits};
 use bevy_derive::{Deref, DerefMut};
+use bevy_ecs::prelude::ReflectComponent;
 use bevy_ecs::{
     bundle::Bundle,
     component::Component,
@@ -11,9 +13,8 @@ use bevy_hierarchy::{Children, Parent};
 use bevy_math::{IVec2, Vec2};
 use bevy_reflect::Reflect;
 
-use crate::position::{Position, SpatialTraits};
-
 #[derive(Component, Default, Debug, Clone, Copy, Reflect, Deref, DerefMut)]
+#[reflect(Component)]
 pub struct GlobalPosition(pub IVec2);
 
 impl GlobalPosition {

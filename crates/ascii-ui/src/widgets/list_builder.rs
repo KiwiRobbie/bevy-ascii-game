@@ -20,24 +20,24 @@ where
         items: Vec<T>,
     ) -> WidgetBuilderFn {
         Box::new(move |commands| {
+            let children: Vec<Entity> = items
+                .iter()
+                .enumerate()
+                .map(|(i, t)| builder(i, t)(commands))
+                .collect();
             base_width
-                .with(MultiChildWidget(
-                    items
-                        .iter()
-                        .enumerate()
-                        .map(|(i, t)| builder(i, t)(commands))
-                        .collect(),
-                ))
+                .children(&children)
+                .with(MultiChildWidget)
                 .with(ListBuilderWidget { builder, items })(commands)
         })
     }
 
-    pub fn push(&mut self, list_widget: &mut MultiChildWidget, item: T, commands: &mut Commands) {
-        list_widget.push((self.builder)(self.items.len(), &item)(commands));
+    pub fn push(&mut self, widget: Entity, item: T, commands: &mut Commands) {
+        (self.builder)(self.items.len(), &item).parent(widget)(commands);
         self.items.push(item);
     }
-    pub fn pop(&mut self, self_column: &mut MultiChildWidget, commands: &mut Commands) {
-        if let Some(entity) = self_column.pop() {
+    pub fn pop(&mut self, children: &mut Children, commands: &mut Commands) {
+        if let Some(&entity) = children.last() {
             self.items.pop().unwrap();
             commands.entity(entity).despawn();
         }

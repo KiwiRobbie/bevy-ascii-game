@@ -15,7 +15,10 @@ use bevy::{
     transform::components::GlobalTransform,
 };
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
-use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
+use spatial_grid::{
+    global_position::GlobalPosition,
+    grid::{PhysicsGridMember, SpatialGrid},
+};
 
 use crate::layout::{build_layout::LayoutDepth, positioned::Positioned, render_clip::ClipRegion};
 
@@ -61,6 +64,7 @@ pub(crate) fn mouse_interaction(
     q_intractable: Query<
         (
             Entity,
+            &GlobalPosition,
             &Positioned,
             &PhysicsGridMember,
             Option<&ScrollableMarker>,
@@ -72,7 +76,7 @@ pub(crate) fn mouse_interaction(
     q_active: Query<Entity, With<ActiveMarker>>,
     q_triggered: Query<Entity, With<TriggeredMarker>>,
     q_scroll_interaction: Query<Entity, With<ScrollInteraction>>,
-    q_physics_grid: Query<(&SpatialGrid, &GlobalTransform)>,
+    q_physics_grid: Query<(&SpatialGrid, &GlobalTransform, &GlobalPosition)>,
     mut mouse_input: ResMut<MouseInput>,
 ) {
     let mut mouse_capture = false;
@@ -94,9 +98,16 @@ pub(crate) fn mouse_interaction(
         let mut positions: Vec<_> = q_intractable
             .iter()
             .filter_map(
-                |(entity, positioned, grid_member, scrollable, clip, depth)| {
-                    cursor_in_widget(&q_physics_grid, grid_member, position, positioned, clip)
-                        .map(|_| (entity, scrollable, depth))
+                |(entity, global_pos, positioned, grid_member, scrollable, clip, depth)| {
+                    cursor_in_widget(
+                        &q_physics_grid,
+                        grid_member,
+                        position,
+                        global_pos,
+                        positioned,
+                        clip,
+                    )
+                    .map(|_| (entity, scrollable, depth))
                 },
             )
             .collect();
@@ -134,23 +145,27 @@ pub(crate) fn mouse_interaction(
 }
 
 fn cursor_in_widget(
-    q_physics_grid: &Query<'_, '_, (&SpatialGrid, &GlobalTransform)>,
+    q_physics_grid: &Query<'_, '_, (&SpatialGrid, &GlobalTransform, &GlobalPosition)>,
     grid_member: &PhysicsGridMember,
-    position: bevy::prelude::Vec3,
+    world_cursor_position: bevy::prelude::Vec3,
+    global_pos: &GlobalPosition,
     positioned: &Positioned,
     clip: Option<&ClipRegion>,
 ) -> Option<IVec2> {
-    let (grid, transform) = q_physics_grid.get(grid_member.grid).ok()?;
-    let position =
-        (transform.compute_matrix().inverse() * position.extend(1.0)).xy() / grid.step.as_vec2();
-    let position = position.as_ivec2() + IVec2::Y;
+    let (grid, transform, buffer_position) = q_physics_grid.get(grid_member.grid).ok()?;
 
-    let cursor_position = IVec2::new(1, -1) * position;
+    let grid_cursor_position =
+        ((transform.compute_matrix().inverse() * world_cursor_position.extend(1.0)).xy()
+            / grid.step.as_vec2()
+            + 0.5)
+            .as_ivec2()
+            + **buffer_position;
 
-    if positioned.contains(cursor_position)
-        && clip.map(|r| r.contains(cursor_position)).unwrap_or(true)
-    {
-        Some(cursor_position)
+    let start = **global_pos - positioned.size.as_ivec2().with_x(0);
+    let end = start + positioned.size.as_ivec2().with_y(0);
+
+    if start.cmple(grid_cursor_position).all() && grid_cursor_position.cmplt(end).all() {
+        Some(grid_cursor_position)
     } else {
         None
     }

@@ -26,6 +26,4 @@ pub(crate) trait WidgetLayoutLogic: std::fmt::Debug + Send + Sync {
         world: &World,
         commands: &mut Commands,
     ) -> UVec2;
-
-    fn children(&self, entity: Entity, world: &World) -> Vec<Entity>;
 }

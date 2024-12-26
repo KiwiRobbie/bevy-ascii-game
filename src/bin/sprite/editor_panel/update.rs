@@ -54,14 +54,16 @@ pub(super) fn update_position(
 
 pub(super) fn update_editor_ui(
     q_editor_state: Res<EditorPanelState>,
-    q_focused: Query<&ToolUiEntity, With<FocusedTool>>,
-    mut q_container: Query<&mut SingleChildWidget>,
+    q_focused: Query<&ToolUiEntity, (With<FocusedTool>, With<SingleChildWidget>)>,
+    mut commands: Commands,
 ) {
     let focused_tool_ui = q_focused.get_single().ok();
 
     if let Some(container_entity) = q_editor_state.tool_container {
-        if let Ok(mut container) = q_container.get_mut(container_entity) {
-            container.child = focused_tool_ui.map(|entity| **entity);
+        let mut entity_commands = commands.entity(container_entity);
+        entity_commands.despawn_descendants();
+        if let Some(ToolUiEntity(entity)) = focused_tool_ui {
+            entity_commands.add_child(*entity);
         }
     }
 }

@@ -15,16 +15,8 @@ use bevy_ascii_game::{
 
 use super::state::EditorPanelState;
 
-pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPanelState>) {
-    let menu_state = &mut *menu_state;
-
-    let settings_tab = FlexWidget::column(vec![
-        InfoCounts::build(),
-        Divider::build('-'),
-        DebugOptions::build(),
-    ])(&mut commands);
-
-    let editor_tab = col![
+fn editor_ui_builder(commands: &mut Commands) -> Entity {
+    col![
         row![
             widgets::Divider::build('=').with(Flex::new(1)),
             text!(" Tools "),
@@ -80,8 +72,22 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPane
         text!("Size: 64 x 32"),
         text!("Name: background"),
         sized_box!(vertical: 1),
-        widgets::SingleChildWidget::build(None).save_id(&mut menu_state.tool_container),
-    ](&mut commands);
+        // widgets::SingleChildWidget::build(None).save_id(&mut menu_state.tool_container),
+    ](commands)
+}
+
+pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPanelState>) {
+    // let menu_state = &mut *menu_state;
+
+    let settings_tab = Box::new(|commands: &mut Commands| {
+        FlexWidget::column(vec![
+            InfoCounts::build(),
+            Divider::build('-'),
+            DebugOptions::build(),
+        ])(commands)
+    });
+
+    let editor_tab = Box::new(editor_ui_builder);
 
     SingleChildWidget::build(Some(widgets::TabView::build(vec![
         ("Editor", editor_tab),

@@ -11,6 +11,7 @@ glyph-render = { path = "../glyph-render" }
 bevy = { version = "0.15.0", default-features = false, features = [
     "bevy_window",
 ] }
+itertools = "0.13.0"
 
 
 [lib]

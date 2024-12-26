@@ -18,7 +18,6 @@ pub(crate) fn text_render(
 ) {
     for (entity, positioned, text) in q_text.iter() {
         commands.entity(entity).insert((
-            Position(positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32),
             GlyphSprite {
                 texture: glyph_textures.add(GlyphTexture::from(vec![text.text.clone()])),
                 offset: IVec2::ZERO,

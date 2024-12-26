@@ -18,13 +18,9 @@ pub(crate) fn border_render(
 ) {
     for (entity, positioned, border) in q_text.iter() {
         let data = border.create_data(positioned.size);
-        let position = positioned.offset * IVec2::new(1, -1) - IVec2::Y * positioned.size.y as i32;
-        commands.entity(entity).insert((
-            Position(position),
-            GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::from(data)),
-                offset: IVec2::ZERO,
-            },
-        ));
+        commands.entity(entity).insert((GlyphSprite {
+            texture: glyph_textures.add(GlyphTexture::from(data)),
+            offset: IVec2::ZERO,
+        },));
     }
 }

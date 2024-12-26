@@ -76,14 +76,6 @@ impl WidgetLayoutLogic for GridLogic {
             y: cursor.y + grid.child_size.y,
         };
     }
-
-    fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
-        world
-            .get::<Grid>(entity)
-            .expect("Grid logic without Grid!")
-            .children
-            .clone()
-    }
 }
 
 impl Grid {

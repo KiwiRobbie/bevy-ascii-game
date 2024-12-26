@@ -1,8 +1,6 @@
 use ascii_ui::{
-    layout::delete_layout_recursive,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
-    widgets::{self, MultiChildWidget},
-    FlexDirection,
+    widgets::{self},
 };
 use bevy::{
     ecs::component::{ComponentId, ComponentInfo},
@@ -114,6 +112,7 @@ pub(crate) fn inspector_fetch_system(
     let type_registry = &type_registry.0;
 
     for (inspector_entity, inspector, column_children) in q_inspector.iter_mut() {
+        commands.entity(inspector_entity).despawn_descendants();
         if let Some(target) = inspector.target {
             let mut inspector_widgets = vec![];
             inspector_widgets.push(widgets::Text::build(format!("Entity: {:?}", target))(
@@ -191,20 +190,9 @@ pub(crate) fn inspector_fetch_system(
                 }
             }
 
-            for entity in &**column_children {
-                delete_layout_recursive(*entity, &mut commands, world);
-            }
-
-            commands.entity(inspector_entity).insert((
-                widgets::FlexWidget {
-                    direction: FlexDirection::Vertical,
-                },
-                MultiChildWidget(inspector_widgets),
-            ));
-        } else {
             commands
                 .entity(inspector_entity)
-                .insert(MultiChildWidget(vec![]));
+                .add_children(&inspector_widgets);
         }
     }
 }

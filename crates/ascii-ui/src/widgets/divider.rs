@@ -25,7 +25,7 @@ impl Divider {
         Box::new(move |commands| {
             commands
                 .spawn((
-                    SingleChildWidget { child: None },
+                    SingleChildWidget,
                     SizedBox::vertical(1),
                     Self { character },
                     RenderBundle::default(),

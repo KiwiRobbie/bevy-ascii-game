@@ -9,6 +9,7 @@ pub trait WidgetBuilder<'a, 'b> {
     fn entity(entity: Entity) -> WidgetBuilderFn<'a>;
     fn with<B: Bundle>(self, attachments: B) -> WidgetBuilderFn<'a>;
     fn parent(self, entity: Entity) -> WidgetBuilderFn<'a>;
+    fn children(self, children: &'a [Entity]) -> WidgetBuilderFn<'a>;
     fn apply(self, commands: &mut Commands) -> WidgetBuilderFn<'b>;
 }
 
@@ -26,6 +27,13 @@ impl<'a, 'b> WidgetBuilder<'a, 'b> for WidgetBuilderFn<'a> {
         Box::new(move |commands: &mut Commands| {
             let entity = self(commands);
             commands.entity(parent).add_child(entity);
+            entity
+        })
+    }
+    fn children(self, children: &'a [Entity]) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands: &mut Commands| {
+            let entity = self(commands);
+            commands.entity(entity).add_children(&children);
             entity
         })
     }

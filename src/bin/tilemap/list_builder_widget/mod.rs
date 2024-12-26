@@ -1,4 +1,7 @@
-use bevy::ecs::{component::Component, entity::Entity, system::Commands};
+use bevy::{
+    ecs::{component::Component, entity::Entity, system::Commands},
+    prelude::{BuildChildren, Children, DespawnRecursiveExt},
+};
 
 use ascii_ui::{
     list_widget::ListWidgetExtension,
@@ -38,19 +41,15 @@ where
         })
     }
 
-    pub(crate) fn push(
-        &mut self,
-        list_widget: &mut MultiChildWidget,
-        item: T,
-        commands: &mut Commands,
-    ) {
-        list_widget.push((self.builder)(self.items.len(), &item)(commands));
+    pub(crate) fn push(&mut self, list_widget: Entity, item: T, commands: &mut Commands) {
+        let list_item = (self.builder)(self.items.len(), &item)(commands);
+        commands.entity(list_widget).add_child(list_item);
         self.items.push(item);
     }
-    pub(crate) fn pop(&mut self, self_column: &mut MultiChildWidget, commands: &mut Commands) {
-        if let Some(entity) = self_column.pop() {
+    pub(crate) fn pop(&mut self, list_widget: &Children, commands: &mut Commands) {
+        if let Some(&entity) = list_widget.last() {
             self.items.pop().unwrap();
-            commands.entity(entity).despawn();
+            commands.entity(entity).despawn_recursive();
         }
     }
 

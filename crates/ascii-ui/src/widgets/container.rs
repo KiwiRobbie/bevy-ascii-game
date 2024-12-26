@@ -1,14 +1,5 @@
-use bevy::{
-    ecs::{
-        component::Component, entity::Entity, reflect::ReflectComponent, system::Commands,
-        world::World,
-    },
-    math::{IVec2, UVec2},
-    reflect::Reflect,
-};
-
 use crate::{
-    attachments::{self, padding::Padding, SizedBox},
+    attachments::{padding::Padding, SizedBox},
     layout::{
         constraint::Constraint,
         positioned::Positioned,
@@ -16,12 +7,14 @@ use crate::{
     },
     widget_builder::WidgetBuilderFn,
 };
+use bevy::prelude::*;
+use itertools::Itertools;
+use spatial_grid::position::Position;
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
-pub struct SingleChildWidget {
-    pub child: Option<Entity>,
-}
+#[require(Position)]
+pub struct SingleChildWidget;
 
 #[derive(Debug, Default)]
 pub(crate) struct ContainerLogic;
@@ -33,11 +26,6 @@ impl WidgetLayoutLogic for ContainerLogic {
         world: &World,
         commands: &mut Commands,
     ) -> UVec2 {
-        let container = world
-            .get::<SingleChildWidget>(entity)
-            .cloned()
-            .unwrap_or_default();
-
         let padding = world
             .get::<Padding>(entity)
             .map(|p| p.clone())
@@ -51,11 +39,12 @@ impl WidgetLayoutLogic for ContainerLogic {
         let constraint = constraint.intersect(&sized_box.as_max_constraint());
         let constraint = padding.0.shrink_constraint(&constraint);
 
-        if let Some(child) = world
-            .get::<attachments::stack::Stack>(entity)
-            .map(|stack| stack.children[stack.active])
-            .or(container.child)
-        {
+        if let Some(&child) = world.get::<Children>(entity).and_then(|children| {
+            children
+                .iter()
+                .at_most_one()
+                .expect("Too many children on single child widget!")
+        }) {
             let child_widget = world
                 .get::<WidgetLayout>(child)
                 .expect("Container child invalid!");
@@ -79,28 +68,33 @@ impl WidgetLayoutLogic for ContainerLogic {
             sized_box.height.unwrap_or(constraint.max().y),
         );
     }
-
-    fn children(&self, entity: Entity, world: &World) -> Vec<Entity> {
-        let Some(container) = world.get::<SingleChildWidget>(entity) else {
-            return vec![];
-        };
-
-        let child = world
-            .get::<attachments::stack::Stack>(entity)
-            .map(|stack| stack.children[stack.active])
-            .or(container.child);
-
-        child.iter().map(|e| e.clone()).collect()
-    }
 }
 
 impl SingleChildWidget {
     pub fn build<'a>(child: Option<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
         Box::new(move |commands| {
             let child = child.map(|child| child(commands));
-            commands
-                .spawn((Self { child }, WidgetLayout::new::<ContainerLogic>()))
-                .id()
+            let mut entity_commands =
+                commands.spawn((SingleChildWidget, WidgetLayout::new::<ContainerLogic>()));
+
+            if let Some(child) = child {
+                entity_commands.add_child(child);
+            }
+
+            entity_commands.id()
+        })
+    }
+
+    pub fn build_existing<'a>(child: Option<Entity>) -> WidgetBuilderFn<'a> {
+        Box::new(move |commands| {
+            let mut entity_commands =
+                commands.spawn((SingleChildWidget, WidgetLayout::new::<ContainerLogic>()));
+
+            if let Some(child) = child {
+                entity_commands.add_child(child);
+            }
+
+            entity_commands.id()
         })
     }
 }
