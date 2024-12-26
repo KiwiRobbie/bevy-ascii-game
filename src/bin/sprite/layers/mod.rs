@@ -20,13 +20,27 @@ use spatial_grid::{depth::Depth, global_position::GlobalPosition};
 #[derive(Debug)]
 pub struct EditorLayerItem {
     name: String,
-    layer: Entity,
-    hidden: bool,
+    entity: Entity,
+}
+
+impl EditorLayerItem {
+    pub fn new(entity: Entity, name: impl Into<String>) -> Self {
+        Self {
+            entity,
+            name: name.into(),
+        }
+    }
 }
 
 #[derive(Debug, Component)]
 pub struct EditorLayers {
     layers: Vec<EditorLayerItem>,
+}
+
+impl EditorLayers {
+    pub fn new(layers: Vec<EditorLayerItem>) -> Self {
+        Self { layers }
+    }
 }
 
 #[derive(Debug, Component)]

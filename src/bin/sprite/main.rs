@@ -27,8 +27,9 @@ use glyph_render::{
 };
 use grid_physics::plugin::PhysicsPlugin;
 use itertools::Duplicates;
-use layers::{EditorLayer, EditorLayerPlugin, SelectedEditorLayer};
+use layers::{EditorLayer, EditorLayerItem, EditorLayerPlugin, EditorLayers, SelectedEditorLayer};
 use spatial_grid::{
+    depth::Depth,
     global_position::GlobalPosition,
     grid::SpatialGrid,
     position::{Position, SpatialTraits},
@@ -83,11 +84,30 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn((
-        EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
-        SelectedEditorLayer,
-        GamePhysicsGridMarker,
-    ));
+    let fg_entity = commands
+        .spawn((
+            EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
+            SelectedEditorLayer,
+            GamePhysicsGridMarker,
+            Depth(0.1),
+        ))
+        .id();
+
+    let bg_entity = commands
+        .spawn((
+            EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
+            SelectedEditorLayer,
+            GamePhysicsGridMarker,
+            Depth(0.0),
+        ))
+        .id();
+
+    commands
+        .spawn(EditorLayers::new(vec![
+            EditorLayerItem::new(fg_entity, "foreground"),
+            EditorLayerItem::new(bg_entity, "background"),
+        ]))
+        .add_children(&[fg_entity, bg_entity]);
 
     commands.spawn((
         Camera2d,
@@ -101,9 +121,17 @@ fn setup(mut commands: Commands) {
     ));
 }
 
+#[derive(Debug, Deref, DerefMut)]
+struct ZoomSizeLocal(f32);
+impl Default for ZoomSizeLocal {
+    fn default() -> Self {
+        Self(11.)
+    }
+}
+
 fn mouse_zoom_system(
     mut mouse_input: ResMut<MouseInput>,
-    mut size: Local<f32>,
+    mut size: Local<ZoomSizeLocal>,
     mut q_glyph_buffer: Query<
         (&mut FontSize, &mut SpatialGrid, &mut GlyphBuffer),
         With<PrimaryGlyphBufferMarker>,
@@ -118,13 +146,13 @@ fn mouse_zoom_system(
         .y;
 
     let factor = (distance / 16.0).exp();
-    *size *= factor;
-    *size = size.clamp(2.0, 128.0);
+    **size *= factor;
+    **size = size.clamp(2.0, 128.0);
 
     let window = window.get_single().unwrap();
 
     for (mut font_size, mut grid, mut buffer) in q_glyph_buffer.iter_mut() {
-        let size = *size as u32;
+        let size = **size as u32;
         **font_size = size;
         grid.step = UVec2::new(font_size.advance(), font_size.line_spacing());
 

@@ -23,7 +23,7 @@ use grid_physics::{collision::Collider, plugin::PhysicsUpdateSet, velocity::Velo
 use parallax::parallax_system;
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
-    position::{Position, SpatialBundle, SpatialTraits},
+    position::{Position, SpatialBundle},
     remainder::Remainder,
 };
 
@@ -124,29 +124,25 @@ fn create_physics_grids(
 
 pub(crate) fn grid_translate(
     q_player: Query<
-        (&Position, &Remainder, &Velocity, &Collider),
+        (&Position, &Velocity, &Collider),
         (With<PlayerMarker>, Without<PrimaryGlyphBufferMarker>),
     >,
     mut q_primary_buffer: Query<
-        (&mut Position, &mut Remainder, &GlyphBuffer),
+        (&mut Position, &GlyphBuffer),
         (Without<PlayerMarker>, With<PrimaryGlyphBufferMarker>),
     >,
     mut prediction_offset_current: Local<IVec2>,
     mut prediction_offset_target: Local<Vec2>,
     time: Res<Time>,
 ) {
-    let Ok((mut position, remainder, &GlyphBuffer { textures: _, size })) =
-        q_primary_buffer.get_single_mut()
+    let Ok((mut position, &GlyphBuffer { textures: _, size })) = q_primary_buffer.get_single_mut()
     else {
         return;
     };
-    let Ok((player_pos, player_remainder, player_velocity, collider)) = q_player.get_single()
-    else {
+    let Ok((player_pos, player_velocity, collider)) = q_player.get_single() else {
         return;
     };
     let Some(aabb) = collider.aabb() else { return };
-
-    // let padding = IVec2::new(size.x as i32 / 4, size.y as i32 / 2);
 
     let x_padding = size.x as i32 / 4;
     let y_target = size.y as i32 / 3;
