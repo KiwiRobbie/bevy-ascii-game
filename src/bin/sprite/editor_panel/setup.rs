@@ -13,7 +13,7 @@ use bevy_ascii_game::{
     widgets::{DebugOptions, InfoCounts},
 };
 
-use super::state::EditorPanelState;
+use super::update::ToolUiContainer;
 
 fn editor_ui_builder(commands: &mut Commands) -> Entity {
     col![
@@ -72,13 +72,11 @@ fn editor_ui_builder(commands: &mut Commands) -> Entity {
         text!("Size: 64 x 32"),
         text!("Name: background"),
         sized_box!(vertical: 1),
-        // widgets::SingleChildWidget::build(None).save_id(&mut menu_state.tool_container),
+        widgets::SingleChildWidget::build(None).with(ToolUiContainer),
     ](commands)
 }
 
-pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPanelState>) {
-    // let menu_state = &mut *menu_state;
-
+pub(super) fn setup_ui(commands: &mut Commands) -> Entity {
     let settings_tab = Box::new(|commands: &mut Commands| {
         FlexWidget::column(vec![
             InfoCounts::build(),
@@ -89,7 +87,7 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPane
 
     let editor_tab = Box::new(editor_ui_builder);
 
-    SingleChildWidget::build(Some(widgets::TabView::build(vec![
+    let root_entity = SingleChildWidget::build(Some(widgets::TabView::build(vec![
         ("Editor", editor_tab),
         ("Settings", settings_tab),
     ])))
@@ -109,8 +107,9 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<EditorPane
         attachments::RenderBundle::default(),
         DebugMenuMarker,
         InteractableMarker,
-    ))
-    .save_id(&mut menu_state.root_widget)(&mut commands);
+    ))(commands);
+
+    root_entity
 }
 
 #[derive(Debug, Component)]

@@ -10,8 +10,8 @@ pub struct FocusedTool;
 #[derive(Debug, Component)]
 pub struct ExclusiveKeyboardEventHandler;
 
-#[derive(Debug, Component, Deref, DerefMut)]
-pub struct ToolUiEntity(pub Entity);
+#[derive(Component, Deref, DerefMut)]
+pub struct BuildToolUi(pub Box<dyn Fn(&mut Commands) -> Entity + Send + Sync + 'static>);
 
 pub struct EditorToolsPlugin;
 impl Plugin for EditorToolsPlugin {

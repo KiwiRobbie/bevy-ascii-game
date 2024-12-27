@@ -8,16 +8,19 @@ use spatial_grid::grid::SpatialGrid;
 use bevy_ascii_game::physics_grids::UiPhysicsGrid;
 
 use crate::tools::{
-    text::spawn_type_tool, ExclusiveKeyboardEventHandler, FocusedTool, ToolUiEntity,
+    text::spawn_type_tool, BuildToolUi, ExclusiveKeyboardEventHandler, FocusedTool,
 };
 
-use super::{setup::DebugMenuMarker, state::EditorPanelState};
+use super::{
+    setup::{setup_ui, DebugMenuMarker},
+    state::EditorPanelState,
+};
 
 pub(super) fn toggle_menu(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<EditorPanelState>,
     gamepads: Query<&Gamepad>,
-    mut q_root: Query<&mut Root>,
+    mut commands: Commands,
 ) {
     if keyboard.just_pressed(KeyCode::F3) {
         state.enabled = !state.enabled;
@@ -28,10 +31,16 @@ pub(super) fn toggle_menu(
         }
     }
 
-    if let Some(root) = state.root_widget {
-        let mut root = q_root.get_mut(root).unwrap();
-        root.enabled = state.enabled;
-    }
+    match state.root_widget {
+        Some(root) if !state.enabled => {
+            state.root_widget.take();
+            commands.entity(root).despawn_recursive();
+        }
+        None if state.enabled => {
+            state.root_widget = Some(setup_ui(&mut commands));
+        }
+        _ => {}
+    };
 }
 
 pub(super) fn update_position(
@@ -51,19 +60,22 @@ pub(super) fn update_position(
         root.position.y = buffer.size.y as i32 - root.size.y as i32;
     }
 }
+#[derive(Debug, Component)]
+pub struct ToolUiContainer;
 
 pub(super) fn update_editor_ui(
-    q_editor_state: Res<EditorPanelState>,
-    q_focused: Query<&ToolUiEntity, (With<FocusedTool>, With<SingleChildWidget>)>,
+    q_tool_container: Query<(Entity, Option<&Children>), With<ToolUiContainer>>,
+    q_build_tool: Query<&BuildToolUi, With<FocusedTool>>,
     mut commands: Commands,
 ) {
-    let focused_tool_ui = q_focused.get_single().ok();
-
-    if let Some(container_entity) = q_editor_state.tool_container {
-        let mut entity_commands = commands.entity(container_entity);
-        entity_commands.despawn_descendants();
-        if let Some(ToolUiEntity(entity)) = focused_tool_ui {
-            entity_commands.add_child(*entity);
+    if let Some((container_entity, children)) = q_tool_container.get_single().ok() {
+        if let Some(BuildToolUi(builder)) = q_build_tool.get_single().ok() {
+            if children.map(|children| children.is_empty()).unwrap_or(true) {
+                let entity = builder(&mut commands);
+                commands.entity(container_entity).add_child(entity);
+            }
+        } else {
+            commands.entity(container_entity).despawn_descendants();
         }
     }
 }

@@ -329,7 +329,6 @@ fn testing_update(
     let Some(world_cursor_position) = mouse_input.world_position() else {
         return;
     };
-    dbg!(world_cursor_position);
     let Ok((grid, buffer_position, transform)) = q_physics_grid.get_single() else {
         return;
     };
@@ -340,7 +339,6 @@ fn testing_update(
             + 0.5)
             .as_ivec2()
             + **buffer_position;
-    dbg!(grid_cursor_position);
     let start = Vec2::new(16.0, 0.0);
     let end = grid_cursor_position.as_vec2();
 

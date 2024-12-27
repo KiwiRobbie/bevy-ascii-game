@@ -25,7 +25,7 @@ use crate::{
     tools::{ExclusiveKeyboardEventHandler, FocusedTool},
 };
 
-use super::ToolUiEntity;
+use super::BuildToolUi;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub enum TypeMode {
@@ -71,10 +71,7 @@ pub struct TypeToolUi {
     mode_entity: Entity,
 }
 
-pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Assets<GlyphTexture>) {
-    use ascii_ui::widgets;
-    let root_entity = commands.spawn(()).id();
-
+fn build_ui(commands: &mut Commands) -> Entity {
     let mut mode_entity = Entity::PLACEHOLDER;
     let ui_builder = col![
         row![
@@ -84,14 +81,19 @@ pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Asse
         ],
         widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
         row![
-            widgets::Text::build("Mode: ").parent(root_entity),
+            widgets::Text::build("Mode: "),
             widgets::Text::build("")
                 .with(InteractableMarker)
                 .save_id(&mut mode_entity)
         ],
     ];
+    ui_builder
+        .apply(commands)
+        .with((TypeToolUi { mode_entity }, FocusedTool))(commands)
+}
 
-    let ui_entity = ui_builder.apply(commands).with(TypeToolUi { mode_entity })(commands);
+pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Assets<GlyphTexture>) {
+    let root_entity = commands.spawn(()).id();
 
     let cursors = [
         glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
@@ -133,9 +135,8 @@ pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Asse
                 cursor_entity,
                 cursors,
             },
-            ToolUiEntity(ui_entity),
+            BuildToolUi(Box::new(build_ui)),
         ))
-        .add_child(ui_entity)
         .add_child(cursor_entity);
 }
 
@@ -264,15 +265,15 @@ fn type_tool_update(
 }
 
 fn type_tool_ui_update(
-    mut q_tool: Query<(&mut TypeTool, &ToolUiEntity), (With<FocusedTool>, Without<TypeToolUi>)>,
+    mut q_tool: Query<&mut TypeTool, (With<FocusedTool>, Without<TypeToolUi>)>,
     q_ui_root: Query<&TypeToolUi, Without<TypeTool>>,
     mut q_mode_text: Query<(&mut widgets::Text, Has<ButtonJustPressedMarker>)>,
 ) {
-    let Ok((mut tool, ui_entity)) = q_tool.get_single_mut() else {
+    let Ok(mut tool) = q_tool.get_single_mut() else {
         return;
     };
 
-    let Ok(tool_ui) = q_ui_root.get(**ui_entity) else {
+    let Ok(tool_ui) = q_ui_root.get_single() else {
         return;
     };
 
