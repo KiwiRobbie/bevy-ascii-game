@@ -7,7 +7,7 @@ use super::MultiChildWidget;
 #[derive(Component)]
 pub struct ListBuilderWidget<T: Send + Sync> {
     items: Vec<T>,
-    pub builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+    pub builder: Box<dyn Fn(usize, &T) -> WidgetBuilderFn + Send + Sync>,
 }
 
 impl<T> ListBuilderWidget<T>
@@ -16,7 +16,7 @@ where
 {
     pub fn build(
         base_width: WidgetBuilderFn,
-        builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+        builder: Box<dyn Fn(usize, &T) -> WidgetBuilderFn + Send + Sync>,
         items: Vec<T>,
     ) -> WidgetBuilderFn {
         Box::new(move |commands| {
@@ -39,7 +39,13 @@ where
     pub fn pop(&mut self, children: &mut Children, commands: &mut Commands) {
         if let Some(&entity) = children.last() {
             self.items.pop().unwrap();
-            commands.entity(entity).despawn();
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+    pub fn clear(&mut self, children: &mut Children, commands: &mut Commands) {
+        for &entity in children.iter() {
+            self.items.pop().unwrap();
+            commands.entity(entity).despawn_recursive();
         }
     }
 }

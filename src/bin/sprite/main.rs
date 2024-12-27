@@ -25,7 +25,7 @@ use glyph_render::{
     glyph_render_plugin::GlyphRenderPlugin,
 };
 use grid_physics::plugin::PhysicsPlugin;
-use layers::{EditorLayer, EditorLayerItem, EditorLayerPlugin, EditorLayers, SelectedEditorLayer};
+use layers::{EditorLayer, EditorLayerPlugin, EditorLayers, SelectedEditorLayer};
 use spatial_grid::{
     depth::Depth,
     global_position::GlobalPosition,
@@ -82,30 +82,24 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    let fg_entity = commands
+    let layers_entity = commands.spawn(EditorLayers).id();
+
+    commands
         .spawn((
-            EditorLayer::new(),
+            EditorLayer::new("foreground"),
             SelectedEditorLayer,
             GamePhysicsGridMarker,
             Depth(0.1),
         ))
-        .id();
-
-    // let bg_entity = commands
-    //     .spawn((
-    //         EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
-    //         SelectedEditorLayer,
-    //         GamePhysicsGridMarker,
-    //         Depth(0.0),
-    //     ))
-    //     .id();
+        .set_parent(layers_entity);
 
     commands
-        .spawn(EditorLayers::new(vec![
-            EditorLayerItem::new(fg_entity, "foreground"),
-            // EditorLayerItem::new(bg_entity, "background"),
-        ]))
-        .add_children(&[fg_entity]);
+        .spawn((
+            EditorLayer::new("background"),
+            GamePhysicsGridMarker,
+            Depth(0.0),
+        ))
+        .set_parent(layers_entity);
 
     commands.spawn((
         Camera2d,

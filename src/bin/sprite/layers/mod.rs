@@ -17,32 +17,12 @@ use glyph_render::{
 };
 use spatial_grid::{depth::Depth, global_position::GlobalPosition, position::Position};
 use std::sync::Arc;
+use widget::{init_layer_list_ui, update_indirect_list_builder, update_layer_entry_widget};
 
-#[derive(Debug)]
-pub struct EditorLayerItem {
-    name: String,
-    entity: Entity,
-}
-
-impl EditorLayerItem {
-    pub fn new(entity: Entity, name: impl Into<String>) -> Self {
-        Self {
-            entity,
-            name: name.into(),
-        }
-    }
-}
+pub mod widget;
 
 #[derive(Debug, Component)]
-pub struct EditorLayers {
-    layers: Vec<EditorLayerItem>,
-}
-
-impl EditorLayers {
-    pub fn new(layers: Vec<EditorLayerItem>) -> Self {
-        Self { layers }
-    }
-}
+pub struct EditorLayers;
 
 #[derive(Debug, Component)]
 pub struct SelectedEditorLayer;
@@ -50,6 +30,8 @@ pub struct SelectedEditorLayer;
 #[derive(Debug, Component)]
 #[require(GlobalPosition, Depth, SyncToRenderWorld)]
 pub struct EditorLayer {
+    visible: bool,
+    name: String,
     tiles: HashMap<IVec2, EditorLayerTile>,
 }
 
@@ -81,8 +63,10 @@ impl EditorLayerTile {
     }
 }
 impl EditorLayer {
-    pub fn new() -> Self {
+    pub fn new(name: impl Into<String>) -> Self {
         Self {
+            visible: true,
+            name: name.into(),
             tiles: HashMap::new(),
         }
     }
@@ -151,18 +135,14 @@ fn extract_editor_layer(
             &GlyphBuffer,
         )>,
     >,
-    q_layer: Extract<
-        Query<(
-            RenderEntity,
-            &EditorLayer,
-            &GlobalPosition,
-            &Depth,
-            &TargetGlyphBuffer,
-        )>,
-    >,
+    q_layer: Extract<Query<(&EditorLayer, &GlobalPosition, &Depth, &TargetGlyphBuffer)>>,
     mut extracted_glyph_cache: ResMut<ExtractedGlyphTextureCache>,
 ) {
-    for (layer_render_entity, layer, layer_position, depth, target) in &q_layer {
+    for (layer, layer_position, depth, target) in &q_layer {
+        if !layer.visible {
+            continue;
+        }
+
         let Ok((target_render_entity, font, font_size, buffer_position, buffer)) =
             q_buffer.get(**target)
         else {
@@ -208,6 +188,16 @@ pub struct EditorLayerPlugin;
 
 impl Plugin for EditorLayerPlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(
+            Update,
+            (
+                init_layer_list_ui,
+                update_indirect_list_builder,
+                update_layer_entry_widget,
+            )
+                .chain(),
+        );
+
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(ExtractSchedule, extract_editor_layer);

@@ -26,6 +26,9 @@ pub struct ActiveMarker;
 pub struct TriggeredMarker;
 
 #[derive(Debug, Component)]
+pub struct ExternalStateMarker;
+
+#[derive(Debug, Component)]
 pub(crate) struct ScrollInteraction {
     pub(crate) distance: Vec2,
 }

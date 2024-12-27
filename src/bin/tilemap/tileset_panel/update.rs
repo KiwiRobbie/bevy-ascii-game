@@ -1,9 +1,5 @@
 use bevy::{
-    asset::{
-        io::AssetSourceId,
-        saver::{ErasedAssetSaver, SavedAsset},
-        ErasedLoadedAsset, LoadedAsset,
-    },
+    asset::{io::AssetSourceId, saver::ErasedAssetSaver, ErasedLoadedAsset, LoadedAsset},
     prelude::*,
     tasks::IoTaskPool,
 };

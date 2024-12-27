@@ -6,6 +6,7 @@ use bevy::{
         query::With,
         system::{Commands, Query, ResMut, Resource},
     },
+    prelude::Has,
 };
 
 use crate::debug::{DebugCollisions, DebugPositions, DebugUi};
@@ -52,23 +53,23 @@ fn update_values(
     mut pause_physics: ResMut<EnablePhysicsSystems>,
     mut ui: ResMut<DebugUi>,
     q_debug_options: Query<&DebugOptions>,
-    q_checkbox: Query<Option<&CheckboxEnabledMarker>, With<Checkbox>>,
+    q_checkbox: Query<Has<CheckboxEnabledMarker>, With<Checkbox>>,
 ) {
     for state in q_debug_options.iter() {
         if let Some(entity) = state.colliders_checkbox {
-            let state = q_checkbox.get(entity).unwrap().is_some();
+            let state = q_checkbox.get(entity).unwrap();
             **collisions = state;
         }
         if let Some(entity) = state.position_checkbox {
-            let state = q_checkbox.get(entity).unwrap().is_some();
+            let state = q_checkbox.get(entity).unwrap();
             **positions = state;
         }
         if let Some(entity) = state.pause_checkbox {
-            let state = q_checkbox.get(entity).unwrap().is_some();
+            let state = q_checkbox.get(entity).unwrap();
             **pause_physics = !state;
         }
         if let Some(entity) = state.ui_checkbox {
-            let state = q_checkbox.get(entity).unwrap().is_some();
+            let state = q_checkbox.get(entity).unwrap();
             **ui = state;
         }
     }

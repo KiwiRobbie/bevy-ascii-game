@@ -13,6 +13,8 @@ use bevy_ascii_game::{
     widgets::{DebugOptions, InfoCounts},
 };
 
+use crate::layers::widget::LayersWidget;
+
 use super::update::ToolUiContainer;
 
 fn editor_ui_builder(commands: &mut Commands) -> Entity {
@@ -27,50 +29,7 @@ fn editor_ui_builder(commands: &mut Commands) -> Entity {
         text!(" Draw   (D)"),
         text!(" Shape  (S)"),
         sized_box!(vertical: 1),
-        row![
-            widgets::Divider::build('=').with(Flex::new(1)),
-            text!(" Layers "),
-            widgets::Divider::build('=').with(Flex::new(1)),
-        ],
-        sized_box!(vertical: 1),
-        row![
-            widgets::Checkbox::build(),
-            sized_box!(vertical: 1),
-            text!("background").with(Flex::new(1)),
-            widgets::Button::build_raw("^"),
-            sized_box!(vertical: 1),
-            widgets::Button::build_raw("v"),
-        ],
-        row![
-            widgets::Checkbox::build(),
-            sized_box!(vertical: 1),
-            text!("layer 1").with(Flex::new(1)),
-            widgets::Button::build_raw("^"),
-            sized_box!(vertical: 1),
-            widgets::Button::build_raw("v"),
-        ]
-        .with(attachments::MainAxisAlignment::SpaceBetween),
-        row![
-            widgets::Checkbox::build(),
-            sized_box!(vertical: 1),
-            text!("layer 2").with(Flex::new(1)),
-            widgets::Button::build_raw("^"),
-            sized_box!(vertical: 1),
-            widgets::Button::build_raw("v"),
-        ]
-        .with(attachments::MainAxisAlignment::SpaceBetween),
-        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),
-        row![
-            widgets::SingleChildWidget::build(Some(text!("New Layer")))
-                .with(attachments::Flex::new(1))
-                .with(attachments::Padding::symmetric(1, 0)),
-            widgets::Button::build("Create"),
-        ],
-        sized_box!(vertical: 2),
-        text!("Selected Layer"),
-        sized_box!(vertical: 1),
-        text!("Size: 64 x 32"),
-        text!("Name: background"),
+        LayersWidget::build(),
         sized_box!(vertical: 1),
         widgets::SingleChildWidget::build(None).with(ToolUiContainer),
     ](commands)

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use super::super::attachments;
 use super::super::widgets;
+use crate::mouse::ExternalStateMarker;
 use crate::{
     mouse::{InteractableMarker, TriggeredMarker},
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
@@ -23,26 +24,20 @@ pub(crate) fn checkbox_interaction_system(
     q_checkboxes: Query<(
         Entity,
         &Checkbox,
-        Option<&CheckboxEnabledMarker>,
-        Option<&TriggeredMarker>,
+        Has<CheckboxEnabledMarker>,
+        Has<TriggeredMarker>,
+        Has<ExternalStateMarker>,
     )>,
     mut q_checkbox_text: Query<&mut widgets::text::Text>,
 ) {
-    for (entity, checkbox, enabled, triggered) in q_checkboxes.iter() {
-        if triggered.is_some() {
-            if enabled.is_some() {
-                commands
-                    .entity(entity)
-                    .remove::<CheckboxEnabledMarker>()
-                    .insert(CheckboxDisabledMarker);
-                q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text = "[ ]".into();
-            } else {
-                commands
-                    .entity(entity)
-                    .remove::<CheckboxDisabledMarker>()
-                    .insert(CheckboxEnabledMarker);
-                q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text = "[x]".into();
-            }
+    for (entity, checkbox, was_enabled, triggered, external) in q_checkboxes.iter() {
+        if external {
+            q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text =
+                ["[ ]", "[x]"][was_enabled as usize].into();
+        } else if triggered {
+            Checkbox::toggle(&mut commands, was_enabled, entity);
+            q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text =
+                ["[x]", "[ ]"][was_enabled as usize].into();
         };
     }
 }
@@ -71,12 +66,24 @@ impl Checkbox {
                 .save_id(&mut toggle_text)
                 .apply(commands)
                 .with((
-                    attachments::MainAxisAlignment::SpaceBetween,
                     InteractableMarker,
                     Checkbox {
                         checkbox: toggle_text,
                     },
                 ))(commands)
         })
+    }
+
+    pub fn toggle(commands: &mut Commands, enabled: bool, entity: Entity) {
+        match enabled {
+            true => commands
+                .entity(entity)
+                .remove::<CheckboxEnabledMarker>()
+                .insert(CheckboxDisabledMarker),
+            false => commands
+                .entity(entity)
+                .remove::<CheckboxDisabledMarker>()
+                .insert(CheckboxEnabledMarker),
+        };
     }
 }
