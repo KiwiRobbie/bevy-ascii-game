@@ -1,8 +1,5 @@
-use bevy::ecs::{
-    entity::Entity,
-    query::With,
-    system::{Commands, Query},
-};
+use bevy::prelude::*;
+
 use glyph_render::glyph_sprite::GlyphSprite;
 
 use super::bundle::RenderWidgetMarker;

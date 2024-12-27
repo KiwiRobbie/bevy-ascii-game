@@ -1,19 +1,11 @@
-use bevy::{
-    ecs::{
-        component::Component,
-        entity::Entity,
-        system::{Commands, Query},
-    },
-    prelude::Has,
-};
+use bevy::prelude::*;
 
+use super::super::attachments;
+use super::super::widgets;
 use crate::{
     mouse::{InteractableMarker, TriggeredMarker},
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
 };
-
-use super::super::attachments;
-use super::super::widgets;
 
 #[derive(Debug, Component)]
 pub struct Button {}

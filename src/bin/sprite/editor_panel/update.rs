@@ -47,8 +47,8 @@ pub(super) fn update_position(
     };
 
     for mut root in q_root.iter_mut() {
-        root.position.y = -(buffer.size.y as i32);
         root.position.x = buffer.size.x as i32 - root.size.x as i32;
+        root.position.y = buffer.size.y as i32 - root.size.y as i32;
     }
 }
 

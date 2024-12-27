@@ -1,21 +1,7 @@
-use std::ops::Div;
+use bevy::prelude::*;
 
+use crate::tileset_panel::setup::TilesetTileId;
 use ascii_ui::mouse::{input::MouseInput, TriggeredMarker};
-use bevy::{
-    app::{Plugin, Startup, Update},
-    asset::Assets,
-    color::palettes::css::GRAY,
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::{With, Without},
-        system::{Commands, Query, Res, ResMut},
-    },
-    input::mouse::MouseButton,
-    math::{IVec2, UVec2, Vec4Swizzles},
-    prelude::Deref,
-    transform::components::GlobalTransform,
-};
 use bevy_ascii_game::{
     physics_grids::GamePhysicsGridMarker,
     tilemap::{asset::TilemapSource, chunk::TilemapChunk, component::Tilemap},
@@ -29,8 +15,6 @@ use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::{Position, SpatialBundle},
 };
-
-use crate::tileset_panel::setup::TilesetTileId;
 
 pub(crate) struct BrushPlugin;
 impl Plugin for BrushPlugin {

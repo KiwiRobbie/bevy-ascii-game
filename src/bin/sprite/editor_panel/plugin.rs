@@ -1,14 +1,11 @@
-use ascii_ui::plugin::UiPlugin;
-use bevy::{
-    app::{Plugin, Startup, Update},
-    prelude::IntoSystemConfigs,
-};
+use bevy::prelude::*;
 
 use super::{
     setup::setup_ui,
     state::EditorPanelState,
     update::{toggle_menu, update_editor_shortcuts, update_editor_ui, update_position},
 };
+use ascii_ui::plugin::UiPlugin;
 
 pub(crate) struct TilesetPanelPlugin;
 impl Plugin for TilesetPanelPlugin {

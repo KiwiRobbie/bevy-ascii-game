@@ -1,15 +1,10 @@
-use bevy::{
-    app::{Plugin, PostUpdate},
-    asset::AssetApp,
-    ecs::schedule::IntoSystemConfigs,
-};
-
-use crate::glyph_animation::player::loop_animation_player;
+use bevy::prelude::*;
 
 use super::{
     player::{animation_graph_player, animation_graph_traverse},
     GlyphAnimationGraphAssetLoader, GlyphAnimationGraphSource,
 };
+use crate::glyph_animation::player::loop_animation_player;
 
 pub struct GlyphAnimationGraphPlugin;
 

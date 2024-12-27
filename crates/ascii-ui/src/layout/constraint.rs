@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use bevy::math::UVec2;
+use bevy::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Constraint {

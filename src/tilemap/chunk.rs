@@ -1,4 +1,4 @@
-use bevy::{asset::Asset, math::UVec2, reflect::TypePath};
+use bevy::prelude::*;
 
 #[derive(Debug, Clone, Asset, TypePath)]
 pub struct TilemapChunk {

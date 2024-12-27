@@ -1,23 +1,14 @@
-use std::sync::Arc;
+use bevy::prelude::*;
 
-use bevy::{
-    app::{Plugin, PostUpdate},
-    asset::{AssetApp, Assets},
-    ecs::{
-        query::{Added, Changed, Or, With},
-        system::{Query, Res, ResMut},
-    },
+use super::{AtlasBuilder, CharacterSet, FontAtlasCache, FontAtlasUser};
+use crate::font::{
+    CustomFont, CustomFontLoader, CustomFontSource, DefaultFont, FontLoadedMarker, FontSize,
 };
+use std::sync::Arc;
 use swash::{
     scale::{Render, ScaleContext, Source, StrikeWith},
     zeno::Format,
 };
-
-use crate::font::{
-    CustomFont, CustomFontLoader, CustomFontSource, DefaultFont, FontLoadedMarker, FontSize,
-};
-
-use super::{AtlasBuilder, CharacterSet, FontAtlasCache, FontAtlasUser};
 
 type FontUpdatedFilter = Or<(
     Changed<FontSize>,

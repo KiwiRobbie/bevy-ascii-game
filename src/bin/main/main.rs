@@ -1,30 +1,4 @@
-use std::sync::Arc;
-
-use bevy::{
-    app::{App, PluginGroup, Startup, Update},
-    asset::{AssetServer, Assets},
-    color::{Color, Hsla},
-    core_pipeline::bloom::Bloom,
-    ecs::{
-        component::Component,
-        entity::Entity,
-        event::EventReader,
-        query::With,
-        system::{Commands, Local, Query, Res, ResMut},
-    },
-    input::{
-        gamepad::{GamepadConnection, GamepadConnectionEvent},
-        keyboard::{Key, KeyboardInput},
-    },
-    math::{IVec2, UVec2},
-    prelude::{Camera2d, *},
-    render::{
-        camera::{Camera, CameraRenderGraph, ClearColorConfig},
-        texture::ImagePlugin,
-    },
-    window::{Window, WindowPlugin, WindowResolution},
-    DefaultPlugins,
-};
+use bevy::prelude::*;
 
 use bevy_ascii_game::{
     debug::DebugPlugin,
@@ -58,6 +32,7 @@ use glyph_render::{
 use grid_physics::{collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
 use rand_core::RngCore;
 use spatial_grid::{depth::Depth, position::SpatialBundle, PositionPropagationPlugin};
+use std::sync::Arc;
 
 fn main() {
     let mut app = App::new();

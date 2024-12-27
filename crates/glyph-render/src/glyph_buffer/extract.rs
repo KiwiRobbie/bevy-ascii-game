@@ -1,7 +1,5 @@
 // Extract from textures
 
-use std::sync::Arc;
-
 use bevy::{
     ecs::entity::EntityHashSet,
     prelude::*,
@@ -10,8 +8,8 @@ use bevy::{
         Extract,
     },
 };
-use spatial_grid::{depth::Depth, global_position::GlobalPosition, grid::SpatialGrid};
 
+use super::{GlyphBuffer, TargetGlyphBuffer};
 use crate::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
@@ -22,8 +20,8 @@ use crate::{
     glyph_sprite::GlyphSprite,
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
-
-use super::{GlyphBuffer, TargetGlyphBuffer};
+use spatial_grid::{depth::Depth, global_position::GlobalPosition, grid::SpatialGrid};
+use std::sync::Arc;
 
 pub fn extract_glyph_buffers(
     mut commands: Commands,

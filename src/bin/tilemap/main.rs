@@ -1,28 +1,6 @@
-use ascii_ui::mouse::input::MouseInput;
-use bevy::{
-    app::{App, PluginGroup, Startup, Update},
-    asset::AssetServer,
-    color::Color,
-    core_pipeline::{bloom::Bloom, core_2d::Camera2d},
-    ecs::{
-        event::EventReader,
-        query::With,
-        system::{Commands, Local, Query, Res, ResMut},
-    },
-    input::{
-        mouse::{MouseButton, MouseMotion},
-        ButtonInput,
-    },
-    math::{IVec2, UVec2, Vec2},
-    prelude::ClearColorConfig,
-    render::{
-        camera::{Camera, CameraRenderGraph},
-        texture::ImagePlugin,
-    },
-    window::{PrimaryWindow, Window, WindowPlugin, WindowResolution},
-    DefaultPlugins,
-};
+use bevy::prelude::*;
 
+use ascii_ui::mouse::input::MouseInput;
 use bevy_ascii_game::{
     debug::DebugPlugin,
     physics_grids::{GamePhysicsGridMarker, PhysicsGridPlugin, PrimaryGlyphBufferMarker},

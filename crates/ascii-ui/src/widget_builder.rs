@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::{bundle::Bundle, entity::Entity, system::Commands},
-    prelude::BuildChildren,
-};
+use bevy::prelude::*;
 
 pub type WidgetBuilderFn<'a> = Box<dyn (FnOnce(&mut Commands) -> Entity) + 'a>;
 

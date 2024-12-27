@@ -1,19 +1,12 @@
-use std::path::PathBuf;
-
-use bevy::{
-    asset::{
-        io::{Reader, VecReader},
-        AssetLoader, Handle, LoadContext,
-    },
-    math::{IVec2, UVec2},
-    utils::{hashbrown::HashMap, ConditionalSendFuture},
-};
-
-use crate::tileset::asset::TilesetSource;
+use bevy::asset::io::Reader;
+use bevy::asset::{AssetLoader, LoadContext};
+use bevy::prelude::*;
+use bevy::utils::ConditionalSendFuture;
 
 use super::meta::TilemapMeta;
-
 use super::{asset::TilemapSource, chunk::TilemapChunk};
+use crate::tileset::asset::TilesetSource;
+use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct TilemapLoader {}

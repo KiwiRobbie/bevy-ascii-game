@@ -1,14 +1,8 @@
+use bevy::prelude::*;
+
 use super::{setup::DebugMenuMarker, state::DebugMenuState};
 use crate::physics_grids::UiPhysicsGrid;
 use ascii_ui::attachments::Root;
-use bevy::{
-    ecs::{
-        query::With,
-        system::{Query, Res, ResMut},
-    },
-    input::{gamepad::GamepadButton, keyboard::KeyCode, ButtonInput},
-    prelude::Gamepad,
-};
 use glyph_render::glyph_buffer::GlyphBuffer;
 use spatial_grid::grid::SpatialGrid;
 
@@ -46,7 +40,7 @@ pub fn update_position(
     };
 
     for mut root in q_root.iter_mut() {
-        root.position.y = -(buffer.size.y as i32);
         root.position.x = buffer.size.x as i32 - root.size.x as i32;
+        root.position.y = buffer.size.y as i32 - root.size.y as i32;
     }
 }

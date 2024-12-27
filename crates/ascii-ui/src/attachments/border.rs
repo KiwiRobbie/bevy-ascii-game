@@ -1,4 +1,4 @@
-use bevy::{ecs::component::Component, math::UVec2};
+use bevy::prelude::*;
 
 use super::padding::{EdgeInsets, Padding};
 

@@ -1,4 +1,4 @@
-use bevy::{ecs::entity::Entity, math::UVec2};
+use bevy::prelude::*;
 
 use crate::{
     widget_builder::WidgetBuilderFn,

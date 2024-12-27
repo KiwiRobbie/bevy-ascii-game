@@ -1,4 +1,4 @@
-use bevy::{asset::Handle, ecs::bundle::Bundle};
+use bevy::prelude::*;
 
 use super::{
     player::{GlyphAnimationGraphCurrent, GlyphAnimationGraphSettings, GlyphAnimationGraphTarget},

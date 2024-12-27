@@ -1,8 +1,4 @@
-use bevy::{
-    app::Plugin,
-    ecs::{bundle::Bundle, component::Component},
-    prelude::SystemSet,
-};
+use bevy::prelude::*;
 
 use self::{controller::PlayerControllerInputPlugin, keyboard::PlayerKeyboardInputPlugin};
 
@@ -30,7 +26,7 @@ pub(crate) struct PlayerInputBundle {
 }
 
 pub(crate) mod player_inputs {
-    use bevy::{ecs::bundle::Bundle, ecs::component::Component};
+    use bevy::prelude::*;
 
     #[derive(Bundle)]
     pub(crate) struct MarkerResetBundle {

@@ -1,4 +1,4 @@
-use bevy::ecs::component::Component;
+use bevy::prelude::*;
 
 use crate::layout::constraint::Constraint;
 

@@ -1,4 +1,4 @@
-use bevy::{ecs::component::Component, math::UVec2};
+use bevy::prelude::*;
 
 use crate::layout::constraint::Constraint;
 #[derive(Debug, Component, Default, Clone)]
@@ -14,6 +14,9 @@ impl Padding {
             left: amount,
             right: amount,
         })
+    }
+    pub fn total(&self) -> UVec2 {
+        UVec2::new(self.0.left + self.0.right, self.0.top + self.0.bottom)
     }
 }
 

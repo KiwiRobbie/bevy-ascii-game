@@ -12,7 +12,7 @@ pub mod tileset;
 pub mod widgets;
 
 pub(crate) mod utils {
-    use bevy::{ecs::entity::EntityHashSet, prelude::*};
+    use bevy::prelude::*;
 
     pub(crate) fn clear_component<T: Component>(
         q_focused: Query<Entity, With<T>>,

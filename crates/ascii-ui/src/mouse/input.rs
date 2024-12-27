@@ -1,19 +1,7 @@
 use bevy::{
-    ecs::{
-        event::EventReader,
-        query::With,
-        system::{Query, Res, ResMut, Resource},
-    },
-    input::{
-        mouse::{MouseButton, MouseWheel},
-        touch::{TouchInput, TouchPhase},
-        ButtonInput,
-    },
-    math::{Vec2, Vec3},
-    prelude::{Deref, DerefMut},
-    render::camera::Camera,
-    transform::components::GlobalTransform,
-    window::{PrimaryWindow, Window},
+    input::{mouse::MouseWheel, touch::TouchPhase},
+    prelude::*,
+    window::PrimaryWindow,
 };
 
 #[derive(Debug, Default, Resource, DerefMut, Deref)]

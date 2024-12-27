@@ -1,13 +1,11 @@
-use bevy::{
-    asset::AssetServer,
-    ecs::{
-        entity::Entity,
-        query::With,
-        system::{Commands, Query, Res},
-    },
-    math::{IVec2, UVec2, Vec2},
-};
+use bevy::prelude::*;
 
+use super::{
+    input::{controller::PlayerInputController, player_inputs::ResetMarker},
+    movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
+    PlayerBundle,
+};
+use crate::physics_grids::GamePhysicsGridMarker;
 use glyph_render::{
     glyph_animation_graph::bundle::GlyphAnimationGraphBundle, glyph_buffer::TargetGlyphBuffer,
 };
@@ -22,14 +20,6 @@ use spatial_grid::{
     depth::Depth,
     position::{Position, SpatialBundle},
     remainder::Remainder,
-};
-
-use crate::physics_grids::GamePhysicsGridMarker;
-
-use super::{
-    input::{controller::PlayerInputController, player_inputs::ResetMarker},
-    movement::{walk::PlayerWalkSpeed, PlayerMovementBundle},
-    PlayerBundle,
 };
 
 pub(crate) fn player_reset_system(

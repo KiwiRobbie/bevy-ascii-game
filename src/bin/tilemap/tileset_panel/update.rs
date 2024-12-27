@@ -1,29 +1,14 @@
-use std::{ffi::OsStr, path::Path};
+use bevy::prelude::*;
 
+use super::{
+    setup::{DebugMenuMarker, ItemMutateButton, SaveTilemapButton},
+    state::TilesetPanelState,
+};
+use crate::list_builder_widget::ListBuilderWidget;
 use ascii_ui::{
     attachments::Root,
     widgets::{self, button::ButtonJustPressedMarker, MultiChildWidget},
 };
-use bevy::{
-    asset::{
-        io::AssetSourceId,
-        saver::{AssetSaver, SavedAsset},
-        AssetEvent, AssetServer, Assets, ErasedLoadedAsset, Handle, LoadedAsset,
-    },
-    ecs::{
-        component::Component,
-        event::EventReader,
-        query::With,
-        system::{Commands, Query, Res, ResMut},
-    },
-    input::{gamepad::GamepadButton, keyboard::KeyCode, ButtonInput},
-    prelude::{Children, Entity, Gamepad},
-    tasks::IoTaskPool,
-};
-use glyph_render::glyph_buffer::GlyphBuffer;
-
-use spatial_grid::grid::SpatialGrid;
-
 use bevy_ascii_game::{
     physics_grids::UiPhysicsGrid,
     tilemap::{
@@ -35,13 +20,9 @@ use bevy_ascii_game::{
     },
     tileset::asset::TilesetSource,
 };
-
-use crate::list_builder_widget::ListBuilderWidget;
-
-use super::{
-    setup::{DebugMenuMarker, ItemMutateButton, SaveTilemapButton},
-    state::TilesetPanelState,
-};
+use glyph_render::glyph_buffer::GlyphBuffer;
+use spatial_grid::grid::SpatialGrid;
+use std::{ffi::OsStr, path::Path};
 
 pub(super) fn toggle_menu(
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -77,8 +58,8 @@ pub(super) fn update_position(
     };
 
     for mut root in q_root.iter_mut() {
-        root.position.y = -(buffer.size.y as i32);
         root.position.x = buffer.size.x as i32 - root.size.x as i32;
+        root.position.y = buffer.size.y as i32 - root.size.y as i32;
     }
 }
 

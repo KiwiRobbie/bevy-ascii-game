@@ -1,25 +1,17 @@
-use std::sync::Arc;
+use bevy::prelude::*;
 
-use bevy::{
-    asset::Assets,
-    ecs::{
-        entity::Entity,
-        system::{Commands, Query, ResMut},
-    },
-    math::IVec2,
-};
 use glyph_render::{
     glyph_render_plugin::{GlyphTexture, GlyphTextureSource},
     glyph_sprite::GlyphSprite,
 };
-use spatial_grid::position::Position;
+use std::sync::Arc;
 
-use crate::{layout::positioned::Positioned, widgets::Texture};
+use crate::{layout::positioned::WidgetSize, widgets::Texture};
 
 pub(crate) fn texture_render(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut commands: Commands,
-    q_text: Query<(Entity, &Positioned, &Texture)>,
+    q_text: Query<(Entity, &WidgetSize, &Texture)>,
 ) {
     for (entity, positioned, text) in q_text.iter() {
         commands.entity(entity).insert((GlyphSprite {

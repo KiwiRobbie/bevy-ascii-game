@@ -1,11 +1,4 @@
-use bevy::{
-    asset::Assets,
-    ecs::{
-        component::Component,
-        system::{Query, Res},
-    },
-    time::Time,
-};
+use bevy::prelude::*;
 
 use super::{GlyphAnimation, GlyphAnimationSource};
 

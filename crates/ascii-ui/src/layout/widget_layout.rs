@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::{component::Component, entity::Entity, system::Commands, world::World},
-    math::UVec2,
-};
+use bevy::prelude::*;
 
 use super::constraint::Constraint;
 

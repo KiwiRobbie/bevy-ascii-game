@@ -1,18 +1,16 @@
 use bevy::{
     asset::{io::Reader, AssetLoader, LoadContext},
-    math::{IVec2, UVec2},
+    prelude::*,
     utils::{ConditionalSendFuture, HashMap, HashSet},
 };
-
-use text_util::text_mirror::mirror_lines;
-
-pub mod meta;
 
 use self::meta::{
     create_data, CountDirection, FrameIndex, FrameMeta, GlyphAnimationMeta, MirroredFrame,
 };
-
 use super::{GlyphAnimationFrame, GlyphAnimationSource};
+use text_util::text_mirror::mirror_lines;
+
+pub mod meta;
 
 #[derive(Default)]
 pub struct GlyphAnimationAssetLoader {}

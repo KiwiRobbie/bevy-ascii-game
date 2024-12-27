@@ -1,4 +1,4 @@
-use bevy::ecs::component::Component;
+use bevy::prelude::*;
 
 #[derive(Component, Default, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum MainAxisAlignment {

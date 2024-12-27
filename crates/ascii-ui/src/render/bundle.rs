@@ -1,7 +1,5 @@
-use bevy::{
-    ecs::{bundle::Bundle, component::Component},
-    transform::components::{GlobalTransform, Transform},
-};
+use bevy::prelude::*;
+
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
     font::FontSize,

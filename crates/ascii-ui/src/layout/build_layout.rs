@@ -1,21 +1,11 @@
-use bevy::{
-    ecs::{
-        bundle::Bundle,
-        component::Component,
-        entity::Entity,
-        query::With,
-        system::{Commands, Query},
-        world::World,
-    },
-    math::{IVec2, UVec2},
-    prelude::{Children, Deref, DerefMut},
-};
+use bevy::prelude::*;
+
 use glyph_render::glyph_buffer::TargetGlyphBuffer;
 use spatial_grid::{grid::PhysicsGridMember, position::Position};
 
 use crate::{
     attachments::Root,
-    layout::{constraint::Constraint, positioned::Positioned, widget_layout::WidgetLayout},
+    layout::{constraint::Constraint, positioned::WidgetSize, widget_layout::WidgetLayout},
     widgets::{container::SingleChildWidget, ScrollingView},
 };
 
@@ -23,11 +13,11 @@ use super::render_clip::ClipRegion;
 
 pub(crate) fn clear_layout(
     mut commands: Commands,
-    q_positioned: Query<Entity, With<Positioned>>,
+    q_positioned: Query<Entity, With<WidgetSize>>,
     q_depth: Query<Entity, With<LayoutDepth>>,
 ) {
     for entity in q_positioned.iter() {
-        commands.entity(entity).remove::<Positioned>();
+        commands.entity(entity).remove::<WidgetSize>();
     }
     for entity in q_depth.iter() {
         commands.entity(entity).remove::<LayoutDepth>();
@@ -50,10 +40,9 @@ pub(crate) fn build_layout(
                 world,
                 &mut commands,
             );
-            commands.entity(entity).insert(Positioned {
-                offset: root.position,
-                size: root.size,
-            });
+            commands
+                .entity(entity)
+                .insert((Position(root.position), WidgetSize(root.size)));
         }
     }
 }
@@ -68,7 +57,6 @@ pub(crate) fn propagate_data_positions(
             recurse_apply_data(
                 &mut commands,
                 0,
-                UVec2::ZERO,
                 world,
                 root_entity,
                 None,
@@ -77,27 +65,28 @@ pub(crate) fn propagate_data_positions(
         }
     }
 }
-
 pub(crate) fn recurse_apply_data<B: Bundle + Clone>(
     commands: &mut Commands,
     depth: usize,
-    parent_size: UVec2,
     world: &World,
     entity: Entity,
     clip_region: Option<&ClipRegion>,
     bundle: &B,
 ) {
-    let Some(positioned) = world.get::<Positioned>(entity) else {
+    let Some(position) = world.get::<Position>(entity) else {
         println!("no position");
         return;
     };
-
+    let Some(size) = world.get::<WidgetSize>(entity) else {
+        println!("no size");
+        return;
+    };
     let children = world.get::<Children>(entity).into_iter().flatten().copied();
 
     let clip_region = if let Some(existing_clip_region) =
         world.get::<ScrollingView>(entity).map(|_| ClipRegion {
-            start: positioned.offset,
-            size: positioned.size,
+            start: **position,
+            size: **size,
         }) {
         if let Some(clip_region) = clip_region {
             Some(clip_region.intersection(&existing_clip_region))
@@ -112,24 +101,14 @@ pub(crate) fn recurse_apply_data<B: Bundle + Clone>(
         commands.entity(entity).insert(clip_region.clone());
     }
 
-    commands.entity(entity).insert((
-        Position(
-            positioned.offset * IVec2::new(1, -1) - positioned.size.as_ivec2().with_x(0)
-                + parent_size.as_ivec2().with_x(0),
-        ),
-        // Positioned {
-        //     offset: position.offset,
-        //     size: position.size,
-        // },
-        bundle.clone(),
-        LayoutDepth(depth),
-    ));
+    commands
+        .entity(entity)
+        .insert((bundle.clone(), LayoutDepth(depth)));
 
     for child in children {
         recurse_apply_data(
             commands,
             depth + 1,
-            positioned.size,
             world,
             child,
             clip_region.as_ref(),

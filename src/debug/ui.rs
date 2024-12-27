@@ -1,32 +1,24 @@
-use ascii_ui::{layout::positioned::Positioned, mouse::ActiveMarker};
-use bevy::{
-    app::{Plugin, Update},
-    color::palettes::css::ORANGE,
-    ecs::{
-        query::With,
-        schedule::IntoSystemConfigs,
-        system::{Query, Res, Resource},
-    },
-    gizmos::gizmos::Gizmos,
-    math::Vec2,
-    prelude::{Deref, DerefMut},
-    transform::components::Transform,
+use bevy::prelude::*;
+
+use ascii_ui::{layout::positioned::WidgetSize, mouse::ActiveMarker};
+use spatial_grid::{
+    global_position::GlobalPosition,
+    grid::{PhysicsGridMember, SpatialGrid},
 };
-use spatial_grid::grid::{PhysicsGridMember, SpatialGrid};
 
 fn debug_active(
     mut gizmos: Gizmos,
-    q_positioned: Query<(&Positioned, &PhysicsGridMember), With<ActiveMarker>>,
-    q_physics_grid: Query<(&SpatialGrid, &Transform)>,
+    q_positioned: Query<(&GlobalPosition, &WidgetSize, &PhysicsGridMember), With<ActiveMarker>>,
+    q_physics_grid: Query<(&GlobalPosition, &SpatialGrid, &Transform)>,
 ) {
-    for (positioned, grid_member) in q_positioned.iter() {
-        let Ok((grid, transform)) = q_physics_grid.get(grid_member.grid) else {
+    for (position, size, grid_member) in q_positioned.iter() {
+        let Ok((grid_position, grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
 
-        let offset = positioned.offset.as_vec2() * grid.step.as_vec2() * Vec2::new(1.0, -1.0)
+        let offset = (**position - **grid_position).as_vec2() * grid.step.as_vec2()
             + transform.translation.truncate();
-        let size = positioned.size.as_vec2() * grid.step.as_vec2() * Vec2::new(1.0, -1.0);
+        let size = size.as_vec2() * grid.step.as_vec2();
         let center = offset + 0.5 * size;
 
         gizmos.rect_2d(center, size, ORANGE);

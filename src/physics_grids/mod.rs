@@ -1,35 +1,18 @@
-use bevy::{
-    app::{Plugin, PostUpdate, PreUpdate, Startup, Update},
-    asset::AssetServer,
-    ecs::{
-        component::Component,
-        entity::{Entity, EntityHashSet},
-        query::With,
-        system::{Commands, Query, Res, ResMut, Resource},
-    },
-    math::{IVec2, UVec2, Vec2},
-    prelude::{Deref, DerefMut, IntoSystemConfigs, Local, TransformSystem, Without},
-    render::sync_world::SyncToRenderWorld,
-    time::Time,
-    transform::components::{GlobalTransform, Transform},
-};
+use bevy::{ecs::entity::EntityHashSet, prelude::*, render::sync_world::SyncToRenderWorld};
+
+use self::resize::grid_resize_update;
+use crate::player::PlayerMarker;
 use glyph_render::{
     atlas::{CharacterSet, FontAtlasUser},
     font::{CustomFont, FontSize},
     glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
 };
-
 use grid_physics::{collision::Collider, plugin::PhysicsUpdateSet, velocity::Velocity};
 use parallax::parallax_system;
 use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
     position::{Position, SpatialBundle},
-    remainder::Remainder,
 };
-
-use crate::player::PlayerMarker;
-
-use self::resize::grid_resize_update;
 
 pub mod parallax;
 pub mod resize;

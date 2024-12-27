@@ -1,12 +1,7 @@
-use crate::glyph_render_plugin::GlyphTexture;
-use bevy::{
-    app::Plugin,
-    asset::{AssetApp, Handle},
-    ecs::component::Component,
-    math::IVec2,
-};
+use bevy::prelude::*;
 
 use self::loader::GlyphTextureLoader;
+use crate::glyph_render_plugin::GlyphTexture;
 
 pub(crate) mod loader;
 

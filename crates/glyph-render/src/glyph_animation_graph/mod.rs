@@ -1,18 +1,16 @@
-use std::collections::VecDeque;
-
-use anyhow::Context;
 use bevy::{
-    asset::{io::Reader, Asset, AssetLoader, Handle, LoadContext},
-    ecs::component::Component,
-    reflect::TypePath,
+    asset::{io::Reader, AssetLoader, LoadContext},
+    prelude::*,
     utils::{
         hashbrown::{HashMap, HashSet},
         ConditionalSendFuture,
     },
 };
-use serde::Deserialize;
 
 use crate::glyph_animation::GlyphAnimationSource;
+use anyhow::Context;
+use serde::Deserialize;
+use std::collections::VecDeque;
 
 pub mod bundle;
 pub mod player;

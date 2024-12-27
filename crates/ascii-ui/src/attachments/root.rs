@@ -1,8 +1,4 @@
-use bevy::{
-    ecs::{component::Component, reflect::ReflectComponent},
-    math::{IVec2, UVec2},
-    reflect::Reflect,
-};
+use bevy::prelude::*;
 
 #[derive(Component, Debug, Clone, Reflect)]
 #[reflect(Component)]

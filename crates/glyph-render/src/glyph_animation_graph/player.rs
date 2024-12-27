@@ -1,17 +1,7 @@
-use bevy::{
-    asset::{Assets, Handle},
-    ecs::{
-        component::Component,
-        entity::Entity,
-        system::{Commands, Query, Res},
-    },
-    prelude::{Deref, DerefMut},
-    time::Time,
-};
-
-use crate::glyph_animation::{GlyphAnimation, GlyphAnimationSource};
+use bevy::prelude::*;
 
 use super::{GlyphAnimationGraph, GlyphAnimationGraphSource};
+use crate::glyph_animation::{GlyphAnimation, GlyphAnimationSource};
 
 #[derive(Debug, Component, Clone)]
 pub struct GlyphAnimationGraphSettings {

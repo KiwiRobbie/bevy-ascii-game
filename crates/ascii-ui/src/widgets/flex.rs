@@ -5,7 +5,7 @@ use crate::{
     attachments::{Flex, MainAxisAlignment},
     layout::{
         constraint::Constraint,
-        positioned::Positioned,
+        positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
@@ -125,57 +125,67 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
             }
         };
 
-        let mut cursor_pos: IVec2 = IVec2::ZERO;
-        let mut cross_axis_size: u32 = 0;
-        let main_axis = flex_dir.main_axis().as_ivec2();
-        let cross_axis = flex_dir.cross_axis().as_ivec2();
+        // local space
+        let local_main_axis = flex_dir.main_axis().as_ivec2();
+        let local_cross_axis = flex_dir.cross_axis().as_ivec2();
+        let global_main_axis = flex_dir.main_axis().as_ivec2() * IVec2::new(1, -1);
+        // let global_cross_axis = flex_dir.cross_axis().as_ivec2() * IVec2::new(1, -1);
 
-        if main_axis_alignment == MainAxisAlignment::End {
-            cursor_pos += main_axis * total_padding as i32;
-        }
+        let main_axis_size = main_axis_space.unwrap_or(child_total_space) as i32;
+        // match (main_axis_alignment, child_total_flex) {
+        // (MainAxisAlignment::Start, 0) => child_total_space,
+        // (_, _) => main_axis_space.unwrap_or(child_total_space),
+        // } as i32;
+        let cross_axis_size = child_layout_data
+            .iter()
+            .map(|(_, size, _)| (size.as_ivec2() * local_cross_axis).element_sum())
+            .max()
+            .unwrap_or(0);
+        let self_size = main_axis_size * local_main_axis + cross_axis_size * local_cross_axis;
+
+        let mut cursor_pos: IVec2 = self_size.with_x(0);
 
         let mut remaining_flex = child_total_flex;
         let mut remaining_flex_space = total_flex_space;
 
-        for (index, (child, size, flex)) in child_layout_data.iter().enumerate() {
+        for (index, (child, child_size, flex)) in child_layout_data.iter().enumerate() {
             if flex.factor > 0 {
                 let flex_space = (remaining_flex_space * flex.factor) / remaining_flex;
                 remaining_flex -= flex.factor;
                 remaining_flex_space -= flex_space;
 
-                commands.entity(*child).insert(Positioned {
-                    offset: cursor_pos,
-                    size: main_axis.as_uvec2() * flex_space + cross_axis.as_uvec2() * size,
-                });
-                cross_axis_size = cross_axis_size.max(size.y);
-                cursor_pos += main_axis * flex_space as i32;
+                let child_size = local_main_axis.as_uvec2() * flex_space
+                    + local_cross_axis.as_uvec2() * child_size;
+                commands.entity(*child).insert((
+                    Position(cursor_pos - child_size.as_ivec2().with_x(0)),
+                    WidgetSize(child_size),
+                ));
+                cursor_pos += global_main_axis * flex_space as i32;
             } else {
                 if main_axis_alignment == MainAxisAlignment::SpaceAround {
                     let extra = index < extra_spaces;
-                    cursor_pos += main_axis * spacing as i32;
-                    cursor_pos += main_axis * extra as i32;
+                    cursor_pos += global_main_axis * spacing as i32;
+                    cursor_pos += global_main_axis * extra as i32;
                 }
 
-                commands.entity(*child).insert(Positioned {
-                    offset: cursor_pos,
-                    size: *size,
-                });
-                cross_axis_size = cross_axis_size.max((size * cross_axis.as_uvec2()).element_sum());
-                cursor_pos += main_axis * size.as_ivec2();
+                commands.entity(*child).insert((
+                    Position(cursor_pos - child_size.as_ivec2().with_x(0)),
+                    WidgetSize(*child_size),
+                ));
+
+                cursor_pos += global_main_axis * child_size.as_ivec2();
 
                 if main_axis_alignment == MainAxisAlignment::SpaceBetween
                     && index + 1 != child_layout_data.len()
                 {
                     let extra = index < extra_spaces;
-                    cursor_pos += main_axis * spacing as i32;
-                    cursor_pos += main_axis * extra as i32;
+                    cursor_pos += global_main_axis * spacing as i32;
+                    cursor_pos += global_main_axis * extra as i32;
                 }
             }
         }
-        if main_axis_alignment == MainAxisAlignment::SpaceAround {
-            cursor_pos += main_axis * spacing as i32;
-        }
-        return cursor_pos.as_uvec2() + cross_axis.as_uvec2() * cross_axis_size;
+
+        return self_size.as_uvec2();
     }
 }
 

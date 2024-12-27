@@ -1,20 +1,14 @@
-use bevy::{
-    ecs::{
-        component::Component, entity::Entity, reflect::ReflectComponent, system::Commands,
-        world::World,
-    },
-    math::UVec2,
-    reflect::Reflect,
-};
+use bevy::prelude::*;
 
 use crate::{
     layout::{
         constraint::Constraint,
-        positioned::Positioned,
+        positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     widget_builder::WidgetBuilderFn,
 };
+use spatial_grid::position::Position;
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
@@ -48,22 +42,30 @@ impl WidgetLayoutLogic for GridLogic {
             .div_euclid(grid.child_size.x);
         let width = columns * grid.child_size.x;
 
-        for child in grid.children.iter() {
+        let children = world.get::<Children>(entity).expect("No children on grid!");
+        let height = (children.len() as u32).div_ceil(columns);
+
+        for (i, child) in children.iter().enumerate() {
+            let child_grid_pos = UVec2::new(i as u32 % columns, i as u32 / columns);
+            let local_child_pos = child_grid_pos * grid.child_size;
+            let global_pos = IVec2::new(1, -1) * local_child_pos.as_ivec2() // Invert y coordinate
+                 + height as i32 * IVec2::Y; // Y starts from top of bounding box
+
             let child_logic = world
                 .get::<WidgetLayout>(*child)
                 .expect("Failed to get widget logic for child");
 
-            constraint.constrain((child_logic.logic).layout(
+            let child_size = constraint.constrain((child_logic.logic).layout(
                 *child,
                 &child_constraint,
                 world,
                 commands,
             ));
 
-            commands.entity(*child).insert(Positioned {
-                offset: cursor.as_ivec2(),
-                size: grid.child_size,
-            });
+            commands.entity(*child).insert((
+                Position(global_pos - child_size.as_ivec2().with_x(0)),
+                WidgetSize(grid.child_size),
+            ));
 
             cursor.x += grid.child_size.x;
             if cursor.x >= width {

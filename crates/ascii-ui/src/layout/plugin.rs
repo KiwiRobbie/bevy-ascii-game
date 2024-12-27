@@ -1,8 +1,4 @@
-use bevy::{
-    app::{Plugin, PostUpdate},
-    ecs::schedule::IntoSystemConfigs,
-    prelude::*,
-};
+use bevy::prelude::*;
 
 use crate::render::UiRenderSet;
 

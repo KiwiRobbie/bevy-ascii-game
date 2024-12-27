@@ -8,20 +8,7 @@ default-run = "main"
 anyhow = "1.0.79"
 serde = "1.0.195"
 ron = "0.8.1"
-bevy = { version = "0.15.0", default-features = false, features = [
-    "bevy_asset",
-    "bevy_gilrs",
-    "bevy_winit",
-    "bevy_core_pipeline",
-    # "bevy_pbr",
-    "bevy_render",
-    "bevy_sprite",
-    "multi_threaded",
-    "x11",
-    "bevy_gizmos",
-    "webgl2",
-    # "wayland",
-] }
+bevy = { version = "0.15.0", default-features = false, features = ["bevy_asset", "bevy_gilrs", "bevy_winit", "bevy_core_pipeline", "bevy_render", "bevy_sprite", "multi_threaded", "x11", "wayland", "bevy_gizmos", "webgl2"] }
 # bevy_animation = { version = "0.14.0-rc.4" }
 ascii-ui = { path = "crates/ascii-ui" }
 grid-physics = { path = "crates/grid-physics" }
@@ -49,40 +36,40 @@ name = "tilemap"
 name = "main"
 
 
-# # Enable a small amount of optimization in debug mode
-# [profile.dev]
-# opt-level = 0
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
 
-# [profile.dev.package.glyph-render]
-# opt-level = 0
-# debug = true
-# debug-assertions = true
-# overflow-checks = true
-# incremental = true
-# codegen-units = 16
+[profile.dev.package.glyph-render]
+opt-level = 1
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 16
 
-# [profile.dev.package.ascii-ui]
-# opt-level = 0
-# debug = true
-# debug-assertions = true
-# overflow-checks = true
-# incremental = true
-# codegen-units = 16
+[profile.dev.package.ascii-ui]
+opt-level = 1
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 16
 
-# [profile.dev.package.grid-physics]
-# opt-level = 0
-# debug = true
-# debug-assertions = true
-# overflow-checks = true
-# incremental = true
-# codegen-units = 16
+[profile.dev.package.grid-physics]
+opt-level = 1
+debug = true
+debug-assertions = true
+overflow-checks = true
+incremental = true
+codegen-units = 16
 
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
-# [profile.dev.package."*"]
-# opt-level = 3
-# debug = false
-# debug-assertions = false
-# overflow-checks = false
-# incremental = true
-# codegen-units = 16
+[profile.dev.package."*"]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+incremental = true
+codegen-units = 16

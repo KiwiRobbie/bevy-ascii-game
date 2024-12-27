@@ -1,14 +1,10 @@
-use bevy::{
-    app::{Plugin, PreUpdate},
-    ecs::schedule::IntoSystemConfigs,
-};
-
-use crate::mouse::mouse_interaction;
+use bevy::prelude::*;
 
 use super::{
     button::button_interaction_system, checkbox::checkbox_interaction_system,
     scrolling_view::scrolling_view_interaction_system, tab_view::tab_view_interaction_system,
 };
+use crate::mouse::mouse_interaction;
 
 pub(crate) struct WidgetPlugin;
 impl Plugin for WidgetPlugin {

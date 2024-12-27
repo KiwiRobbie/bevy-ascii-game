@@ -1,7 +1,4 @@
-use bevy::{
-    ecs::component::Component,
-    math::{IVec2, UVec2},
-};
+use bevy::prelude::*;
 
 #[derive(Debug, Component, Clone)]
 pub(crate) struct ClipRegion {

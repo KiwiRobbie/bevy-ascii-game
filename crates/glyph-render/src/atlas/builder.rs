@@ -1,13 +1,13 @@
 use bevy::{
-    math::{IVec2, UVec2},
+    prelude::*,
     utils::{HashMap, HashSet},
 };
+
+use super::{AtlasItem, FontAtlasSource};
 use swash::{
     scale::{Render, Scaler},
     GlyphId,
 };
-
-use super::{AtlasItem, FontAtlasSource};
 
 struct RenderedGlyph {
     glyph_id: u16,

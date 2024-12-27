@@ -1,27 +1,21 @@
-use bevy::{
-    ecs::{
-        entity::Entity,
-        query::{QueryData, QueryFilter, QueryState, With},
-        world::{FromWorld, World},
+use bevy::ecs::query::{QueryData, QueryFilter};
+use bevy::prelude::*;
+use bevy::render::{
+    render_graph,
+    render_resource::{
+        BindGroupEntries, LoadOp, Operations, PipelineCache, RenderPassColorAttachment,
+        RenderPassDescriptor, StoreOp, TextureViewDescriptor,
     },
-    render::{
-        render_graph,
-        render_resource::{
-            BindGroupEntries, LoadOp, Operations, PipelineCache, RenderPassColorAttachment,
-            RenderPassDescriptor, StoreOp, TextureViewDescriptor,
-        },
-        view::{ViewTarget, ViewUniforms},
-    },
+    view::{ViewTarget, ViewUniforms},
 };
-use spatial_grid::depth::Depth;
-
-use crate::glyph_buffer::TargetGlyphBuffer;
 
 use super::{
     render_resources::{GlyphBufferData, GlyphUniformBuffer},
     AtlasGpuData, GlyphModelUniformBuffer, GlyphPipelineData, GlyphRenderUniformBuffer,
     GlyphTextureInfo, GpuGlyphTexture,
 };
+use crate::glyph_buffer::TargetGlyphBuffer;
+use spatial_grid::depth::Depth;
 
 #[derive(QueryData)]
 

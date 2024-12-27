@@ -1,15 +1,9 @@
+use bevy::prelude::*;
+
 use ascii_ui::{
     attachments,
     widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, Divider, FlexWidget, SingleChildWidget, TabView, Text},
-};
-use bevy::{
-    ecs::{
-        component::Component,
-        system::{Commands, ResMut},
-    },
-    math::{IVec2, UVec2},
-    prelude::World,
 };
 
 use crate::{

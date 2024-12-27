@@ -1,8 +1,4 @@
-use bevy::{
-    app::{Plugin, Update},
-    ecs::{bundle::Bundle, component::Component, query::With, schedule::IntoSystemConfigs},
-};
-use grid_physics::sets::physics_systems_enabled;
+use bevy::prelude::*;
 
 use self::{
     direction::{player_update_sprite_mirror, PlayerDirection},
@@ -13,8 +9,8 @@ use self::{
     },
     walk::{player_walk_system, PlayerWalkSpeed},
 };
-
 use super::PlayerMarker;
+use grid_physics::sets::physics_systems_enabled;
 
 pub(crate) mod direction;
 pub(crate) mod jump;

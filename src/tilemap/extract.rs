@@ -1,13 +1,14 @@
-use std::ops::Div;
-
 use bevy::{
-    asset::Assets,
-    color::Color,
-    ecs::system::{Commands, Query, Res, ResMut},
-    math::{IVec2, UVec2},
-    prelude::{Component, Entity, With},
+    prelude::*,
     render::{sync_world::RenderEntity, Extract},
 };
+
+use super::{
+    asset::TilemapSource,
+    chunk::{TilemapChunk, EMPTY_TILE},
+    component::Tilemap,
+};
+use crate::tileset::asset::TilesetSource;
 use glyph_render::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
@@ -16,14 +17,7 @@ use glyph_render::{
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 use spatial_grid::{depth::Depth, global_position::GlobalPosition};
-
-use crate::tileset::asset::TilesetSource;
-
-use super::{
-    asset::TilemapSource,
-    chunk::{TilemapChunk, EMPTY_TILE},
-    component::Tilemap,
-};
+use std::ops::Div;
 
 #[derive(Component)]
 pub(crate) struct ExtractedTileMapTileMarker;

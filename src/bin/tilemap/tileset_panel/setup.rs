@@ -1,22 +1,13 @@
-use std::sync::Arc;
+use bevy::prelude::*;
 
 use ascii_ui::{
-    attachments::{self, MainAxisAlignment},
+    attachments::{self},
     mouse::InteractableMarker,
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
     widgets::{self, Divider, FlexWidget, SingleChildWidget},
     FlexDirection,
 };
-use bevy::{
-    asset::{AssetServer, Handle},
-    ecs::{
-        component::Component,
-        entity::Entity,
-        system::{Commands, Res, ResMut},
-    },
-    math::{IVec2, UVec2},
-    prelude::World,
-};
+use std::sync::Arc;
 
 use bevy_ascii_game::{
     physics_grids::UiPhysicsGridMarker,
@@ -27,7 +18,7 @@ use glyph_render::glyph_render_plugin::GlyphTextureSource;
 
 use crate::list_builder_widget::ListBuilderWidget;
 
-use super::{state::TilesetPanelState, update::TilesetHandles};
+use super::state::TilesetPanelState;
 
 #[derive(Debug, Component)]
 pub(crate) struct ItemMutateButton {

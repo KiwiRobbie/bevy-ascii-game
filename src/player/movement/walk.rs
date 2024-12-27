@@ -1,9 +1,7 @@
+use bevy::prelude::*;
+
 use super::{direction::PlayerDirection, MovementFilter};
 use crate::player::input::player_inputs;
-use bevy::{
-    ecs::{component::Component, system::Query},
-    prelude::Has,
-};
 use grid_physics::{free::FreeGrounded, velocity::Velocity};
 
 #[derive(Component, Debug, Default, Clone)]

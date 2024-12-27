@@ -1,13 +1,5 @@
-use std::sync::Arc;
+use bevy::prelude::*;
 
-use bevy::{
-    color::palettes::css,
-    prelude::*,
-    render::{
-        sync_world::{RenderEntity, SyncToRenderWorld},
-        Extract, RenderApp,
-    },
-};
 use glyph_render::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
@@ -16,6 +8,7 @@ use glyph_render::{
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 use spatial_grid::{depth::Depth, global_position::GlobalPosition};
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct EditorLayerItem {

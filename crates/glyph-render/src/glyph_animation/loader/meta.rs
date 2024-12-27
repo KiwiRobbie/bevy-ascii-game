@@ -1,4 +1,4 @@
-use bevy::{asset::Asset, math::UVec2, reflect::TypePath};
+use bevy::prelude::*;
 
 #[derive(serde::Deserialize, Asset, TypePath)]
 pub(crate) struct GlyphAnimationMeta {

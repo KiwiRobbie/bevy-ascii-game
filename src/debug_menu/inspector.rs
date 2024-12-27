@@ -105,13 +105,13 @@ fn get_component_info(world: &World, component_id: ComponentId) -> Option<&Compo
 
 pub(crate) fn inspector_fetch_system(
     mut commands: Commands,
-    mut q_inspector: Query<(Entity, &InspectorTab, &widgets::MultiChildWidget)>,
+    mut q_inspector: Query<(Entity, &InspectorTab), With<widgets::MultiChildWidget>>,
     world: &World,
     type_registry: Res<TypeRegistryResource>,
 ) {
     let type_registry = &type_registry.0;
 
-    for (inspector_entity, inspector, column_children) in q_inspector.iter_mut() {
+    for (inspector_entity, inspector) in q_inspector.iter_mut() {
         commands.entity(inspector_entity).despawn_descendants();
         if let Some(target) = inspector.target {
             let mut inspector_widgets = vec![];

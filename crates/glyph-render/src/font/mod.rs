@@ -1,18 +1,10 @@
-use anyhow::anyhow;
 use bevy::{
-    asset::{io::Reader, Asset, AssetEvent, AssetLoader, AssetServer, Handle, LoadContext},
-    ecs::{
-        component::Component,
-        entity::Entity,
-        event::EventReader,
-        query::Without,
-        system::{Commands, Query, Res, Resource},
-        world::FromWorld,
-    },
-    prelude::{Deref, DerefMut},
-    reflect::TypePath,
+    asset::{io::Reader, AssetLoader, LoadContext},
+    prelude::*,
     utils::ConditionalSendFuture,
 };
+
+use anyhow::anyhow;
 use swash::{CacheKey, FontRef};
 
 #[derive(Component, PartialEq, Eq, Hash, Clone, Deref, DerefMut)]

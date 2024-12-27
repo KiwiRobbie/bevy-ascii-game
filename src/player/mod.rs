@@ -1,10 +1,4 @@
-use bevy::{
-    app::{Plugin, Update},
-    ecs::{bundle::Bundle, component::Component},
-};
-
-use grid_physics::actor::ActorPhysicsBundle;
-use interaction::{InteractionSource, PlayerInteractionPlugin};
+use bevy::prelude::*;
 
 use self::{
     animation::set_animation_target,
@@ -12,6 +6,8 @@ use self::{
     movement::{PlayerMovementBundle, PlayerMovementPlugin},
     reset::player_reset_system,
 };
+use grid_physics::actor::ActorPhysicsBundle;
+use interaction::{InteractionSource, PlayerInteractionPlugin};
 
 pub(crate) mod animation;
 pub mod input;

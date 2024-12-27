@@ -1,22 +1,11 @@
-use bevy::{
-    ecs::{
-        bundle::Bundle,
-        component::Component,
-        entity::{Entity, EntityHashSet},
-        query::Without,
-        system::Query,
-    },
-    math::UVec2,
-    prelude::{Deref, DerefMut},
-    render::render_resource::TextureView,
-};
+use bevy::{ecs::entity::EntityHashSet, prelude::*, render::render_resource::TextureView};
 
 use crate::{
     atlas::FontAtlasUser,
     font::{CustomFont, FontSize},
 };
-
 pub use extract::extract_glyph_buffers;
+
 pub(crate) mod extract;
 pub(crate) mod prepare;
 

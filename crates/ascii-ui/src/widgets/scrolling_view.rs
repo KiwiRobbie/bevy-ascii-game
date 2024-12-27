@@ -1,21 +1,9 @@
-use bevy::{
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::With,
-        reflect::ReflectComponent,
-        system::{Commands, Query},
-        world::World,
-    },
-    math::{IVec2, UVec2},
-    reflect::Reflect,
-};
+use bevy::prelude::*;
 
 use crate::{
     attachments::{padding::Padding, SizedBox},
     layout::{
         constraint::Constraint,
-        positioned::Positioned,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     mouse::{InteractableMarker, ScrollInteraction, ScrollableMarker},
@@ -60,15 +48,16 @@ impl WidgetLayoutLogic for ScrollingViewLogic {
                 .get::<WidgetLayout>(*child)
                 .expect("Container child invalid!");
 
-            let size = (child_widget.logic).layout(*child, &child_constraint, world, commands);
+            let child_size =
+                (child_widget.logic).layout(*child, &child_constraint, world, commands);
 
             let offset = IVec2 {
                 x: padding.0.left as i32,
                 y: padding.0.top as i32 + y_offset,
             };
 
-            let size = child_constraint.constrain(size);
-            commands.entity(*child).insert(Positioned { offset, size });
+            let size = child_constraint.constrain(child_size);
+            // commands.entity(*child).insert(WidgetSize { offset, size });
             y_offset += size.y as i32;
         }
 

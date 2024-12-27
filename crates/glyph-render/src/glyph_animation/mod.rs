@@ -1,15 +1,8 @@
-use std::sync::Arc;
-
-use bevy::{
-    app::Plugin,
-    asset::{Asset, AssetApp, Handle},
-    ecs::component::Component,
-    math::{IVec2, UVec2},
-    reflect::TypePath,
-};
+use bevy::prelude::*;
 
 use self::loader::GlyphAnimationAssetLoader;
 use crate::glyph_render_plugin::GlyphTextureSource;
+use std::sync::Arc;
 
 mod loader;
 pub mod player;

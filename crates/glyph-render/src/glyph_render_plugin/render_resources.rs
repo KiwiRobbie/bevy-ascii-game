@@ -1,6 +1,5 @@
 use bevy::{
-    ecs::component::Component,
-    prelude::{Deref, DerefMut},
+    prelude::*,
     render::render_resource::{Texture, UniformBuffer},
 };
 

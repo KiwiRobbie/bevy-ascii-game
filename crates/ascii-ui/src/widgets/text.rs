@@ -1,11 +1,4 @@
-use bevy::{
-    ecs::{
-        bundle::Bundle, component::Component, entity::Entity, reflect::ReflectComponent,
-        system::Commands, world::World,
-    },
-    math::UVec2,
-    reflect::Reflect,
-};
+use bevy::prelude::*;
 
 use crate::{
     layout::{

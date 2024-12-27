@@ -1,13 +1,6 @@
+use bevy::prelude::*;
+
 use crate::player::PlayerMarker;
-use bevy::{
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::With,
-        system::{Commands, Query},
-    },
-    math::IVec2,
-};
 use glyph_render::glyph_render_plugin::GlyphSpriteMirrored;
 
 use super::PlayerMovementMarker;

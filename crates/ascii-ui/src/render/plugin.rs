@@ -1,18 +1,4 @@
-use bevy::{
-    app::{Plugin, PostUpdate},
-    asset::Assets,
-    ecs::{
-        entity::Entity,
-        schedule::IntoSystemConfigs,
-        system::{Commands, Query, ResMut},
-    },
-    math::IVec2,
-    prelude::TransformSystem,
-};
-use glyph_render::{glyph_render_plugin::GlyphTexture, glyph_sprite::GlyphSprite};
-use spatial_grid::position::Position;
-
-use crate::layout::{render_clip::ClipRegion, UiLayoutSet};
+use bevy::prelude::*;
 
 use super::{
     attachments::border::border_render,
@@ -20,6 +6,9 @@ use super::{
     widgets::{divider::divider_render, text::text_render, texture::texture_render},
     UiRenderSet,
 };
+use crate::layout::{render_clip::ClipRegion, UiLayoutSet};
+use glyph_render::{glyph_render_plugin::GlyphTexture, glyph_sprite::GlyphSprite};
+use spatial_grid::position::Position;
 
 pub(crate) struct RenderPlugin;
 impl Plugin for RenderPlugin {

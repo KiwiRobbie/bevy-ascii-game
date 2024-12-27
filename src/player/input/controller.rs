@@ -1,18 +1,7 @@
-use bevy::{
-    app::{Plugin, PreUpdate},
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::With,
-        system::{Commands, Query},
-    },
-    input::gamepad::GamepadButton,
-    prelude::{Gamepad, IntoSystemConfigs},
-};
-
-use crate::player::PlayerMarker;
+use bevy::prelude::*;
 
 use super::{player_inputs, PlayerInputMarker, PlayerInputSet};
+use crate::player::PlayerMarker;
 
 #[derive(Debug, Component)]
 pub struct PlayerInputController(pub Entity);

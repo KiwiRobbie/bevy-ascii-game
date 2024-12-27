@@ -2,7 +2,7 @@ use crate::{
     attachments::{padding::Padding, SizedBox},
     layout::{
         constraint::Constraint,
-        positioned::Positioned,
+        positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     widget_builder::WidgetBuilderFn,
@@ -56,10 +56,14 @@ impl WidgetLayoutLogic for ContainerLogic {
                 y: padding.0.top as i32,
             };
 
-            commands.entity(child).insert(Positioned {
-                offset,
-                size: constraint.constrain(size),
-            });
+            let child_size = constraint.constrain(size);
+            commands.entity(child).insert((
+                Position(
+                    offset * IVec2::new(1, -1) - child_size.as_ivec2().with_x(0)
+                        + (size + padding.total()).as_ivec2().with_x(0),
+                ),
+                WidgetSize(child_size),
+            ));
             return padding.0.inflate(size);
         }
 

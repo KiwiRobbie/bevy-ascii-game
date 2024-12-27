@@ -1,12 +1,9 @@
-use std::sync::Arc;
-
 use bevy::{
-    ecs::{component::Component, system::Resource},
-    math::{IVec2, UVec2},
-    prelude::{Deref, DerefMut},
-    reflect::TypePath,
+    prelude::*,
     utils::{HashMap, HashSet},
 };
+
+use std::sync::Arc;
 
 mod builder;
 mod plugin;

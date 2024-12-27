@@ -1,28 +1,15 @@
 use bevy::{
-    app::{Plugin, PreUpdate},
-    ecs::{
-        component::Component,
-        entity::Entity,
-        query::With,
-        schedule::IntoSystemConfigs,
-        system::{Commands, Query, ResMut},
-    },
-    input::{
-        mouse::{mouse_button_input_system, MouseButton},
-        InputSystem,
-    },
-    math::{IVec2, Vec2, Vec4Swizzles},
-    transform::components::GlobalTransform,
+    input::{mouse::mouse_button_input_system, InputSystem},
+    prelude::*,
 };
+
+use self::input::{update_mouse_position, MouseInput};
+use crate::layout::{build_layout::LayoutDepth, positioned::WidgetSize, render_clip::ClipRegion};
 use glyph_render::glyph_render_plugin::GlyphSolidColor;
 use spatial_grid::{
     global_position::GlobalPosition,
     grid::{PhysicsGridMember, SpatialGrid},
 };
-
-use crate::layout::{build_layout::LayoutDepth, positioned::Positioned, render_clip::ClipRegion};
-
-use self::input::{update_mouse_position, MouseInput};
 
 pub mod input;
 
@@ -65,7 +52,7 @@ pub(crate) fn mouse_interaction(
         (
             Entity,
             &GlobalPosition,
-            &Positioned,
+            &WidgetSize,
             &PhysicsGridMember,
             Option<&ScrollableMarker>,
             Option<&ClipRegion>,
@@ -149,22 +136,22 @@ fn cursor_in_widget(
     grid_member: &PhysicsGridMember,
     world_cursor_position: bevy::prelude::Vec3,
     global_pos: &GlobalPosition,
-    positioned: &Positioned,
+    size: &WidgetSize,
     clip: Option<&ClipRegion>,
 ) -> Option<IVec2> {
     let (grid, transform, buffer_position) = q_physics_grid.get(grid_member.grid).ok()?;
 
     let grid_cursor_position =
         ((transform.compute_matrix().inverse() * world_cursor_position.extend(1.0)).xy()
-            / grid.step.as_vec2()
-            + 0.5)
-            .as_ivec2()
+            / grid.step.as_vec2())
+        .as_ivec2()
             + **buffer_position;
 
-    let start = **global_pos - positioned.size.as_ivec2().with_x(0);
-    let end = start + positioned.size.as_ivec2().with_y(0);
+    let local_cursor_position = grid_cursor_position - **global_pos;
 
-    if start.cmple(grid_cursor_position).all() && grid_cursor_position.cmplt(end).all() {
+    if IVec2::ZERO.cmple(local_cursor_position).all()
+        && local_cursor_position.cmplt(size.as_ivec2()).all()
+    {
         Some(grid_cursor_position)
     } else {
         None
