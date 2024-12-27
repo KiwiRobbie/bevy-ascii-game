@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
 use ascii_ui::{layout::positioned::WidgetSize, mouse::ActiveMarker};
 use spatial_grid::{
@@ -21,7 +21,7 @@ fn debug_active(
         let size = size.as_vec2() * grid.step.as_vec2();
         let center = offset + 0.5 * size;
 
-        gizmos.rect_2d(center, size, ORANGE);
+        gizmos.rect_2d(center, size, css::ORANGE);
     }
 }
 

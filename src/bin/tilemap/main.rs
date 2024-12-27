@@ -1,4 +1,10 @@
-use bevy::prelude::*;
+use bevy::{
+    core_pipeline::bloom::Bloom,
+    input::mouse::MouseMotion,
+    prelude::*,
+    render::camera::CameraRenderGraph,
+    window::{PrimaryWindow, WindowResolution},
+};
 
 use ascii_ui::mouse::input::MouseInput;
 use bevy_ascii_game::{

@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use bevy::prelude::*;
 use spatial_grid::position::Position;
 
@@ -62,7 +64,10 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
         let flex_widget = world
             .get::<FlexWidget>(entity)
             .expect("Flex Widget Logic missing Flex Component!");
-        let children = &**world.get::<Children>(entity).unwrap();
+        let children: &[Entity] = world
+            .get::<Children>(entity)
+            .map(Deref::deref)
+            .unwrap_or(&[]);
         let flex_dir = flex_widget.direction.clone();
 
         let child_constraint = match flex_dir {

@@ -1,4 +1,13 @@
-use bevy::prelude::*;
+use bevy::{
+    core_pipeline::bloom::Bloom,
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent},
+        keyboard::{Key, KeyboardInput},
+    },
+    prelude::*,
+    render::camera::CameraRenderGraph,
+    window::WindowResolution,
+};
 
 use bevy_ascii_game::{
     debug::DebugPlugin,

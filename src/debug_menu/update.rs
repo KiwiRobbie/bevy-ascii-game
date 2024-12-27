@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use super::{setup::DebugMenuMarker, state::DebugMenuState};
+use super::{
+    setup::{setup_ui, DebugMenuMarker},
+    state::DebugMenuState,
+};
 use crate::physics_grids::UiPhysicsGrid;
 use ascii_ui::attachments::Root;
 use glyph_render::glyph_buffer::GlyphBuffer;
@@ -9,8 +12,8 @@ use spatial_grid::grid::SpatialGrid;
 pub fn toggle_menu(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<DebugMenuState>,
+    mut commands: Commands,
     gamepads: Query<&Gamepad>,
-    mut q_root: Query<&mut Root>,
 ) {
     if keyboard.just_pressed(KeyCode::F3) {
         state.enabled = !state.enabled;
@@ -21,10 +24,16 @@ pub fn toggle_menu(
         }
     }
 
-    if let Some(root) = state.root_widget {
-        let mut root = q_root.get_mut(root).unwrap();
-        root.enabled = state.enabled;
-    }
+    match state.root_widget {
+        Some(root) if !state.enabled => {
+            state.root_widget.take();
+            commands.entity(root).despawn_recursive();
+        }
+        None if state.enabled => {
+            setup_ui(&mut commands, &mut state);
+        }
+        _ => {}
+    };
 }
 
 pub fn update_position(

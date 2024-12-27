@@ -1,7 +1,9 @@
-use bevy::asset::io::Reader;
-use bevy::asset::{AssetLoader, LoadContext};
-use bevy::prelude::*;
-use bevy::utils::ConditionalSendFuture;
+use bevy::{
+    asset::io::{Reader, VecReader},
+    asset::{AssetLoader, LoadContext},
+    prelude::*,
+    utils::{ConditionalSendFuture, HashMap},
+};
 
 use super::meta::TilemapMeta;
 use super::{asset::TilemapSource, chunk::TilemapChunk};

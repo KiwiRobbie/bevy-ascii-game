@@ -1,7 +1,3 @@
-use ascii_ui::{
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
-    widgets::{checkbox::CheckboxEnabledMarker, Checkbox, FlexWidget},
-};
 use bevy::{
     app::{Plugin, Update},
     ecs::{
@@ -11,9 +7,13 @@ use bevy::{
         system::{Commands, Query, ResMut, Resource},
     },
 };
-use grid_physics::sets::EnablePhysicsSystems;
 
 use crate::debug::{DebugCollisions, DebugPositions, DebugUi};
+use ascii_ui::{
+    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widgets::{checkbox::CheckboxEnabledMarker, Checkbox, FlexWidget},
+};
+use grid_physics::sets::EnablePhysicsSystems;
 
 pub(crate) struct DebugOptionsPlugin;
 impl Plugin for DebugOptionsPlugin {

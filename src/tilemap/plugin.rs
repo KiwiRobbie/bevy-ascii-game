@@ -1,6 +1,5 @@
 use bevy::{
-    app::Plugin,
-    asset::AssetApp,
+    prelude::*,
     render::{ExtractSchedule, RenderApp},
 };
 
@@ -18,6 +17,7 @@ impl Plugin for TilemapPlugin {
             .init_asset::<TilemapChunk>()
             .init_asset_loader::<TilemapLoader>()
             .init_asset_loader::<ChunkLoader>();
+
         app.get_sub_app_mut(RenderApp)
             .unwrap()
             .add_systems(ExtractSchedule, extract_tilemaps);

@@ -1,4 +1,4 @@
-use bevy::{app::Plugin, asset::AssetApp};
+use bevy::prelude::*;
 
 use super::{asset::TilesetSource, loader::TilesetLoader};
 

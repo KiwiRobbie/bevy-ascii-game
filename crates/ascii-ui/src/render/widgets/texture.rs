@@ -6,14 +6,14 @@ use glyph_render::{
 };
 use std::sync::Arc;
 
-use crate::{layout::positioned::WidgetSize, widgets::Texture};
+use crate::widgets::Texture;
 
 pub(crate) fn texture_render(
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
     mut commands: Commands,
-    q_text: Query<(Entity, &WidgetSize, &Texture)>,
+    q_text: Query<(Entity, &Texture)>,
 ) {
-    for (entity, positioned, text) in q_text.iter() {
+    for (entity, text) in q_text.iter() {
         commands.entity(entity).insert((GlyphSprite {
             texture: glyph_textures.add(GlyphTexture::new(Arc::new(GlyphTextureSource::new(
                 text.size.x as usize,

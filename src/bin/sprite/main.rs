@@ -1,5 +1,11 @@
 use ascii_ui::mouse::input::MouseInput;
-use bevy::prelude::*;
+use bevy::{
+    core_pipeline::bloom::Bloom,
+    input::mouse::{MouseMotion, MouseWheel},
+    prelude::*,
+    render::camera::CameraRenderGraph,
+    window::{PrimaryWindow, WindowResolution},
+};
 
 use bevy_ascii_game::{
     debug::DebugPlugin,
@@ -78,7 +84,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     let fg_entity = commands
         .spawn((
-            EditorLayer::new(IVec2::new(0, 0), UVec2::new(64, 32)),
+            EditorLayer::new(),
             SelectedEditorLayer,
             GamePhysicsGridMarker,
             Depth(0.1),
@@ -339,7 +345,7 @@ fn testing_update(
     let end = grid_cursor_position.as_vec2();
 
     let (mut layer, layer_pos) = q_layer.get_single_mut().unwrap();
-    layer.clear_characters(' ');
+    layer.clear_tiles();
     for pos in dda_iter(start, end) {
         let local_start = start - pos.as_vec2();
         let local_end = end - pos.as_vec2();
@@ -372,24 +378,6 @@ fn testing_update(
         // print_image(&target, image_size);
         let _ = layer.write_character(pos, '#');
     }
-    // let target = create_target_angle_offset(
-    //     time.elapsed_secs(),
-    //     *offset,
-    //     1.5,
-    //     padding_start,
-    //     grid_size,
-    //     image_size,
-    // );
-
-    // let mut differences: Vec<(f64, &char, &Vec<f32>)> = rendered_characters
-    //     .iter()
-    //     .map(|(_, character, image)| (image_difference(&target, &image), character, image))
-    //     .filter(|(diff, _, _)| diff.is_finite())
-    //     .collect();
-
-    // differences.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());
-    // print_image(&target, image_size);
-    // print_image(differences.first().unwrap().2, image_size);
 }
 
 fn find_best_character(target: &[f32], rendered_characters: &[(char, Vec<f32>)]) -> char {
@@ -490,44 +478,3 @@ fn print_image(image: &[f32], size: UVec2) {
         row.clear();
     }
 }
-
-// fn keyboard_pan_system(
-//     mut evr_kbd: EventReader<KeyboardInput>,
-//     mut q_cursor: Query<
-//         (&mut Position, &mut Remainder),
-//         (With<EditorCursorMarker>, Without<SpatialGrid>),
-//     >,
-//     mut q_grid: Query<
-//         (&mut Position, &mut Remainder),
-//         (With<SpatialGrid>, With<PrimaryGlyphBufferMarker>),
-//     >,
-// ) {
-//     let Ok(mut cursor) = q_cursor.get_single_mut() else {
-//         return;
-//     };
-//     let Ok(mut grid) = q_grid.get_single_mut() else {
-//         return;
-//     };
-
-//     for ev in evr_kbd.read() {
-//         if ev.state.is_pressed() {
-//             if let Some(offset) = match &ev.logical_key {
-//                 Key::ArrowLeft => Some(Vec2::NEG_X),
-//                 Key::ArrowRight => Some(Vec2::X),
-//                 Key::ArrowDown => Some(Vec2::NEG_Y),
-//                 Key::ArrowUp => Some(Vec2::Y),
-//                 Key::Character(ch) => match ch.as_str() {
-//                     "h" => Some(Vec2::NEG_X),
-//                     "l" => Some(Vec2::X),
-//                     "j" => Some(Vec2::NEG_Y),
-//                     "k" => Some(Vec2::Y),
-//                     _ => None,
-//                 },
-//                 _ => None,
-//             } {
-//                 cursor.offset(offset);
-//                 grid.offset(offset);
-//             }
-//         }
-//     }
-// }

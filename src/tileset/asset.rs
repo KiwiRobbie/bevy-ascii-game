@@ -1,7 +1,7 @@
-use std::sync::Arc;
-
 use bevy::{asset::Asset, math::UVec2, reflect::TypePath, utils::HashMap};
+
 use glyph_render::glyph_render_plugin::GlyphTextureSource;
+use std::sync::Arc;
 
 #[derive(Debug, Asset, TypePath, Clone)]
 pub struct TilesetSource {

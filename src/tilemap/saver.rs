@@ -1,9 +1,3 @@
-use super::{
-    asset::TilemapSource,
-    chunk::TilemapChunk,
-    loader::{ChunkLoader, ChunkSettings},
-};
-use super::{loader::TilemapLoader, meta::TilemapMeta};
 use bevy::{
     asset::{
         io::Writer,
@@ -12,6 +6,13 @@ use bevy::{
     },
     utils::ConditionalSendFuture,
 };
+
+use super::{
+    asset::TilemapSource,
+    chunk::TilemapChunk,
+    loader::{ChunkLoader, ChunkSettings},
+};
+use super::{loader::TilemapLoader, meta::TilemapMeta};
 
 #[derive(Default)]
 pub struct TilemapSaver;

@@ -1,13 +1,21 @@
-use bevy::prelude::*;
+use bevy::{
+    color::palettes::css,
+    prelude::*,
+    render::{
+        sync_world::{RenderEntity, SyncToRenderWorld, TemporaryRenderEntity},
+        Extract, RenderApp,
+    },
+    utils::hashbrown::HashMap,
+};
 
 use glyph_render::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
-    glyph_buffer::TargetGlyphBuffer,
+    glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
     glyph_render_plugin::{GlyphSolidColor, GlyphTextureSource},
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
-use spatial_grid::{depth::Depth, global_position::GlobalPosition};
+use spatial_grid::{depth::Depth, global_position::GlobalPosition, position::Position};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -42,46 +50,89 @@ pub struct SelectedEditorLayer;
 #[derive(Debug, Component)]
 #[require(GlobalPosition, Depth, SyncToRenderWorld)]
 pub struct EditorLayer {
-    data: Vec<char>,
-    offset: IVec2,
-    size: UVec2,
+    tiles: HashMap<IVec2, EditorLayerTile>,
 }
 
-impl EditorLayer {
-    pub fn new(offset: IVec2, size: UVec2) -> Self {
-        assert!(size.x > 0);
-        assert!(size.y > 0);
+const TILE_USIZE: usize = 32;
+const TILE_DIMENSIONS: IVec2 = IVec2::new(32, 32);
+#[derive(Debug)]
+struct EditorLayerTile {
+    data: Box<[char; TILE_USIZE * TILE_USIZE]>,
+    count: usize,
+}
+impl EditorLayerTile {
+    fn new() -> Self {
         Self {
-            data: vec!['.'; size.x as usize * size.y as usize],
-            offset,
-            size,
+            data: Box::new([' '; TILE_USIZE * TILE_USIZE]),
+            count: 0usize,
         }
     }
-    pub fn get_texture_source(&self) -> GlyphTextureSource {
-        GlyphTextureSource {
-            data: self.data.clone().into(),
-            width: self.size.x as usize,
-            height: self.size.y as usize,
+}
+impl EditorLayerTile {
+    fn write(&mut self, index: usize, character: char) -> bool {
+        if character != ' ' {
+            self.count += 1;
         }
+        if self.data[index] != ' ' {
+            self.count -= 1;
+        }
+        self.data[index] = character;
+        self.count > 0
+    }
+}
+impl EditorLayer {
+    pub fn new() -> Self {
+        Self {
+            tiles: HashMap::new(),
+        }
+    }
+    pub fn get_texture_sources(
+        &self,
+        start: IVec2,
+        end: IVec2,
+    ) -> impl Iterator<Item = (GlyphTextureSource, Position)> + '_ {
+        self.tiles
+            .iter()
+            .filter(move |(&pos, _)| {
+                let tile_start = pos * TILE_DIMENSIONS;
+                let tile_end = tile_start + TILE_DIMENSIONS;
+                IVec2::cmplt(start.max(tile_start), end.min(tile_end)).all()
+            })
+            .map(|(pos, tile)| {
+                (
+                    GlyphTextureSource {
+                        data: tile.data.clone(),
+                        width: TILE_USIZE,
+                        height: TILE_USIZE,
+                    },
+                    Position(*pos * TILE_DIMENSIONS),
+                )
+            })
     }
 
-    pub fn get_offset(&self) -> IVec2 {
-        self.offset
-    }
-    pub fn clear_characters(&mut self, clear_character: char) {
-        for character in &mut self.data {
-            *character = clear_character;
-        }
+    pub fn clear_tiles(&mut self) {
+        self.tiles.clear();
     }
     pub fn write_character(&mut self, position: IVec2, character: char) -> Result<(), ()> {
-        let pos =
-            position * IVec2::new(1, -1) + self.size.as_ivec2().with_x(0) - IVec2::Y - self.offset;
-        if !(0 <= pos.x && pos.x < self.size.x as i32 && 0 <= pos.y && pos.y < self.size.y as i32) {
-            return Err(());
+        let tile_index = position.div_euclid(TILE_DIMENSIONS);
+        let tile_position = TILE_DIMENSIONS.with_x(0) - IVec2::new(0, 1)
+            + IVec2::new(1, -1) * position.rem_euclid(TILE_DIMENSIONS);
+        let character_index = tile_position.x as usize + tile_position.y as usize * TILE_USIZE;
+
+        if character != ' ' {
+            let tile_entry = self
+                .tiles
+                .entry(tile_index)
+                .or_insert_with(|| EditorLayerTile::new());
+            assert!(tile_entry.write(character_index, character));
+            return Ok(());
         }
 
-        let index = pos.x as usize + pos.y as usize * self.size.x as usize;
-        self.data[index] = character;
+        if let Some(tile_entry) = self.tiles.get_mut(&tile_index) {
+            if !tile_entry.write(character_index, character) {
+                self.tiles.remove(&tile_index);
+            }
+        }
 
         Ok(())
     }
@@ -91,7 +142,15 @@ fn extract_editor_layer(
     mut commands: Commands,
     atlas_cache: Extract<Res<FontAtlasCache>>,
     fonts: Extract<Res<Assets<CustomFontSource>>>,
-    q_buffer: Extract<Query<(RenderEntity, &CustomFont, &FontSize, &GlobalPosition)>>,
+    q_buffer: Extract<
+        Query<(
+            RenderEntity,
+            &CustomFont,
+            &FontSize,
+            &GlobalPosition,
+            &GlyphBuffer,
+        )>,
+    >,
     q_layer: Extract<
         Query<(
             RenderEntity,
@@ -103,8 +162,9 @@ fn extract_editor_layer(
     >,
     mut extracted_glyph_cache: ResMut<ExtractedGlyphTextureCache>,
 ) {
-    for (layer_render_entity, layer, position, depth, target) in &q_layer {
-        let Ok((target_render_entity, font, font_size, buffer_position)) = q_buffer.get(**target)
+    for (layer_render_entity, layer, layer_position, depth, target) in &q_layer {
+        let Ok((target_render_entity, font, font_size, buffer_position, buffer)) =
+            q_buffer.get(**target)
         else {
             continue;
         };
@@ -118,22 +178,29 @@ fn extract_editor_layer(
             .get(&(font_size.clone(), font.key()))
             .unwrap();
 
-        let extracted_glyph_texture = extracted_glyph_cache.get_or_create(
-            &Arc::new(layer.get_texture_source()),
-            Color::WHITE,
-            atlas,
-            font.as_ref(),
-        );
+        for (texture, position) in layer.get_texture_sources(
+            **buffer_position,
+            **buffer_position + buffer.size.as_ivec2(),
+        ) {
+            let extracted_glyph_texture = extracted_glyph_cache.get_or_create(
+                &Arc::new(texture),
+                Color::WHITE,
+                atlas,
+                font.as_ref(),
+            );
 
-        commands.entity(layer_render_entity).insert((
-            GlobalPosition::from(**position + layer.get_offset() - **buffer_position),
-            ExtractedGlyphTexture(extracted_glyph_texture),
-            TargetGlyphBuffer(target_render_entity),
-            depth.clone(),
-            GlyphSolidColor {
-                color: css::WHITE.into(),
-            },
-        ));
+            commands.spawn((
+                TemporaryRenderEntity,
+                Position::from(*position + **layer_position - **buffer_position),
+                GlobalPosition::from(*position + **layer_position - **buffer_position),
+                ExtractedGlyphTexture(extracted_glyph_texture),
+                TargetGlyphBuffer(target_render_entity),
+                depth.clone(),
+                GlyphSolidColor {
+                    color: css::WHITE.into(),
+                },
+            ));
+        }
     }
 }
 

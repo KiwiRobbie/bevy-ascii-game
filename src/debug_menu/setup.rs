@@ -13,7 +13,7 @@ use crate::{
 
 use super::{inspector::InspectorTab, state::DebugMenuState};
 
-pub(crate) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuState>) {
+pub(crate) fn setup_ui(commands: &mut Commands, menu_state: &mut DebugMenuState) {
     let debug_menu_state = &mut *menu_state;
 
     let settings_tab = Box::new(|commands: &mut Commands| {
@@ -53,7 +53,7 @@ pub(crate) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<DebugMenuS
         attachments::RenderBundle::default(),
         DebugMenuMarker,
     ))
-    .save_id(&mut debug_menu_state.root_widget)(&mut commands);
+    .save_id(&mut debug_menu_state.root_widget)(commands);
 }
 
 #[derive(Debug, Component)]

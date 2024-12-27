@@ -1,4 +1,12 @@
-use bevy::prelude::*;
+use bevy::{
+    asset::{
+        io::AssetSourceId,
+        saver::{ErasedAssetSaver, SavedAsset},
+        ErasedLoadedAsset, LoadedAsset,
+    },
+    prelude::*,
+    tasks::IoTaskPool,
+};
 
 use super::{
     setup::{DebugMenuMarker, ItemMutateButton, SaveTilemapButton},
@@ -164,11 +172,7 @@ pub(super) fn save_tilemap_system(
                 let mut output = output.await.unwrap();
 
                 ChunkSaver
-                    .save(
-                        &mut output,
-                        SavedAsset::from_loaded(&erased).unwrap(),
-                        &ChunkSettings::default(),
-                    )
+                    .save(&mut output, &erased, &ChunkSettings::default())
                     .await
                     .unwrap();
             })
@@ -188,16 +192,7 @@ pub(super) fn save_tilemap_system(
 
             let mut output = output.await.unwrap();
 
-            dbg!(
-                TilemapSaver
-                    .save(
-                        &mut output,
-                        SavedAsset::from_loaded(&erased).unwrap(),
-                        &Default::default(),
-                    )
-                    .await
-            )
-            .unwrap();
+            dbg!(TilemapSaver.save(&mut output, &erased, &()).await).unwrap();
         })
         .detach();
 }

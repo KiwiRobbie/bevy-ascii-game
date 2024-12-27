@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css, prelude::*};
 
 use crate::tileset_panel::setup::TilesetTileId;
 use ascii_ui::mouse::{input::MouseInput, TriggeredMarker};
@@ -29,7 +29,9 @@ pub(crate) fn setup(mut commands: Commands) {
         Brush,
         SpatialBundle::default(),
         GamePhysicsGridMarker,
-        GlyphSolidColor { color: GRAY.into() },
+        GlyphSolidColor {
+            color: css::GRAY.into(),
+        },
     ));
 }
 
@@ -98,10 +100,7 @@ pub(crate) fn update_brush(
                 + **buffer_position;
 
         let mut cursor_position = grid_cursor_position
-            - tile_size
-                .map(|s| s.div(2))
-                .unwrap_or(UVec2::ZERO)
-                .as_ivec2()
+            - tile_size.map(|s| **s / 2).unwrap_or(UVec2::ZERO).as_ivec2()
             + **buffer_position;
 
         for (tilemap, tilemap_position) in q_tilemap.iter() {
