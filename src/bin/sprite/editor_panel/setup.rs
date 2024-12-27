@@ -3,7 +3,7 @@ use ascii_ui::{
     col,
     mouse::InteractableMarker,
     row, sized_box, text,
-    widget_builder::{WidgetBuilder, WidgetSaver},
+    widget_builder::WidgetBuilder,
     widgets::{self, Divider, FlexWidget, SingleChildWidget},
 };
 use bevy::prelude::*;

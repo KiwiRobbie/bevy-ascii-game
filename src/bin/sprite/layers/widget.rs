@@ -79,7 +79,6 @@ use super::{EditorLayer, EditorLayers, SelectedEditorLayer};
 #[derive(Component)]
 pub struct LayersWidget {
     layer_list: Entity,
-    layers_to_ui: EntityHashMap<Entity>,
 }
 
 #[derive(Debug, Component)]
@@ -116,14 +115,14 @@ impl LayerEntryWidget {
     }
 }
 pub fn update_layer_entry_widget(
-    q_layers_widget: Query<(Entity, &LayerEntryWidget)>,
+    q_layers_widget: Query<&LayerEntryWidget>,
     q_name_widget: Query<(Entity, Has<TriggeredMarker>)>,
     mut q_layers: Query<(&mut EditorLayer, Has<SelectedEditorLayer>)>,
     q_checkbox: Query<(Has<TriggeredMarker>, Has<CheckboxEnabledMarker>), With<Checkbox>>,
     mut commands: Commands,
     q_selected: Query<Entity, (With<EditorLayer>, With<SelectedEditorLayer>)>,
 ) {
-    for (entity, widget) in &q_layers_widget {
+    for widget in &q_layers_widget {
         let (mut layer, layer_selected) = q_layers.get_mut(widget.layer_entity).unwrap();
         if let Ok((triggered, enabled)) = q_checkbox.get(widget.visible_checkbox_widget) {
             if triggered {
@@ -186,10 +185,7 @@ impl LayersWidget {
                 text!("Size: 64 x 32"),
                 text!("Name: background"),
             ]
-            .with(LayersWidget {
-                layer_list,
-                layers_to_ui: Default::default(),
-            })(commands)
+            .with(LayersWidget { layer_list })(commands)
         })
     }
 }

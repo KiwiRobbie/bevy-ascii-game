@@ -1,4 +1,4 @@
-use ascii_ui::{attachments::Root, widgets::SingleChildWidget};
+use ascii_ui::attachments::Root;
 use bevy::prelude::*;
 
 use glyph_render::{glyph_buffer::GlyphBuffer, glyph_render_plugin::GlyphTexture};

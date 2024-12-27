@@ -6,7 +6,6 @@ use bevy::{
 use ascii_ui::{
     list_widget::ListWidgetExtension,
     widget_builder::{WidgetBuilder, WidgetBuilderFn},
-    widgets::{self, MultiChildWidget},
 };
 
 #[derive(Component)]

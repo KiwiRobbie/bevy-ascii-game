@@ -37,7 +37,6 @@ use spatial_grid::{
 use tools::EditorToolsPlugin;
 
 mod editor_panel;
-mod input;
 mod layers;
 mod tools;
 fn main() {
@@ -252,7 +251,6 @@ fn create_target_endpoints(
 fn testing_update(
     q_testing: Query<(&CustomFont, &FontSize), With<TestingMarker>>,
     fonts: Res<Assets<CustomFontSource>>,
-    time: Res<Time>,
     q_physics_grid: Query<
         (&SpatialGrid, &GlobalPosition, &GlobalTransform),
         With<PrimaryGlyphBufferMarker>,
