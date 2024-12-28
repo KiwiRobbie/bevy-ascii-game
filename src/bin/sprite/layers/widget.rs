@@ -8,7 +8,7 @@ use ascii_ui::{
     widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
     widgets::{self, checkbox::CheckboxEnabledMarker, Checkbox},
 };
-use glyph_render::glyph_render_plugin::GlyphSolidColor;
+use glyph_render::glyph_render_plugin::SolidColor;
 
 #[derive(Component)]
 pub(super) struct IndirectListBuilder {
@@ -141,7 +141,7 @@ pub fn update_layer_entry_widget(
                 .entity(widget.layer_entity)
                 .insert(SelectedEditorLayer);
         }
-        commands.entity(name_widget).insert(GlyphSolidColor {
+        commands.entity(name_widget).insert(SolidColor {
             color: [css::GRAY, css::RED][layer_selected as usize].into(),
         });
     }
@@ -163,6 +163,7 @@ pub(super) fn init_layer_list_ui(
 impl LayersWidget {
     pub fn build<'a>() -> WidgetBuilderFn<'a> {
         Box::new(|commands: &mut Commands| {
+            let selected_layer_name = text!("Selected Layer")(commands);
             let mut layer_list = Entity::PLACEHOLDER;
             col![
                 row![
@@ -180,7 +181,7 @@ impl LayersWidget {
                     widgets::Button::build("Create"),
                 ],
                 sized_box!(vertical: 2),
-                text!("Selected Layer"),
+                selected_layer_name.to_builder(),
                 sized_box!(vertical: 1),
                 text!("Size: 64 x 32"),
                 text!("Name: background"),

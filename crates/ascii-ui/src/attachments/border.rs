@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::theme::TextTheme;
+
 use super::padding::{EdgeInsets, Padding};
 
 #[derive(Debug, Component, Clone)]
@@ -10,6 +12,8 @@ pub struct Border {
     pub(crate) right: Option<char>,
 
     pub(crate) corners: [Option<char>; 4],
+
+    pub(crate) style: TextTheme,
 }
 
 impl Border {
@@ -24,6 +28,7 @@ impl Border {
             left: horizontal,
             right: horizontal,
             corners,
+            style: TextTheme::Primary,
         }
     }
     fn sides(pos: UVec2, size: UVec2) -> (bool, bool, bool, bool) {
@@ -40,6 +45,7 @@ impl Border {
             left: None,
             right: None,
             corners: [Some(character), Some(character), None, None],
+            style: TextTheme::Primary,
         }
     }
     pub fn bottom(character: char) -> Self {
@@ -49,6 +55,7 @@ impl Border {
             left: None,
             right: None,
             corners: [None, None, Some(character), Some(character)],
+            style: TextTheme::Primary,
         }
     }
     pub fn left(character: char) -> Self {
@@ -58,6 +65,7 @@ impl Border {
             left: Some(character),
             right: None,
             corners: [Some(character), None, None, Some(character)],
+            style: TextTheme::Primary,
         }
     }
     pub fn right(character: char) -> Self {
@@ -67,6 +75,7 @@ impl Border {
             left: None,
             right: Some(character),
             corners: [None, Some(character), Some(character), None],
+            style: TextTheme::Primary,
         }
     }
 

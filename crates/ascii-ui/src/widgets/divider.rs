@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::{
-    attachments::SizedBox, layout::widget_layout::WidgetLayout, render::bundle::RenderBundle,
-    widget_builder::WidgetBuilderFn,
+    attachments::SizedBox, layout::widget_layout::WidgetLayout, render::RenderBundle,
+    theme::TextTheme, widget_builder::WidgetBuilder,
 };
 
 use super::{container::ContainerLogic, SingleChildWidget};
@@ -11,6 +11,7 @@ use super::{container::ContainerLogic, SingleChildWidget};
 #[reflect(Component)]
 pub struct Divider {
     pub(crate) character: char,
+    pub(crate) style: TextTheme,
 }
 
 #[derive(Bundle)]
@@ -21,13 +22,17 @@ pub(crate) struct DividerBundle {
 }
 
 impl Divider {
-    pub fn build<'a>(character: char) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build<'a>(character: char) -> WidgetBuilder<'a> {
+        Self::build_styled(character, TextTheme::Subtle)
+    }
+
+    pub fn build_styled<'a>(character: char, style: TextTheme) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             commands
                 .spawn((
                     SingleChildWidget,
                     SizedBox::vertical(1),
-                    Self { character },
+                    Self { character, style },
                     RenderBundle::default(),
                     WidgetLayout::new::<ContainerLogic>(),
                 ))

@@ -1,10 +1,13 @@
 use bevy::prelude::SystemSet;
 
-pub(crate) mod attachments;
-pub(crate) mod bundle;
-pub(crate) mod clear;
-pub(crate) mod plugin;
-pub(crate) mod widgets;
+mod attachments;
+mod bundle;
+mod clear;
+pub(super) mod plugin;
+mod theme;
+mod widgets;
 
 #[derive(Debug, SystemSet, Hash, PartialEq, Eq, Clone)]
 pub struct UiRenderSet;
+
+pub use bundle::RenderBundle;

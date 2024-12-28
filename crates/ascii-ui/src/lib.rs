@@ -4,6 +4,7 @@ pub mod list_widget;
 pub mod mouse;
 pub mod plugin;
 pub(crate) mod render;
+pub mod theme;
 pub mod widget_builder;
 pub mod widgets;
 

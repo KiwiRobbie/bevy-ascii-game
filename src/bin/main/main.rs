@@ -35,7 +35,7 @@ use glyph_render::{
     font::font_load_system,
     glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
-    glyph_render_plugin::{GlyphRenderPlugin, GlyphSolidColor, GlyphTexture, GlyphTextureSource},
+    glyph_render_plugin::{GlyphRenderPlugin, SolidColor, GlyphTexture, GlyphTextureSource},
     glyph_sprite::{GlyphSprite, GlyphTexturePlugin},
 };
 use grid_physics::{collision::Aabb, plugin::PhysicsPlugin, solid::SolidPhysicsBundle};
@@ -155,7 +155,7 @@ fn late_setup_system(
                 offset: IVec2::new(0, 0),
             },
             SpatialBundle::default(),
-            GlyphSolidColor {
+            SolidColor {
                 color: Hsva::new(214., 0.83, 0.32, 1.).into(),
             },
             GamePhysicsGridMarker,
@@ -193,7 +193,7 @@ fn late_setup_system(
                 offset: IVec2::new(0, 18),
             },
             SpatialBundle::default(),
-            GlyphSolidColor {
+            SolidColor {
                 color: Hsva::new(0., 0.0, 0.1, 1.).into(),
             },
             GamePhysicsGridMarker,
@@ -234,7 +234,7 @@ fn late_setup_system(
                 offset: IVec2::new(15, 20),
             },
             SpatialBundle::default(),
-            GlyphSolidColor {
+            SolidColor {
                 color: Hsva::new(0., 0.0, 0.8, 1.).into(),
             },
             GamePhysicsGridMarker,
@@ -255,7 +255,7 @@ fn setup_system(
 ) {
     commands.spawn((
         Tilemap(server.load("tilemaps/bridge_base.tilemap.ron")),
-        GlyphSolidColor {
+        SolidColor {
             color: Hsla::new(0., 0., 0.15, 1.).into(),
         },
         SolidPhysicsBundle {
@@ -267,7 +267,7 @@ fn setup_system(
     ));
     commands.spawn((
         Tilemap(server.load("tilemaps/output.tilemap.ron")),
-        GlyphSolidColor {
+        SolidColor {
             color: Hsla::new(0., 0., 0.25, 1.).into(),
         },
         SolidPhysicsBundle {
@@ -279,7 +279,7 @@ fn setup_system(
     ));
     create_player(&mut commands, &server).insert((
         PlayerInputKeyboardMarker,
-        GlyphSolidColor {
+        SolidColor {
             color: Color::LinearRgba(Color::hsl(0.0, 1.0, 0.6).to_linear() * 10.0),
         },
         GamePhysicsGridMarker,

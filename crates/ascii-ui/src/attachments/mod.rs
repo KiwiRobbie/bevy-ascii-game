@@ -5,7 +5,7 @@ pub(crate) mod padding;
 pub(crate) mod root;
 pub(crate) mod sized_box;
 
-pub use super::render::bundle::RenderBundle;
+pub use super::render::RenderBundle;
 pub use border::Border;
 pub use flex::Flex;
 pub use main_axis::MainAxisAlignment;

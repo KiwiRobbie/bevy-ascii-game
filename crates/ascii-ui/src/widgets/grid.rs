@@ -6,7 +6,7 @@ use crate::{
         positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    widget_builder::WidgetBuilderFn,
+    widget_builder::WidgetBuilder,
 };
 use spatial_grid::position::Position;
 
@@ -82,13 +82,13 @@ impl WidgetLayoutLogic for GridLogic {
 
 impl Grid {
     pub(crate) fn build<'a>(
-        children: Vec<WidgetBuilderFn<'a>>,
+        children: Vec<WidgetBuilder<'a>>,
         child_size: UVec2,
-    ) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    ) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             let mut children_entities = vec![];
             for child in children.into_iter() {
-                children_entities.push((child)(commands));
+                children_entities.push(child.build(commands));
             }
             commands
                 .spawn((

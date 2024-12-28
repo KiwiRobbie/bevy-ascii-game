@@ -12,7 +12,7 @@ use glyph_render::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
-    glyph_render_plugin::{GlyphSolidColor, GlyphTextureSource},
+    glyph_render_plugin::{GlyphTextureSource, SolidColor},
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 use spatial_grid::{depth::Depth, global_position::GlobalPosition, position::Position};
@@ -176,7 +176,7 @@ fn extract_editor_layer(
                 ExtractedGlyphTexture(extracted_glyph_texture),
                 TargetGlyphBuffer(target_render_entity),
                 depth.clone(),
-                GlyphSolidColor {
+                SolidColor {
                     color: css::WHITE.into(),
                 },
             ));

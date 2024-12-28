@@ -3,7 +3,8 @@ use bevy::prelude::*;
 use crate::{
     attachments::MainAxisAlignment,
     mouse::{InteractableMarker, TriggeredMarker},
-    widget_builder::{WidgetBuilder, WidgetBuilderFn},
+    theme::TextTheme,
+    widget_builder::WidgetBuilder,
 };
 
 use super::{
@@ -58,33 +59,28 @@ pub(crate) fn tab_view_interaction_system(
     }
 }
 impl TabView {
-    pub fn build<'a>(
-        children: Vec<(
-            impl Into<String> + 'a,
-            Box<dyn Fn(&mut Commands) -> Entity + Send + Sync>,
-        )>,
-    ) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build<'a>(children: Vec<(impl Into<String> + 'a, WidgetBuilder)>) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             // let tab_titles = children.iter().map(|(name, _)| (*name).into()).collect();
             // let tab_entities = children.iter().map(|(_, tab)| *tab).collect();
 
             let (tab_titles, tab_entities): (Vec<String>, Vec<_>) =
                 children.into_iter().map(|(a, b)| (a.into(), b)).unzip();
 
-            let left = widgets::Text::build("<-").with(InteractableMarker)(commands);
-            let title = widgets::Text::build("[ Tab View ]")(commands);
-            let right = widgets::Text::build("->").with(InteractableMarker)(commands);
+            let left = widgets::Text::build_styled("<--", TextTheme::Heavy)
+                .with(InteractableMarker)
+                .build(commands);
+            let right = widgets::Text::build_styled("-->", TextTheme::Heavy)
+                .with(InteractableMarker)
+                .build(commands);
+            let title = widgets::Text::build("[ Tab View ]").build(commands);
 
-            let stack = widgets::Stack::build(tab_entities)(commands);
+            let stack = widgets::Stack::build(tab_entities).build(commands);
 
             widgets::FlexWidget::column(vec![
-                widgets::FlexWidget::row(vec![
-                    WidgetBuilderFn::entity(left),
-                    WidgetBuilderFn::entity(title),
-                    WidgetBuilderFn::entity(right),
-                ])
-                .with(attachments::MainAxisAlignment::SpaceAround),
-                WidgetBuilderFn::entity(stack),
+                widgets::FlexWidget::row(vec![left.into(), title.into(), right.into()])
+                    .with(attachments::MainAxisAlignment::SpaceAround),
+                stack.into(),
             ])
             .with((
                 MainAxisAlignment::Start,
@@ -95,7 +91,8 @@ impl TabView {
                     stack,
                     tabs: tab_titles,
                 },
-            ))(commands)
+            ))
+            .build(commands)
         })
     }
 }

@@ -4,7 +4,7 @@ use super::super::attachments;
 use super::super::widgets;
 use crate::{
     mouse::{InteractableMarker, TriggeredMarker},
-    widget_builder::{WidgetBuilder, WidgetBuilderFn},
+    widget_builder::WidgetBuilder,
 };
 
 #[derive(Debug, Component)]
@@ -34,16 +34,20 @@ pub(crate) fn button_interaction_system(
     }
 }
 impl Button {
-    pub fn build<'a>(label: impl Into<&'a str>) -> WidgetBuilderFn<'a> {
-        widgets::Text::build(format!("[ {} ]", label.into())).with((
+    pub fn build<'a>(label: impl Into<&'a str>) -> WidgetBuilder<'a> {
+        widgets::Text::build_styled(
+            format!("[ {} ]", label.into()),
+            crate::theme::TextTheme::Heavy,
+        )
+        .with((
             attachments::MainAxisAlignment::SpaceBetween,
             InteractableMarker,
             Button {},
         ))
     }
 
-    pub fn build_raw<'a>(label: impl Into<String>) -> WidgetBuilderFn<'a> {
-        widgets::Text::build(label.into()).with((
+    pub fn build_raw<'a>(label: impl Into<String>) -> WidgetBuilder<'a> {
+        widgets::Text::build_styled(label.into(), crate::theme::TextTheme::Heavy).with((
             attachments::MainAxisAlignment::SpaceBetween,
             InteractableMarker,
             Button {},

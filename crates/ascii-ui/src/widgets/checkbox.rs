@@ -3,9 +3,10 @@ use bevy::prelude::*;
 use super::super::attachments;
 use super::super::widgets;
 use crate::mouse::ExternalStateMarker;
+use crate::theme::TextTheme;
 use crate::{
     mouse::{InteractableMarker, TriggeredMarker},
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widget_builder::{WidgetBuilder, WidgetSaver},
 };
 
 #[derive(Debug, Component)]
@@ -42,12 +43,12 @@ pub(crate) fn checkbox_interaction_system(
     }
 }
 impl Checkbox {
-    pub fn build_labeled<'a>(label: impl Into<String> + 'a) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build_labeled<'a>(label: impl Into<String> + 'a) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             let mut toggle_text = Entity::PLACEHOLDER;
             widgets::FlexWidget::row(vec![
                 widgets::Text::build(label),
-                widgets::Text::build("[ ]").save_id(&mut toggle_text),
+                widgets::Text::build_styled("[ ]", TextTheme::Heavy).save_id(&mut toggle_text),
             ])
             .apply(commands)
             .with((
@@ -59,10 +60,10 @@ impl Checkbox {
             ))(commands)
         })
     }
-    pub fn build<'a>() -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build<'a>() -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             let mut toggle_text = Entity::PLACEHOLDER;
-            widgets::Text::build("[ ]")
+            widgets::Text::build_styled("[ ]", TextTheme::Heavy)
                 .save_id(&mut toggle_text)
                 .apply(commands)
                 .with((
@@ -70,7 +71,8 @@ impl Checkbox {
                     Checkbox {
                         checkbox: toggle_text,
                     },
-                ))(commands)
+                ))
+                .build(commands)
         })
     }
 

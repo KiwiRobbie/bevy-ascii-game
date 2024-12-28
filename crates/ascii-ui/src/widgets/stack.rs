@@ -1,22 +1,20 @@
 use bevy::prelude::*;
 
-use crate::{layout::widget_layout::WidgetLayout, widget_builder::WidgetBuilderFn};
+use crate::{layout::widget_layout::WidgetLayout, widget_builder::WidgetBuilder};
 
 use super::{container::ContainerLogic, SingleChildWidget};
-
-type StackBuilderFn = Box<dyn Fn(&mut Commands) -> Entity + Send + Sync>;
 
 #[derive(Component)]
 #[require(SingleChildWidget)]
 pub struct Stack {
-    builders: Vec<StackBuilderFn>,
+    builders: Vec<WidgetBuilder>,
     active: usize,
 }
 
 impl Stack {
-    pub fn build<'a>(builders: Vec<StackBuilderFn>) -> WidgetBuilderFn<'a> {
-        Box::new(|commands| {
-            let child = builders[0](commands);
+    pub fn build<'a>(builders: Vec<WidgetBuilder>) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(|commands| {
+            let child = builders[0].build(commands);
             commands
                 .spawn((
                     Stack {

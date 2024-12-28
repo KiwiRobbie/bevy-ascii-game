@@ -8,7 +8,7 @@ use bevy::{
     ecs::{query::QueryFilter, system::SystemParam},
     prelude::*,
 };
-use glyph_render::glyph_render_plugin::GlyphSolidColor;
+use glyph_render::glyph_render_plugin::SolidColor;
 use grid_physics::{
     actor::FilterActors,
     collision::{Collider, RayTest},
@@ -156,7 +156,7 @@ pub(crate) fn interaction_color_system(
             (_, true) => css::WHITE,
         }
         .into();
-        commands.entity(entity).insert(GlyphSolidColor { color });
+        commands.entity(entity).insert(SolidColor { color });
     }
 }
 

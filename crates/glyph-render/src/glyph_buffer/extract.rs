@@ -15,7 +15,7 @@ use crate::{
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_animation::{GlyphAnimation, GlyphAnimationSource},
     glyph_render_plugin::{
-        ExtractedAtlas, GlyphSolidColor, GlyphSpriteMirrored, GlyphTexture, GlyphTextureSource,
+        ExtractedAtlas, SolidColor, GlyphSpriteMirrored, GlyphTexture, GlyphTextureSource,
     },
     glyph_sprite::GlyphSprite,
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
@@ -44,7 +44,7 @@ pub fn extract_glyph_buffers(
             Option<&GlyphSprite>,
             Option<&GlyphAnimation>,
             Option<&GlyphSpriteMirrored>,
-            Option<&GlyphSolidColor>,
+            Option<&SolidColor>,
             Option<&Depth>,
         )>,
     >,

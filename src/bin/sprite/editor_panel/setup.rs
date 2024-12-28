@@ -25,6 +25,8 @@ fn editor_ui_builder(commands: &mut Commands) -> Entity {
             widgets::Divider::build('=').with(Flex::new(1)),
         ],
         sized_box!(vertical: 1),
+        text!(" Move   (G)"),
+        text!(" Select (R)"),
         text!(" Type   (T)"),
         text!(" Draw   (D)"),
         text!(" Shape  (S)"),

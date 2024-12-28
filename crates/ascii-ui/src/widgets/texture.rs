@@ -5,8 +5,8 @@ use crate::{
         constraint::Constraint,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    render::bundle::RenderBundle,
-    widget_builder::WidgetBuilderFn,
+    render::RenderBundle,
+    widget_builder::WidgetBuilder,
 };
 
 #[derive(Component, Debug, Clone, Default)]
@@ -35,9 +35,9 @@ impl WidgetLayoutLogic for TextureLogic {
 }
 
 impl Texture {
-    pub fn build<'a>(data: Box<[char]>, size: UVec2) -> WidgetBuilderFn<'a> {
+    pub fn build<'a>(data: Box<[char]>, size: UVec2) -> WidgetBuilder<'a> {
         if data.len() == (size.x * size.y) as usize {
-            Box::new(move |commands| {
+            WidgetBuilder::new(move |commands| {
                 commands
                     .spawn((
                         Self { data, size },
@@ -47,7 +47,7 @@ impl Texture {
                     .id()
             })
         } else {
-            Box::new(move |commands| {
+            WidgetBuilder::new(move |commands| {
                 commands
                     .spawn((
                         Self {

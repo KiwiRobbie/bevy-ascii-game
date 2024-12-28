@@ -5,14 +5,16 @@ use crate::{
         constraint::Constraint,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    render::bundle::RenderBundle,
-    widget_builder::WidgetBuilderFn,
+    render::RenderBundle,
+    theme::TextTheme,
+    widget_builder::WidgetBuilder,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
 pub struct Text {
     pub text: String,
+    pub style: TextTheme,
 }
 #[derive(Debug, Default)]
 
@@ -48,7 +50,10 @@ impl<T: Bundle> TextBundle<T> {
         Self {
             layout: WidgetLayout::new::<TextLogic>(),
             render: RenderBundle::default(),
-            text: Text { text },
+            text: Text {
+                text,
+                style: Default::default(),
+            },
             attachments,
         }
     }
@@ -58,11 +63,18 @@ impl<T: Bundle> TextBundle<T> {
 }
 
 impl Text {
-    pub fn build<'a>(text: impl Into<String> + 'a) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build<'a>(text: impl Into<String> + 'a) -> WidgetBuilder<'a> {
+        Self::build_styled(text, Default::default())
+    }
+
+    pub fn build_styled<'a>(text: impl Into<String> + 'a, style: TextTheme) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             commands
                 .spawn((
-                    Self { text: text.into() },
+                    Self {
+                        text: text.into(),
+                        style,
+                    },
                     RenderBundle::default(),
                     WidgetLayout::new::<TextLogic>(),
                 ))

@@ -10,7 +10,7 @@ use crate::{
         positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    widget_builder::{WidgetBuilder, WidgetBuilderFn},
+    widget_builder::WidgetBuilder,
     FlexDirection,
 };
 
@@ -195,11 +195,11 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
 }
 
 impl MultiChildWidget {
-    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build<'a>(children: Vec<WidgetBuilder<'a>>) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             let children_entities: Vec<Entity> = children
                 .into_iter()
-                .map(|child| (child)(commands))
+                .map(|child| child.build(commands))
                 .collect();
 
             commands
@@ -213,17 +213,17 @@ impl MultiChildWidget {
 impl FlexWidget {
     pub fn build<'a>(
         direction: FlexDirection,
-        children: Vec<WidgetBuilderFn<'a>>,
-    ) -> WidgetBuilderFn<'a> {
+        children: Vec<WidgetBuilder<'a>>,
+    ) -> WidgetBuilder<'a> {
         MultiChildWidget::build(children)
             .with((Self { direction }, WidgetLayout::new::<FlexLayoutLogic>()))
     }
 
-    pub fn row<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+    pub fn row<'a>(children: Vec<WidgetBuilder<'a>>) -> WidgetBuilder<'a> {
         Self::build(FlexDirection::Horizontal, children)
     }
 
-    pub fn column<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
+    pub fn column<'a>(children: Vec<WidgetBuilder<'a>>) -> WidgetBuilder<'a> {
         Self::build(FlexDirection::Vertical, children)
     }
 }

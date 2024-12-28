@@ -5,7 +5,7 @@ use crate::{
         positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
-    widget_builder::WidgetBuilderFn,
+    widget_builder::WidgetBuilder,
 };
 use bevy::prelude::*;
 use itertools::Itertools;
@@ -75,9 +75,9 @@ impl WidgetLayoutLogic for ContainerLogic {
 }
 
 impl SingleChildWidget {
-    pub fn build<'a>(child: Option<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
-            let child = child.map(|child| child(commands));
+    pub fn build<'a>(child: Option<WidgetBuilder<'a>>) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
+            let child = child.map(|child| child.build(commands));
             let mut entity_commands =
                 commands.spawn((SingleChildWidget, WidgetLayout::new::<ContainerLogic>()));
 
@@ -89,8 +89,8 @@ impl SingleChildWidget {
         })
     }
 
-    pub fn build_existing<'a>(child: Option<Entity>) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build_existing<'a>(child: Option<Entity>) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             let mut entity_commands =
                 commands.spawn((SingleChildWidget, WidgetLayout::new::<ContainerLogic>()));
 

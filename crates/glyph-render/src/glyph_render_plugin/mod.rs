@@ -220,7 +220,7 @@ impl ExtractedGlyphTextureSource {
 }
 
 #[derive(Component, Clone, ExtractComponent, Debug)]
-pub struct GlyphSolidColor {
+pub struct SolidColor {
     pub color: Color,
 }
 
@@ -302,7 +302,7 @@ fn prepare_buffers(
     mut commands: Commands,
     q_textures: Query<(
         Entity,
-        Option<&GlyphSolidColor>,
+        Option<&SolidColor>,
         &GlobalTransform,
         &GpuGlyphTexture,
         &SpatialGrid,

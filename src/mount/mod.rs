@@ -1,7 +1,7 @@
 use bevy::{color::palettes::css, prelude::*};
 use glyph_render::{
     glyph_animation_graph::player::GlyphAnimationGraphTarget,
-    glyph_render_plugin::{GlyphSolidColor, GlyphSpriteMirrored},
+    glyph_render_plugin::{SolidColor, GlyphSpriteMirrored},
 };
 use grid_physics::{
     free::FreeMarker, gravity::Gravity, movement::Movement, plugin::PhysicsUpdateSet,
@@ -81,7 +81,7 @@ fn mount_interaction_system(
             Velocity::default(),
             Gravity::default(),
             Movement::default(),
-            GlyphSolidColor {
+            SolidColor {
                 color: css::WHITE.into(),
             },
         ));

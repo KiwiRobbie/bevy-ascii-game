@@ -13,7 +13,7 @@ use glyph_render::{
     atlas::FontAtlasCache,
     font::{CustomFont, CustomFontSource, FontSize},
     glyph_buffer::{GlyphBuffer, TargetGlyphBuffer},
-    glyph_render_plugin::GlyphSolidColor,
+    glyph_render_plugin::SolidColor,
     glyph_texture::{ExtractedGlyphTexture, ExtractedGlyphTextureCache},
 };
 use spatial_grid::{depth::Depth, global_position::GlobalPosition};
@@ -41,7 +41,7 @@ pub(crate) fn extract_tilemaps(
             &GlobalPosition,
             Option<&Depth>,
             &Tilemap,
-            Option<&GlyphSolidColor>,
+            Option<&SolidColor>,
         )>,
     >,
     tilemaps: Extract<Res<Assets<TilemapSource>>>,

@@ -8,7 +8,7 @@ use bevy_ascii_game::{
     tileset::asset::TilesetSource,
 };
 use glyph_render::{
-    glyph_render_plugin::{GlyphSolidColor, GlyphTexture},
+    glyph_render_plugin::{SolidColor, GlyphTexture},
     glyph_sprite::GlyphSprite,
 };
 use spatial_grid::{
@@ -29,7 +29,7 @@ pub(crate) fn setup(mut commands: Commands) {
         Brush,
         SpatialBundle::default(),
         GamePhysicsGridMarker,
-        GlyphSolidColor {
+        SolidColor {
             color: css::GRAY.into(),
         },
     ));

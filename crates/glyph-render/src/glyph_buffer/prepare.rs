@@ -14,7 +14,7 @@ use spatial_grid::{depth::Depth, global_position::GlobalPosition};
 
 use crate::{
     glyph_render_plugin::{
-        GlyphRenderUniformBuffer, GlyphRenderUniforms, GlyphSolidColor, GpuGlyphTexture,
+        GlyphRenderUniformBuffer, GlyphRenderUniforms, SolidColor, GpuGlyphTexture,
         PreparedGlyphTextureSource,
     },
     glyph_texture::{ExtractedGlyphTexture, PreparedGlyphTextureCache},
@@ -32,7 +32,7 @@ pub(crate) fn prepare_glyph_buffers(
         &GlobalPosition,
         &Depth,
         &ExtractedGlyphTexture,
-        Option<&GlyphSolidColor>,
+        Option<&SolidColor>,
     )>,
     mut prepare_glyph_texture_cache: ResMut<PreparedGlyphTextureCache>,
 ) {

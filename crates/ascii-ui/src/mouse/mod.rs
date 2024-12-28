@@ -5,7 +5,7 @@ use bevy::{
 
 use self::input::{update_mouse_position, MouseInput};
 use crate::layout::{build_layout::LayoutDepth, positioned::WidgetSize, render_clip::ClipRegion};
-use glyph_render::glyph_render_plugin::GlyphSolidColor;
+use glyph_render::glyph_render_plugin::SolidColor;
 use spatial_grid::{
     global_position::GlobalPosition,
     grid::{PhysicsGridMember, SpatialGrid},
@@ -75,7 +75,7 @@ pub(crate) fn mouse_interaction(
         commands
             .entity(entity)
             .remove::<ActiveMarker>()
-            .remove::<GlyphSolidColor>();
+            .remove::<SolidColor>();
     }
     for entity in q_triggered.iter() {
         commands.entity(entity).remove::<TriggeredMarker>();
@@ -109,7 +109,7 @@ pub(crate) fn mouse_interaction(
             commands
                 .entity(*entity)
                 .insert(ActiveMarker)
-                .insert(GlyphSolidColor {
+                .insert(SolidColor {
                     color: bevy::color::palettes::css::ORANGE.into(),
                 });
             if mouse_input

@@ -7,7 +7,7 @@ use crate::{
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     mouse::{InteractableMarker, ScrollInteraction, ScrollableMarker},
-    widget_builder::WidgetBuilderFn,
+    widget_builder::WidgetBuilder,
 };
 
 #[derive(Component, Debug, Clone, Reflect, Default)]
@@ -77,11 +77,11 @@ impl WidgetLayoutLogic for ScrollingViewLogic {
 }
 
 impl ScrollingView {
-    pub fn build<'a>(children: Vec<WidgetBuilderFn<'a>>) -> WidgetBuilderFn<'a> {
-        Box::new(move |commands| {
+    pub fn build<'a>(children: Vec<WidgetBuilder<'a>>) -> WidgetBuilder<'a> {
+        WidgetBuilder::new(move |commands| {
             let mut children_entities = vec![];
             for child in children.into_iter() {
-                children_entities.push((child)(commands));
+                children_entities.push(child.build(commands));
             }
             commands
                 .spawn((
