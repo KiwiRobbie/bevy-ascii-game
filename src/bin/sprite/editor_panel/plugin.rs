@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use super::{
     state::EditorPanelState,
-    update::{toggle_menu, update_editor_shortcuts, update_editor_ui, update_position},
+    update::{
+        isolate_layers_update, toggle_menu, update_editor_shortcuts, update_editor_ui,
+        update_position,
+    },
 };
 use ascii_ui::plugin::UiPlugin;
 
@@ -17,6 +20,7 @@ impl Plugin for TilesetPanelPlugin {
                     toggle_menu,
                     update_editor_shortcuts.before(update_editor_ui),
                     update_editor_ui,
+                    isolate_layers_update.after(update_editor_ui),
                 ),
             )
             .init_resource::<EditorPanelState>();

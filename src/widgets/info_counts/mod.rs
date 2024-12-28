@@ -11,7 +11,7 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 use ascii_ui::{
-    widget_builder::{WidgetBuilder, WidgetSaver},
+    widget_builder::WidgetBuilder,
     widgets::{FlexWidget, Text},
 };
 use grid_physics::{actor::Actor, solid::Solid};

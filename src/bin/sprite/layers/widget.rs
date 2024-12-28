@@ -129,7 +129,7 @@ pub fn update_layer_entry_widget(
         let (mut layer, layer_selected) = q_layers.get_mut(widget.layer_entity).unwrap();
         if let Ok((triggered, enabled)) = q_checkbox.get(widget.visible_checkbox_widget) {
             if triggered {
-                layer.visible = !layer.visible;
+                layer.enabled = !layer.enabled;
                 Checkbox::toggle(&mut commands, enabled, widget.visible_checkbox_widget)
             }
         }

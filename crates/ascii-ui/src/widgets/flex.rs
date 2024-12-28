@@ -116,8 +116,8 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
             .unwrap_or_default();
 
         let (total_flex_space, total_padding) = match (main_axis_space, child_total_flex) {
-            (Some(main_axis_space), 0) => (0, main_axis_space - child_total_space),
-            (Some(main_axis_space), _) => (main_axis_space - child_total_space, 0),
+            (Some(main_axis_space), 0) => (0, main_axis_space.saturating_sub(child_total_space)),
+            (Some(main_axis_space), _) => (main_axis_space.saturating_sub(child_total_space), 0),
             (None, _) => (0, 0),
         };
 

@@ -7,8 +7,12 @@ use spatial_grid::grid::SpatialGrid;
 
 use bevy_ascii_game::physics_grids::UiPhysicsGrid;
 
-use crate::tools::{
-    text::spawn_type_tool, BuildToolUi, ExclusiveKeyboardEventHandler, FocusedTool,
+use crate::{
+    layers::{EditorLayer, SelectedEditorLayer},
+    tools::{
+        text::spawn_type_tool, translate::spawn_translate_tool, BuildToolUi,
+        ExclusiveKeyboardEventHandler, FocusedTool,
+    },
 };
 
 use super::{
@@ -79,13 +83,21 @@ pub(super) fn update_editor_ui(
         }
     }
 }
-
+pub(super) fn isolate_layers_update(
+    state: Res<EditorPanelState>,
+    mut q_layers: Query<(&mut EditorLayer, Has<SelectedEditorLayer>)>,
+) {
+    for (mut layer, is_selected) in &mut q_layers {
+        layer.visible = layer.enabled & (!state.isolate_selected || is_selected);
+    }
+}
 pub(super) fn update_editor_shortcuts(
     mut commands: Commands,
     q_focused: Query<Entity, With<FocusedTool>>,
     q_using_keyboard: Query<(), With<ExclusiveKeyboardEventHandler>>,
     input_keys: Res<ButtonInput<KeyCode>>,
     mut glyph_textures: ResMut<Assets<GlyphTexture>>,
+    mut state: ResMut<EditorPanelState>,
 ) {
     let clear_focused = |commands: &mut Commands| {
         for entity in &q_focused {
@@ -99,5 +111,12 @@ pub(super) fn update_editor_shortcuts(
     if input_keys.just_pressed(KeyCode::KeyT) {
         clear_focused(&mut commands);
         spawn_type_tool(&mut commands, &mut glyph_textures)
+    }
+    if input_keys.just_pressed(KeyCode::KeyG) {
+        clear_focused(&mut commands);
+        spawn_translate_tool(&mut commands)
+    }
+    if input_keys.just_pressed(KeyCode::Slash) {
+        state.isolate_selected = !state.isolate_selected;
     }
 }

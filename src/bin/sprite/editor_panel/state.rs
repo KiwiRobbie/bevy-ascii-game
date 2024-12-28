@@ -4,6 +4,7 @@ use bevy::ecs::{entity::Entity, system::Resource};
 pub(super) struct EditorPanelState {
     pub(crate) enabled: bool,
     pub(crate) root_widget: Option<Entity>,
+    pub(crate) isolate_selected: bool,
 }
 
 impl Default for EditorPanelState {
@@ -11,6 +12,7 @@ impl Default for EditorPanelState {
         EditorPanelState {
             enabled: true,
             root_widget: None,
+            isolate_selected: false,
         }
     }
 }

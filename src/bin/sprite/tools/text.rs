@@ -76,7 +76,7 @@ fn build_ui(commands: &mut Commands) -> Entity {
     let ui_builder = col![
         row![
             widgets::Divider::build('=').with(Flex::new(1)),
-            widgets::Text::build(" Type Tool "),
+            widgets::Text::build(" Text Tool "),
             widgets::Divider::build('=').with(Flex::new(1)),
         ],
         widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical(1)),

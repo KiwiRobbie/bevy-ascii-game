@@ -33,7 +33,8 @@ pub struct SelectedEditorLayer;
 #[derive(Debug, Component)]
 #[require(Position, GlobalPosition, Depth, SyncToRenderWorld)]
 pub struct EditorLayer {
-    visible: bool,
+    pub visible: bool,
+    pub enabled: bool,
     name: String,
     tiles: HashMap<IVec2, EditorLayerTile>,
 }
@@ -69,6 +70,7 @@ impl EditorLayer {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             visible: true,
+            enabled: true,
             name: name.into(),
             tiles: HashMap::new(),
         }
@@ -162,7 +164,7 @@ fn extract_editor_layer(
             .get(&(font_size.clone(), font.key()))
             .unwrap();
 
-        for (texture, position) in layer.get_texture_sources(
+        for (texture, tile_position) in layer.get_texture_sources(
             **buffer_position,
             **buffer_position + buffer.size.as_ivec2(),
         ) {
@@ -172,11 +174,9 @@ fn extract_editor_layer(
                 atlas,
                 font.as_ref(),
             );
-
             commands.spawn((
                 TemporaryRenderEntity,
-                Position::from(*position + **layer_position - **buffer_position),
-                GlobalPosition::from(*position + **layer_position - **buffer_position),
+                GlobalPosition::from(*tile_position + **layer_position - **buffer_position),
                 ExtractedGlyphTexture(extracted_glyph_texture),
                 TargetGlyphBuffer(target_render_entity),
                 depth.clone(),

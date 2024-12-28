@@ -152,7 +152,13 @@ fn cursor_in_widget(
 
     let local_cursor_position = grid_cursor_position - **global_pos;
 
-    if IVec2::ZERO.cmple(local_cursor_position).all()
+    let in_clip = match clip {
+        Some(clip) => clip.contains(local_cursor_position),
+        None => true,
+    };
+
+    if in_clip
+        && IVec2::ZERO.cmple(local_cursor_position).all()
         && local_cursor_position.cmplt(size.as_ivec2()).all()
     {
         Some(grid_cursor_position)

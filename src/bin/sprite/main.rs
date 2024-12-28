@@ -86,7 +86,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    let layers_entity = commands.spawn(EditorLayers).id();
+    let layers_entity = commands.spawn((EditorLayers, Position::default())).id();
 
     commands
         .spawn((
@@ -94,6 +94,7 @@ fn setup(mut commands: Commands) {
             SelectedEditorLayer,
             GamePhysicsGridMarker,
             Depth(0.1),
+            Position::default(),
         ))
         .set_parent(layers_entity);
 
@@ -102,6 +103,7 @@ fn setup(mut commands: Commands) {
             EditorLayer::new("background"),
             GamePhysicsGridMarker,
             Depth(0.0),
+            Position::default(),
         ))
         .set_parent(layers_entity);
 

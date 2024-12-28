@@ -26,7 +26,7 @@ fn editor_ui_builder(commands: &mut Commands) -> Entity {
         sized_box!(vertical: 1),
         text!(" Move   (G)"),
         text!(" Select (R)"),
-        text!(" Type   (T)"),
+        text!(" Text   (T)"),
         text!(" Draw   (D)"),
         text!(" Shape  (S)"),
         sized_box!(vertical: 1),
