@@ -8,8 +8,6 @@ use super::{
 };
 use crate::layout::{render_clip::ClipRegion, UiLayoutSet};
 use glyph_render::{glyph_render_plugin::GlyphTexture, glyph_sprite::GlyphSprite};
-use spatial_grid::position::Position;
-
 pub(crate) struct RenderPlugin;
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
@@ -46,11 +44,5 @@ fn apply_clipping(
         if clip_rect_end.cmplt(texture_start).any() || texture_end.cmple(clip_rect_start).any() {
             commands.entity(entity).remove::<GlyphSprite>();
         }
-        // if (clipping_end - clipping_start).cmple(IVec2::ZERO).any() {
-        // } else {
-        //     if clipping_start.cmpgt(IVec2::ZERO).any()
-        //         || clipping_end.cmplt(texture.size().as_ivec2()).any()
-        //     {}
-        // }
     }
 }
