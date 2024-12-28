@@ -1,14 +1,16 @@
-use bevy::{color::palettes::css, ecs::entity::EntityHashMap, prelude::*};
+use bevy::{ecs::entity::EntityHashMap, prelude::*};
 
 use ascii_ui::{
     attachments::{self, Flex, Padding, SizedBox},
     col,
     mouse::{ExternalStateMarker, InteractableMarker, TriggeredMarker},
     row, sized_box, text,
+    theme::UiTheme,
     widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, checkbox::CheckboxEnabledMarker, Checkbox},
 };
 use glyph_render::glyph_render_plugin::SolidColor;
+use spatial_grid::position::Position;
 
 #[derive(Component)]
 pub(super) struct IndirectListBuilder {
@@ -142,9 +144,14 @@ pub fn update_layer_entry_widget(
                 .entity(widget.layer_entity)
                 .insert(SelectedEditorLayer);
         }
-        commands.entity(name_widget).insert(SolidColor {
-            color: [css::GRAY, css::RED][layer_selected as usize].into(),
-        });
+
+        if layer_selected {
+            commands.entity(name_widget).insert(SolidColor {
+                color: UiTheme::default().text_secondary.color,
+            });
+        } else {
+            commands.entity(name_widget).remove::<SolidColor>();
+        }
     }
 }
 pub(super) fn init_layer_list_ui(
@@ -164,7 +171,6 @@ pub(super) fn init_layer_list_ui(
 impl LayersWidget {
     pub fn build<'a>() -> WidgetBuilder<'a> {
         WidgetBuilder::new(|commands: &mut Commands| {
-            let selected_layer_name = text!("Selected Layer").build(commands);
             let layer_list = col![].build(commands);
             col![
                 row![
@@ -176,19 +182,76 @@ impl LayersWidget {
                 layer_list.into(),
                 widgets::SingleChildWidget::build(None).with(SizedBox::vertical(1)),
                 row![
-                    widgets::SingleChildWidget::build(Some(text!("New Layer")))
-                        .with(Flex::new(1))
-                        .with(Padding::symmetric(1, 0)),
+                    widgets::SingleChildWidget::build(Some(text!("New Layer"))).with(Flex::new(1)),
                     widgets::Button::build("Create"),
-                ],
+                ]
+                .with(Padding::symmetric(1, 0)),
                 sized_box!(vertical: 2),
-                selected_layer_name.into(),
-                sized_box!(vertical: 1),
-                text!("Size: 64 x 32"),
-                text!("Name: background"),
+                col![].with((SelectedLayerWidget, Padding::symmetric(1, 0))),
+                widgets::ScrollingView::build((0..10).map(|i| text!(format!("{i}"))).collect())
+                    .with(SizedBox::vertical(4)),
+                widgets::ScrollingView::build((0..10).map(|i| text!(format!("  {i}"))).collect())
+                    .with(SizedBox::vertical(3))
             ]
             .with(LayersWidget { layer_list })
             .build(commands)
         })
     }
 }
+
+#[derive(Component)]
+pub struct SelectedLayerWidget;
+
+impl SelectedLayerWidget {
+    pub(super) fn update(
+        mut commands: Commands,
+        q_self: Query<Entity, With<SelectedLayerWidget>>,
+        q_exists: Query<(), With<SelectedEditorLayer>>,
+        q_selected: Query<
+            (&EditorLayer, &Position),
+            Or<(
+                Changed<EditorLayer>,
+                Changed<Position>,
+                Changed<SelectedEditorLayer>,
+                With<SelectedEditorLayer>,
+            )>,
+        >,
+    ) {
+        if q_exists.get_single().is_ok() {
+            if let Ok((layer, position)) = q_selected.get_single() {
+                for entity in &q_self {
+                    let pos = format!("{} x {}", position.x, position.y);
+                    let children = [
+                        text!("Selected Layer").build(&mut commands),
+                        sized_box!(vertical: 1).build(&mut commands),
+                        row![text!("  Name: "), text!(&layer.name),].build(&mut commands),
+                        row![text!("Offset: "), text!(pos),].build(&mut commands),
+                    ];
+                    commands
+                        .entity(entity)
+                        .despawn_descendants()
+                        .add_children(&children);
+                }
+            }
+        } else {
+            for entity in &q_self {
+                commands.entity(entity).despawn_descendants();
+            }
+        }
+    }
+}
+
+// pub fn update_layers_widget(
+//     q_selected: Query<(&EditorLayer, &Position), With<SelectedEditorLayer>>,
+//     q_layers_widget: Query<&LayersWidget>,
+// ) {
+
+//     let (offset, name) = if let Ok((layer, layer_position)) = q_selected.get_single() {
+//         (
+//             format!("{}x{}", layer_position.x, layer_position.y),
+//             layer.name,
+//         )
+//     } else {
+//         ("", "")
+//     }
+// }

@@ -17,7 +17,10 @@ use glyph_render::{
 };
 use spatial_grid::{depth::Depth, global_position::GlobalPosition, position::Position};
 use std::sync::Arc;
-use widget::{init_layer_list_ui, update_indirect_list_builder, update_layer_entry_widget};
+use widget::{
+    init_layer_list_ui, update_indirect_list_builder, update_layer_entry_widget,
+    SelectedLayerWidget,
+};
 
 pub mod widget;
 
@@ -28,7 +31,7 @@ pub struct EditorLayers;
 pub struct SelectedEditorLayer;
 
 #[derive(Debug, Component)]
-#[require(GlobalPosition, Depth, SyncToRenderWorld)]
+#[require(Position, GlobalPosition, Depth, SyncToRenderWorld)]
 pub struct EditorLayer {
     visible: bool,
     name: String,
@@ -192,11 +195,14 @@ impl Plugin for EditorLayerPlugin {
         app.add_systems(
             Update,
             (
-                init_layer_list_ui,
-                update_indirect_list_builder,
-                update_layer_entry_widget,
-            )
-                .chain(),
+                (
+                    init_layer_list_ui,
+                    update_indirect_list_builder,
+                    update_layer_entry_widget,
+                )
+                    .chain(),
+                SelectedLayerWidget::update,
+            ),
         );
 
         app.get_sub_app_mut(RenderApp)

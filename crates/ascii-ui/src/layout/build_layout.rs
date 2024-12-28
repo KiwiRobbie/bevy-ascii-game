@@ -4,7 +4,7 @@ use glyph_render::glyph_buffer::TargetGlyphBuffer;
 use spatial_grid::{grid::PhysicsGridMember, position::Position};
 
 use crate::{
-    attachments::Root,
+    attachments::{Padding, Root},
     layout::{constraint::Constraint, positioned::WidgetSize, widget_layout::WidgetLayout},
     widgets::{container::SingleChildWidget, ScrollingView},
 };
@@ -70,7 +70,7 @@ pub(crate) fn recurse_apply_data<B: Bundle + Clone>(
     depth: usize,
     world: &World,
     entity: Entity,
-    clip_region: Option<&ClipRegion>,
+    inherited_clip_region: Option<&ClipRegion>,
     bundle: &B,
 ) {
     let Some(position) = world.get::<Position>(entity) else {
@@ -81,20 +81,31 @@ pub(crate) fn recurse_apply_data<B: Bundle + Clone>(
         println!("no size");
         return;
     };
+
+    let padding = world.get::<Padding>(entity).cloned().unwrap_or_default();
+
     let children = world.get::<Children>(entity).into_iter().flatten().copied();
 
-    let clip_region = if let Some(existing_clip_region) =
+    let inherited_clip_region: Option<ClipRegion> =
+        inherited_clip_region.map(|region| ClipRegion {
+            start: region.start - **position,
+            size: region.size,
+        });
+
+    let clip_region = if let Some(scroll_clip_region) =
         world.get::<ScrollingView>(entity).map(|_| ClipRegion {
-            start: **position,
-            size: **size,
+            start: IVec2 {
+                x: padding.0.left as i32,
+                y: padding.0.bottom as i32,
+            },
+            size: **size - padding.total(),
         }) {
-        if let Some(clip_region) = clip_region {
-            Some(clip_region.intersection(&existing_clip_region))
-        } else {
-            Some(existing_clip_region.clone())
+        match inherited_clip_region {
+            Some(clip_region) => Some(clip_region.intersection(&scroll_clip_region)),
+            None => Some(scroll_clip_region.clone()),
         }
     } else {
-        clip_region.map(|r| r.clone())
+        inherited_clip_region
     };
 
     if let Some(clip_region) = &clip_region {

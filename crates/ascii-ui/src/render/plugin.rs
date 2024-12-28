@@ -18,7 +18,7 @@ impl Plugin for RenderPlugin {
             (
                 clear_sprites,
                 (text_render, divider_render, border_render, texture_render),
-                // apply_clipping,
+                apply_clipping,
             )
                 .chain()
                 .in_set(UiRenderSet)
@@ -30,26 +30,27 @@ impl Plugin for RenderPlugin {
 
 fn apply_clipping(
     mut commands: Commands,
-    q_clipped: Query<(Entity, &ClipRegion, &Position, &GlyphSprite)>,
+    q_clipped: Query<(Entity, &ClipRegion, &GlyphSprite)>,
     textures: ResMut<Assets<GlyphTexture>>,
 ) {
-    for (entity, clip, pos, sprite) in q_clipped.iter() {
+    for (entity, clip, sprite) in q_clipped.iter() {
         let clip = clip.to_world_coord();
         let texture = textures.get(sprite.texture.id()).unwrap();
 
-        let texture_start = **pos + sprite.offset;
+        let texture_start = sprite.offset;
+        let texture_end = texture_start + texture.size().as_ivec2();
 
-        let clip_end = clip.start + clip.size.as_ivec2();
+        let clip_rect_start = clip.start + IVec2::Y;
+        let clip_rect_end = clip.start + clip.size.as_ivec2();
 
-        let clipping_start = (clip.start - texture_start).max(IVec2::ZERO);
-        let clipping_end = (clip_end - texture_start).min(texture.size().as_ivec2());
-
-        if (clipping_end - clipping_start).cmple(IVec2::ZERO).any() {
+        if clip_rect_end.cmplt(texture_start).any() || texture_end.cmple(clip_rect_start).any() {
             commands.entity(entity).remove::<GlyphSprite>();
-        } else {
-            if clipping_start.cmpgt(IVec2::ZERO).any()
-                || clipping_end.cmplt(texture.size().as_ivec2()).any()
-            {}
         }
+        // if (clipping_end - clipping_start).cmple(IVec2::ZERO).any() {
+        // } else {
+        //     if clipping_start.cmpgt(IVec2::ZERO).any()
+        //         || clipping_end.cmplt(texture.size().as_ivec2()).any()
+        //     {}
+        // }
     }
 }

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use spatial_grid::position::Position;
 
 use crate::{
-    attachments::{Flex, MainAxisAlignment},
+    attachments::{Flex, MainAxisAlignment, Padding},
     layout::{
         constraint::Constraint,
         positioned::WidgetSize,
@@ -68,11 +68,18 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
             .get::<Children>(entity)
             .map(Deref::deref)
             .unwrap_or(&[]);
+
+        let padding = world
+            .get::<Padding>(entity)
+            .map(|p| p.clone())
+            .unwrap_or_default();
+
+        let padded_constraint = padding.0.shrink_constraint(&constraint);
         let flex_dir = flex_widget.direction.clone();
 
         let child_constraint = match flex_dir {
-            FlexDirection::Horizontal => constraint.remove_x_bounds(),
-            FlexDirection::Vertical => constraint.remove_y_bounds(),
+            FlexDirection::Horizontal => padded_constraint.remove_x_bounds(),
+            FlexDirection::Vertical => padded_constraint.remove_y_bounds(),
         };
 
         let mut child_total_space: u32 = 0;
@@ -84,7 +91,7 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
             let child_size = layout
                 .logic
                 .layout(child, &child_constraint, world, commands);
-            let size = constraint.constrain(child_size);
+            let size = child_constraint.constrain(child_size);
             let flex = get_flex(child, world).cloned().unwrap_or_default();
 
             let main_axis_size = match flex_dir {
@@ -100,8 +107,8 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
         }
 
         let main_axis_space = match flex_dir {
-            FlexDirection::Horizontal => constraint.width.as_ref().map(|w| *w.end()),
-            FlexDirection::Vertical => constraint.height.as_ref().map(|h| *h.end()),
+            FlexDirection::Horizontal => padded_constraint.width.as_ref().map(|w| *w.end()),
+            FlexDirection::Vertical => padded_constraint.height.as_ref().map(|h| *h.end()),
         };
         let main_axis_alignment = world
             .get::<MainAxisAlignment>(entity)
@@ -146,9 +153,12 @@ impl WidgetLayoutLogic for FlexLayoutLogic {
             .map(|(_, size, _)| (size.as_ivec2() * local_cross_axis).element_sum())
             .max()
             .unwrap_or(0);
-        let self_size = main_axis_size * local_main_axis + cross_axis_size * local_cross_axis;
+        let self_size = main_axis_size * local_main_axis
+            + cross_axis_size * local_cross_axis
+            + padding.total().as_ivec2();
 
-        let mut cursor_pos: IVec2 = self_size.with_x(0);
+        let mut cursor_pos: IVec2 =
+            self_size.with_x(0) + IVec2::new(padding.0.left as i32, -(padding.0.top as i32));
 
         let mut remaining_flex = child_total_flex;
         let mut remaining_flex_space = total_flex_space;

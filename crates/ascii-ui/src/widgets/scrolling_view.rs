@@ -1,19 +1,25 @@
+use std::ops::Deref;
+
 use bevy::prelude::*;
+use spatial_grid::position::Position;
 
 use crate::{
     attachments::{padding::Padding, SizedBox},
     layout::{
         constraint::Constraint,
+        positioned::WidgetSize,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
     },
     mouse::{InteractableMarker, ScrollInteraction, ScrollableMarker},
     widget_builder::WidgetBuilder,
 };
 
+use super::MultiChildWidget;
+
 #[derive(Component, Debug, Clone, Reflect, Default)]
 #[reflect(Component)]
+#[require(MultiChildWidget)]
 pub struct ScrollingView {
-    pub(crate) children: Vec<Entity>,
     pub(crate) position: u32,
     pub(crate) remainder: f32,
 }
@@ -37,39 +43,44 @@ impl WidgetLayoutLogic for ScrollingViewLogic {
             .map(|p| p.clone())
             .unwrap_or_default();
 
+        let children: &[Entity] = world
+            .get::<Children>(entity)
+            .map(Deref::deref)
+            .unwrap_or(&[]);
+
         let sized_box = world.get::<SizedBox>(entity);
 
-        let constraint = padding.0.shrink_constraint(constraint);
+        let mut constraint = padding.0.shrink_constraint(constraint);
         let child_constraint = constraint.remove_y_bounds();
 
-        let mut y_offset: i32 = -(scrolling_view.position as i32);
-        for child in scrolling_view.children.iter() {
-            let child_widget = world
-                .get::<WidgetLayout>(*child)
-                .expect("Container child invalid!");
-
-            let child_size =
-                (child_widget.logic).layout(*child, &child_constraint, world, commands);
-
-            let offset = IVec2 {
-                x: padding.0.left as i32,
-                y: padding.0.top as i32 + y_offset,
-            };
-
-            let size = child_constraint.constrain(child_size);
-            // commands.entity(*child).insert(WidgetSize { offset, size });
-            y_offset += size.y as i32;
-        }
-
         if let Some(SizedBox { width, height }) = sized_box {
-            let mut constraint = constraint;
             if let Some(width) = *width {
                 constraint.width = Some(width..=width);
             }
             if let Some(height) = *height {
                 constraint.height = Some(height..=height);
             }
-            return constraint.max();
+        }
+        let height = constraint.max().y as i32;
+
+        let mut y_offset: i32 = -(scrolling_view.position as i32);
+        for &child in children {
+            let child_widget = world
+                .get::<WidgetLayout>(child)
+                .expect("Container child invalid!");
+
+            let child_size = (child_widget.logic).layout(child, &child_constraint, world, commands);
+
+            let offset = IVec2 {
+                x: padding.0.left as i32,
+                y: height - 1 + padding.0.top as i32 - y_offset,
+            };
+
+            let size = child_constraint.constrain(child_size);
+            commands
+                .entity(child)
+                .insert((Position(offset), WidgetSize(size)));
+            y_offset += size.y as i32;
         }
 
         return constraint.max();
@@ -86,7 +97,6 @@ impl ScrollingView {
             commands
                 .spawn((
                     Self {
-                        children: children_entities,
                         position: 0,
                         remainder: 0.0,
                     },
@@ -94,6 +104,7 @@ impl ScrollingView {
                     InteractableMarker,
                     ScrollableMarker,
                 ))
+                .add_children(&children_entities)
                 .id()
         })
     }

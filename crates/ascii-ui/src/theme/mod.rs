@@ -57,7 +57,7 @@ impl Default for UiTheme {
                 color: Color::srgb_u8(0xff, 0x61, 0x88),
             },
             text_secondary: TextStyle {
-                color: Color::srgb_u8(0xab, 0x9d, 0xf),
+                color: Color::srgb_u8(0xab, 0x9d, 0xf2),
             },
         }
     }
