@@ -3,16 +3,12 @@ use bevy::{
     prelude::{BuildChildren, Children, DespawnRecursiveExt},
 };
 
-use ascii_ui::{
-    list_widget::ListWidgetExtension,
-    widget_builder::{WidgetBuilder, WidgetBuilderFn},
-};
+use ascii_ui::{list_widget::ListWidgetExtension, widget_builder::WidgetBuilder};
 
 #[derive(Component)]
 pub(crate) struct ListBuilderWidget<T: Send + Sync> {
     items: Vec<T>,
-    pub(crate) builder:
-        Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+    pub(crate) builder: Box<dyn Fn(usize, &T) -> WidgetBuilder + Send + Sync>,
 }
 
 impl<T> ListBuilderWidget<T>
@@ -20,28 +16,28 @@ where
     T: Send + Sync + 'static,
 {
     pub(crate) fn build<'b, W: ListWidgetExtension>(
-        builder: Box<dyn Fn(usize, &T) -> Box<dyn FnOnce(&mut Commands) -> Entity> + Send + Sync>,
+        builder: Box<dyn Fn(usize, &T) -> WidgetBuilder + Send + Sync>,
         items: Vec<T>,
         args: W::Args,
-    ) -> WidgetBuilderFn<'b>
+    ) -> WidgetBuilder<'b>
     where
-        <W as ListWidgetExtension>::Args: 'b,
+        <W as ListWidgetExtension>::Args: Send + Sync + 'b,
     {
-        Box::new(move |commands| {
-            W::build(
-                items
-                    .iter()
-                    .enumerate()
-                    .map(|(i, t)| builder(i, t))
-                    .collect(),
-                args,
-            )
-            .with(ListBuilderWidget { builder, items })(commands)
+        WidgetBuilder::new(move |commands| {
+            let children = items
+                .iter()
+                .enumerate()
+                .map(|(i, t)| builder(i, t))
+                .collect();
+            W::build(children, args)
+                .apply(commands)
+                .with(ListBuilderWidget { builder, items })
+                .build(commands)
         })
     }
 
     pub(crate) fn push(&mut self, list_widget: Entity, item: T, commands: &mut Commands) {
-        let list_item = (self.builder)(self.items.len(), &item)(commands);
+        let list_item = (self.builder)(self.items.len(), &item).build(commands);
         commands.entity(list_widget).add_child(list_item);
         self.items.push(item);
     }

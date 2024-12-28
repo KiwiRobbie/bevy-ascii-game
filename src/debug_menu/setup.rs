@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use ascii_ui::{
     attachments,
-    widget_builder::{WidgetBuilder, WidgetSaver},
+    widget_builder::WidgetSaver,
     widgets::{self, Divider, FlexWidget, SingleChildWidget, TabView, Text},
 };
 
@@ -21,12 +21,13 @@ pub(crate) fn setup_ui(commands: &mut Commands, menu_state: &mut DebugMenuState)
             InfoCounts::build(),
             Divider::build('-'),
             DebugOptions::build(),
-        ])(commands)
+        ])
+        .build(commands)
     });
     let inspector_tab = Box::new(|commands: &mut Commands| {
-        FlexWidget::column(vec![widgets::Text::build("text")]).with((InspectorTab::default(),))(
-            commands,
-        )
+        FlexWidget::column(vec![widgets::Text::build("text")])
+            .with((InspectorTab::default(),))
+            .build(commands)
     });
 
     SingleChildWidget::build(Some(FlexWidget::column(vec![
@@ -53,7 +54,8 @@ pub(crate) fn setup_ui(commands: &mut Commands, menu_state: &mut DebugMenuState)
         attachments::RenderBundle::default(),
         DebugMenuMarker,
     ))
-    .save_id(&mut debug_menu_state.root_widget)(commands);
+    .save_id(&mut debug_menu_state.root_widget)
+    .build(commands);
 }
 
 #[derive(Debug, Component)]

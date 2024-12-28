@@ -94,9 +94,10 @@ impl EditorLayer {
             })
     }
 
-    pub fn clear_tiles(&mut self) {
-        self.tiles.clear();
-    }
+    // pub fn clear_tiles(&mut self) {
+    //     self.tiles.clear();
+    // }
+
     pub fn write_character(&mut self, position: IVec2, character: char) -> Result<(), ()> {
         let tile_index = position.div_euclid(TILE_DIMENSIONS);
         let tile_position = TILE_DIMENSIONS.with_x(0) - IVec2::new(0, 1)

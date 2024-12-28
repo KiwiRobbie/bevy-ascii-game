@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use ascii_ui::{
     attachments::{self},
     mouse::InteractableMarker,
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, Divider, FlexWidget, SingleChildWidget},
     FlexDirection,
 };
@@ -40,7 +40,8 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPan
             InfoCounts::build(),
             Divider::build('-'),
             DebugOptions::build(),
-        ])(commands)
+        ])
+        .build(commands)
     });
 
     let tileset_tab = Box::new(|commands: &mut Commands| {
@@ -55,7 +56,7 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPan
             ), // .with(TilesetHandles {
                //     handles: vec![server.load("tilesets/bridge.tileset.ron")],
                // }),
-        ])(commands)
+        ]).build(commands)
     });
 
     SingleChildWidget::build(Some(widgets::TabView::build(vec![
@@ -79,7 +80,8 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPan
         DebugMenuMarker,
         InteractableMarker,
     ))
-    .save_id(&mut menu_state.root_widget)(&mut commands);
+    .save_id(&mut menu_state.root_widget)
+    .build(&mut commands);
 }
 
 #[derive(Debug, Component)]
@@ -91,7 +93,7 @@ pub(crate) struct DebugMenuMarker;
 fn build_tileset_ui<'a>(
     source: &TilesetSource,
     handle: Handle<TilesetSource>,
-) -> WidgetBuilderFn<'a> {
+) -> WidgetBuilder<'a> {
     let tile_size = source.tile_size;
     widgets::FlexWidget::column(vec![
         widgets::Text::build(source.display_name.clone()),

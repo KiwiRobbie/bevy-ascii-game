@@ -5,7 +5,7 @@ use ascii_ui::{
     col,
     mouse::{ExternalStateMarker, InteractableMarker, TriggeredMarker},
     row, sized_box, text,
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{self, checkbox::CheckboxEnabledMarker, Checkbox},
 };
 use glyph_render::glyph_render_plugin::SolidColor;
@@ -24,7 +24,7 @@ impl IndirectListBuilder {
     }
 }
 #[derive(Component, Deref)]
-pub(super) struct BuilderFn(pub Box<dyn Fn(Entity, &World) -> WidgetBuilderFn + Send + Sync>);
+pub(super) struct BuilderFn(pub Box<dyn Fn(Entity, &World) -> WidgetBuilder + Send + Sync>);
 
 pub(super) fn update_indirect_list_builder(
     mut commands: Commands,
@@ -51,7 +51,7 @@ pub(super) fn update_indirect_list_builder(
                     updated_src_to_dst.insert(src, dst);
                 }
                 None => {
-                    let dst = (builder)(src, world)(&mut commands);
+                    let dst = (builder)(src, world).build(&mut commands);
                     dst_desired_entities.push(dst);
                     updated_src_to_dst.insert(src, dst);
                 }
@@ -89,8 +89,8 @@ pub struct LayerEntryWidget {
 }
 
 impl LayerEntryWidget {
-    fn build(entity: Entity, world: &World) -> WidgetBuilderFn {
-        Box::new(move |commands: &mut Commands| {
+    fn build(entity: Entity, world: &World) -> WidgetBuilder {
+        WidgetBuilder::new(move |commands: &mut Commands| {
             let mut name_widget = Entity::PLACEHOLDER;
             let mut visible_checkbox_widget = Entity::PLACEHOLDER;
             let layer = world.get::<EditorLayer>(entity).unwrap();
@@ -110,7 +110,8 @@ impl LayerEntryWidget {
                 layer_entity: entity,
                 visible_checkbox_widget,
                 name_widget,
-            })(commands)
+            })
+            .build(commands)
         })
     }
 }
@@ -161,10 +162,10 @@ pub(super) fn init_layer_list_ui(
 }
 
 impl LayersWidget {
-    pub fn build<'a>() -> WidgetBuilderFn<'a> {
-        Box::new(|commands: &mut Commands| {
-            let selected_layer_name = text!("Selected Layer")(commands);
-            let mut layer_list = Entity::PLACEHOLDER;
+    pub fn build<'a>() -> WidgetBuilder<'a> {
+        WidgetBuilder::new(|commands: &mut Commands| {
+            let selected_layer_name = text!("Selected Layer").build(commands);
+            let layer_list = col![].build(commands);
             col![
                 row![
                     widgets::Divider::build('=').with(Flex::new(1)),
@@ -172,7 +173,7 @@ impl LayersWidget {
                     widgets::Divider::build('=').with(Flex::new(1)),
                 ],
                 sized_box!(vertical: 1),
-                col![].save_id(&mut layer_list).apply(commands),
+                layer_list.into(),
                 widgets::SingleChildWidget::build(None).with(SizedBox::vertical(1)),
                 row![
                     widgets::SingleChildWidget::build(Some(text!("New Layer")))
@@ -181,12 +182,13 @@ impl LayersWidget {
                     widgets::Button::build("Create"),
                 ],
                 sized_box!(vertical: 2),
-                selected_layer_name.to_builder(),
+                selected_layer_name.into(),
                 sized_box!(vertical: 1),
                 text!("Size: 64 x 32"),
                 text!("Name: background"),
             ]
-            .with(LayersWidget { layer_list })(commands)
+            .with(LayersWidget { layer_list })
+            .build(commands)
         })
     }
 }

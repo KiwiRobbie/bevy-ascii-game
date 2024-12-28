@@ -4,21 +4,22 @@ use crate::{layout::widget_layout::WidgetLayout, widget_builder::WidgetBuilder};
 
 use super::{container::ContainerLogic, SingleChildWidget};
 
+type BuilderFn = Box<dyn Fn(&mut Commands) -> Entity + Send + Sync>;
 #[derive(Component)]
 #[require(SingleChildWidget)]
 pub struct Stack {
-    builders: Vec<WidgetBuilder>,
+    builders: Vec<BuilderFn>,
     active: usize,
 }
 
 impl Stack {
-    pub fn build<'a>(builders: Vec<WidgetBuilder>) -> WidgetBuilder<'a> {
+    pub fn build<'a>(builders: Vec<BuilderFn>) -> WidgetBuilder<'a> {
         WidgetBuilder::new(|commands| {
-            let child = builders[0].build(commands);
+            let child = (builders[0])(commands);
             commands
                 .spawn((
                     Stack {
-                        builders: builders,
+                        builders,
                         active: 0,
                     },
                     WidgetLayout::new::<ContainerLogic>(),
@@ -31,7 +32,7 @@ impl Stack {
     pub fn set_active(&mut self, entity: Entity, active: usize, commands: &mut Commands) {
         assert!(active < self.builders.len());
         self.active = active;
-        let child_entity = self.builders[active](commands);
+        let child_entity = (self.builders[active])(commands);
         commands
             .entity(entity)
             .despawn_descendants()

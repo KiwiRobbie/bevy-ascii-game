@@ -44,6 +44,7 @@ pub(crate) fn checkbox_interaction_system(
 }
 impl Checkbox {
     pub fn build_labeled<'a>(label: impl Into<String> + 'a) -> WidgetBuilder<'a> {
+        let label = label.into();
         WidgetBuilder::new(move |commands| {
             let mut toggle_text = Entity::PLACEHOLDER;
             widgets::FlexWidget::row(vec![
@@ -57,7 +58,8 @@ impl Checkbox {
                 Checkbox {
                     checkbox: toggle_text,
                 },
-            ))(commands)
+            ))
+            .build(commands)
         })
     }
     pub fn build<'a>() -> WidgetBuilder<'a> {

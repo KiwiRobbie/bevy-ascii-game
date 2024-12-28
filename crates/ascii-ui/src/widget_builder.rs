@@ -6,13 +6,10 @@ pub struct WidgetBuilder<'a> {
     builder: WidgetBuilderFn<'a>,
 }
 
-impl<'a, 'b> WidgetBuilder<'a>
-where
-    'a: 'b,
-{
-    pub fn new<F>(builder: F) -> WidgetBuilder<'b>
+impl<'a, 'b> WidgetBuilder<'a> {
+    pub fn new<F>(builder: F) -> WidgetBuilder<'a>
     where
-        F: FnOnce(&mut Commands<'_, '_>) -> Entity + Send + Sync + 'b,
+        F: FnOnce(&mut Commands<'_, '_>) -> Entity + Send + Sync + 'a,
     {
         WidgetBuilder {
             builder: Box::new(builder),
@@ -25,7 +22,7 @@ where
 
     pub fn entity(entity: Entity) -> WidgetBuilder<'b> {
         let entity = entity.clone();
-        Self::new(move |_| entity)
+        WidgetBuilder::new(move |_| entity)
     }
     pub fn with<B: Bundle>(self, attachments: B) -> WidgetBuilder<'a> {
         Self::new(move |commands: &mut Commands| {
@@ -55,15 +52,16 @@ where
     }
 }
 pub trait WidgetSaver<'a, T> {
-    fn save_id(self, store: &'static mut T) -> Self;
+    fn save_id(self, store: &'a mut T) -> Self;
 }
 impl<'a> WidgetSaver<'a, Entity> for WidgetBuilder<'a> {
-    fn save_id(self, store: &'static mut Entity) -> Self {
-        Self::new(move |commands: &mut Commands| {
+    fn save_id(self, store: &'a mut Entity) -> Self {
+        let func = move |commands: &mut Commands| {
             let entity = self.build(commands);
             *store = entity;
             entity
-        })
+        };
+        Self::new(func)
     }
 }
 impl<'a> WidgetSaver<'a, Option<Entity>> for WidgetBuilder<'a> {

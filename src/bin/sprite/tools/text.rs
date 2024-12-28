@@ -5,7 +5,7 @@ use ascii_ui::{
     col,
     mouse::InteractableMarker,
     row,
-    widget_builder::{WidgetBuilder, WidgetSaver},
+    widget_builder::WidgetSaver,
     widgets::{self, button::ButtonJustPressedMarker},
 };
 use bevy::{
@@ -89,7 +89,8 @@ fn build_ui(commands: &mut Commands) -> Entity {
     ];
     ui_builder
         .apply(commands)
-        .with((TypeToolUi { mode_entity }, FocusedTool))(commands)
+        .with((TypeToolUi { mode_entity }, FocusedTool))
+        .build(commands)
 }
 
 pub(crate) fn spawn_type_tool(commands: &mut Commands, glyph_textures: &mut Assets<GlyphTexture>) {

@@ -11,7 +11,7 @@ use bevy::{
 
 use crate::player::PlayerMarker;
 use ascii_ui::{
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{FlexWidget, Text},
 };
 use grid_physics::{actor::Actor, solid::Solid};
@@ -23,28 +23,35 @@ impl Plugin for InfoCountsPlugin {
     }
 }
 
-#[derive(Debug, Component, Default)]
+#[derive(Debug, Component)]
 pub struct InfoCounts {
-    pub(crate) fps_text: Option<Entity>,
-    pub(crate) entity_text: Option<Entity>,
-    pub(crate) actor_text: Option<Entity>,
-    pub(crate) player_text: Option<Entity>,
-    pub(crate) solid_text: Option<Entity>,
+    pub(crate) fps_text: Entity,
+    pub(crate) entity_text: Entity,
+    pub(crate) actor_text: Entity,
+    pub(crate) player_text: Entity,
+    pub(crate) solid_text: Entity,
 }
 
 impl InfoCounts {
-    pub fn build<'a>() -> WidgetBuilderFn<'a> {
-        Box::new(|commands: &mut Commands| {
-            let mut info = InfoCounts::default();
+    pub fn build<'a>() -> WidgetBuilder<'a> {
+        WidgetBuilder::new(|commands: &mut Commands| {
+            let info = InfoCounts {
+                fps_text: Text::build("").build(commands),
+                entity_text: Text::build("").build(commands),
+                actor_text: Text::build("").build(commands),
+                player_text: Text::build("").build(commands),
+                solid_text: Text::build("").build(commands),
+            };
             FlexWidget::column(vec![
-                Text::build("").save_id(&mut info.fps_text),
-                Text::build("").save_id(&mut info.entity_text),
-                Text::build("").save_id(&mut info.actor_text),
-                Text::build("").save_id(&mut info.player_text),
-                Text::build("").save_id(&mut info.solid_text),
+                info.fps_text.into(),
+                info.entity_text.into(),
+                info.actor_text.into(),
+                info.player_text.into(),
+                info.solid_text.into(),
             ])
             .apply(commands)
-            .with(info)(commands)
+            .with(info)
+            .build(commands)
         })
     }
 }
@@ -59,9 +66,9 @@ fn update_info_count(
     q_info_counts: Query<&InfoCounts>,
 ) {
     for state in q_info_counts.iter() {
-        if let Some(entity) = state.fps_text {
-            q_text.get_mut(entity).unwrap().text = format!("FPS: {:0.2}", 1.0 / time.delta_secs());
-        }
+        q_text.get_mut(state.fps_text).unwrap().text =
+            format!("FPS: {:0.2}", 1.0 / time.delta_secs());
+
         apply_count((&mut q_text, state.entity_text), "Entity Count", &q_entity);
         apply_count((&mut q_text, state.actor_text), "Actor  Count", &q_actor);
         apply_count((&mut q_text, state.player_text), "Player Count", &q_player);
@@ -70,11 +77,9 @@ fn update_info_count(
 }
 
 fn apply_count<F: QueryFilter>(
-    text: (&mut Query<&mut Text>, Option<Entity>),
+    text: (&mut Query<&mut Text>, Entity),
     label: &str,
     q_count: &Query<(), F>,
 ) {
-    if let Some(entity) = text.1 {
-        text.0.get_mut(entity).unwrap().text = format!("{}: {}", label, q_count.iter().count());
-    }
+    text.0.get_mut(text.1).unwrap().text = format!("{}: {}", label, q_count.iter().count());
 }

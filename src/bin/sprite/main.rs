@@ -1,7 +1,7 @@
 use ascii_ui::mouse::input::MouseInput;
 use bevy::{
     core_pipeline::bloom::Bloom,
-    input::mouse::{MouseMotion, MouseWheel},
+    input::mouse::MouseMotion,
     prelude::*,
     render::camera::CameraRenderGraph,
     window::{PrimaryWindow, WindowResolution},
@@ -17,8 +17,8 @@ use bevy_ascii_game::{
 use bevy_remote_inspector::RemoteInspectorPlugins;
 use editor_panel::plugin::TilesetPanelPlugin;
 use glyph_render::{
-    atlas::{CharacterSet, FontAtlasPlugin},
-    font::{font_load_system, CustomFont, CustomFontSource, FontSize},
+    atlas::FontAtlasPlugin,
+    font::{font_load_system, FontSize},
     glyph_animation::GlyphAnimationPlugin,
     glyph_animation_graph::plugin::GlyphAnimationGraphPlugin,
     glyph_buffer::GlyphBuffer,
@@ -28,7 +28,6 @@ use grid_physics::plugin::PhysicsPlugin;
 use layers::{EditorLayer, EditorLayerPlugin, EditorLayers, SelectedEditorLayer};
 use spatial_grid::{
     depth::Depth,
-    global_position::GlobalPosition,
     grid::SpatialGrid,
     position::{Position, SpatialTraits},
     remainder::Remainder,

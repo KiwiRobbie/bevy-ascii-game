@@ -3,7 +3,6 @@ use ascii_ui::{
     col,
     mouse::InteractableMarker,
     row, sized_box, text,
-    widget_builder::WidgetBuilder,
     widgets::{self, Divider, FlexWidget, SingleChildWidget},
 };
 use bevy::prelude::*;
@@ -34,7 +33,8 @@ fn editor_ui_builder(commands: &mut Commands) -> Entity {
         LayersWidget::build(),
         sized_box!(vertical: 1),
         widgets::SingleChildWidget::build(None).with(ToolUiContainer),
-    ](commands)
+    ]
+    .build(commands)
 }
 
 pub(super) fn setup_ui(commands: &mut Commands) -> Entity {
@@ -43,7 +43,8 @@ pub(super) fn setup_ui(commands: &mut Commands) -> Entity {
             InfoCounts::build(),
             Divider::build('-'),
             DebugOptions::build(),
-        ])(commands)
+        ])
+        .build(commands)
     });
 
     let editor_tab = Box::new(editor_ui_builder);
@@ -68,7 +69,8 @@ pub(super) fn setup_ui(commands: &mut Commands) -> Entity {
         attachments::RenderBundle::default(),
         DebugMenuMarker,
         InteractableMarker,
-    ))(commands);
+    ))
+    .build(commands);
 
     root_entity
 }

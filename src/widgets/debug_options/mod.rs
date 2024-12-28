@@ -11,7 +11,7 @@ use bevy::{
 
 use crate::debug::{DebugCollisions, DebugPositions, DebugUi};
 use ascii_ui::{
-    widget_builder::{WidgetBuilder, WidgetBuilderFn, WidgetSaver},
+    widget_builder::{WidgetBuilder, WidgetSaver},
     widgets::{checkbox::CheckboxEnabledMarker, Checkbox, FlexWidget},
 };
 use grid_physics::sets::EnablePhysicsSystems;
@@ -32,8 +32,8 @@ pub struct DebugOptions {
 }
 
 impl DebugOptions {
-    pub fn build<'a>() -> WidgetBuilderFn<'a> {
-        Box::new(|commands: &mut Commands| {
+    pub fn build<'a>() -> WidgetBuilder<'a> {
+        WidgetBuilder::new(|commands: &mut Commands| {
             let mut options = DebugOptions::default();
             FlexWidget::column(vec![
                 Checkbox::build_labeled("Debug Position").save_id(&mut options.position_checkbox),
@@ -42,7 +42,8 @@ impl DebugOptions {
                 Checkbox::build_labeled("Pause Physics").save_id(&mut options.pause_checkbox),
             ])
             .apply(commands)
-            .with(options)(commands)
+            .with(options)
+            .build(commands)
         })
     }
 }

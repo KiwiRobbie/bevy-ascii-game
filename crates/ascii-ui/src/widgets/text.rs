@@ -68,13 +68,11 @@ impl Text {
     }
 
     pub fn build_styled<'a>(text: impl Into<String> + 'a, style: TextTheme) -> WidgetBuilder<'a> {
+        let text = text.into();
         WidgetBuilder::new(move |commands| {
             commands
                 .spawn((
-                    Self {
-                        text: text.into(),
-                        style,
-                    },
+                    Self { text, style },
                     RenderBundle::default(),
                     WidgetLayout::new::<TextLogic>(),
                 ))

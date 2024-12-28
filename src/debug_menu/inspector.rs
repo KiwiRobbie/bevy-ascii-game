@@ -1,7 +1,4 @@
-use ascii_ui::{
-    widget_builder::{WidgetBuilder, WidgetBuilderFn},
-    widgets::{self},
-};
+use ascii_ui::widgets::{self};
 use bevy::{
     ecs::component::{ComponentId, ComponentInfo},
     prelude::*,
@@ -45,20 +42,20 @@ type BuildEcsUi = fn(&dyn Any, &mut Commands) -> Entity;
 
 fn uvec2_ui(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<UVec2>().unwrap();
-    widgets::Text::build(format!("({}, {})", data.x, data.y))(commands)
+    widgets::Text::build(format!("({}, {})", data.x, data.y)).build(commands)
 }
 fn ivec2_ui(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<IVec2>().unwrap();
-    widgets::Text::build(format!("({}, {})", data.x, data.y))(commands)
+    widgets::Text::build(format!("({}, {})", data.x, data.y)).build(commands)
 }
 fn vec2_ui(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<Vec2>().unwrap();
-    widgets::Text::build(format!("({:0.3}, {:0.3})", data.x, data.y))(commands)
+    widgets::Text::build(format!("({:0.3}, {:0.3})", data.x, data.y)).build(commands)
 }
 
 fn float_ui<T: std::fmt::Display + 'static>(data: &dyn Any, commands: &mut Commands) -> Entity {
     let data = data.downcast_ref::<T>().unwrap();
-    widgets::Text::build(format!("{:0.3}", data))(commands)
+    widgets::Text::build(format!("{:0.3}", data)).build(commands)
 }
 
 #[derive(Debug, Clone)]
@@ -115,9 +112,8 @@ pub(crate) fn inspector_fetch_system(
         commands.entity(inspector_entity).despawn_descendants();
         if let Some(target) = inspector.target {
             let mut inspector_widgets = vec![];
-            inspector_widgets.push(widgets::Text::build(format!("Entity: {:?}", target))(
-                &mut commands,
-            ));
+            inspector_widgets
+                .push(widgets::Text::build(format!("Entity: {:?}", target)).build(&mut commands));
 
             if let Some(component_ids) = get_components_ids(world, target) {
                 let component_ids: Vec<ComponentId> = component_ids.collect();
@@ -162,15 +158,18 @@ pub(crate) fn inspector_fetch_system(
                                 if let Some(ui_for) =
                                     type_registry.get_type_data::<EcsUiFor>(field.type_id())
                                 {
-                                    field_widgets.push(WidgetBuilderFn::entity((ui_for
-                                        .fn_readonly)(
-                                        field.try_as_reflect().unwrap().as_any(),
-                                        &mut commands,
-                                    )));
+                                    field_widgets.push(
+                                        (ui_for.fn_readonly)(
+                                            field.try_as_reflect().unwrap().as_any(),
+                                            &mut commands,
+                                        )
+                                        .into(),
+                                    );
                                 }
 
-                                inspector_widgets
-                                    .push(widgets::FlexWidget::row(field_widgets)(&mut commands));
+                                inspector_widgets.push(
+                                    widgets::FlexWidget::row(field_widgets).build(&mut commands),
+                                );
                             }
                         }
                         ReflectRef::TupleStruct(reflected) => {

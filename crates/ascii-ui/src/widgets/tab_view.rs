@@ -59,13 +59,18 @@ pub(crate) fn tab_view_interaction_system(
     }
 }
 impl TabView {
-    pub fn build<'a>(children: Vec<(impl Into<String> + 'a, WidgetBuilder)>) -> WidgetBuilder<'a> {
+    pub fn build<'a>(
+        children: Vec<(
+            impl Into<String> + 'a,
+            Box<dyn Fn(&mut Commands) -> Entity + Send + Sync>,
+        )>,
+    ) -> WidgetBuilder<'a> {
+        let (tab_titles, tab_entities): (Vec<String>, Vec<_>) =
+            children.into_iter().map(|(a, b)| (a.into(), b)).unzip();
+
         WidgetBuilder::new(move |commands| {
             // let tab_titles = children.iter().map(|(name, _)| (*name).into()).collect();
             // let tab_entities = children.iter().map(|(_, tab)| *tab).collect();
-
-            let (tab_titles, tab_entities): (Vec<String>, Vec<_>) =
-                children.into_iter().map(|(a, b)| (a.into(), b)).unzip();
 
             let left = widgets::Text::build_styled("<--", TextTheme::Heavy)
                 .with(InteractableMarker)
