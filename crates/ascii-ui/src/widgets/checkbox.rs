@@ -20,28 +20,6 @@ pub struct CheckboxEnabledMarker;
 #[derive(Debug, Component)]
 pub(crate) struct CheckboxDisabledMarker;
 
-pub(crate) fn checkbox_interaction_system(
-    mut commands: Commands,
-    q_checkboxes: Query<(
-        Entity,
-        &Checkbox,
-        Has<CheckboxEnabledMarker>,
-        Has<TriggeredMarker>,
-        Has<ExternalStateMarker>,
-    )>,
-    mut q_checkbox_text: Query<&mut widgets::text::Text>,
-) {
-    for (entity, checkbox, was_enabled, triggered, external) in q_checkboxes.iter() {
-        if external {
-            q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text =
-                ["[ ]", "[x]"][was_enabled as usize].into();
-        } else if triggered {
-            Checkbox::toggle(&mut commands, was_enabled, entity);
-            q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text =
-                ["[x]", "[ ]"][was_enabled as usize].into();
-        };
-    }
-}
 impl Checkbox {
     pub fn build_labeled<'a>(label: impl Into<String> + 'a) -> WidgetBuilder<'a> {
         let label = label.into();
@@ -89,5 +67,28 @@ impl Checkbox {
                 .remove::<CheckboxDisabledMarker>()
                 .insert(CheckboxEnabledMarker),
         };
+    }
+
+    pub(crate) fn update(
+        mut commands: Commands,
+        q_checkboxes: Query<(
+            Entity,
+            &Checkbox,
+            Has<CheckboxEnabledMarker>,
+            Has<TriggeredMarker>,
+            Has<ExternalStateMarker>,
+        )>,
+        mut q_checkbox_text: Query<&mut widgets::text::Text>,
+    ) {
+        for (entity, checkbox, was_enabled, triggered, external) in q_checkboxes.iter() {
+            if external {
+                q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text =
+                    ["[ ]", "[x]"][was_enabled as usize].into();
+            } else if triggered {
+                Checkbox::toggle(&mut commands, was_enabled, entity);
+                q_checkbox_text.get_mut(checkbox.checkbox).unwrap().text =
+                    ["[x]", "[ ]"][was_enabled as usize].into();
+            };
+        }
     }
 }

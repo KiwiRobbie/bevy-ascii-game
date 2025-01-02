@@ -16,23 +16,6 @@ pub(crate) struct ButtonPressedMarker;
 #[derive(Debug, Component)]
 pub struct ButtonJustPressedMarker;
 
-pub(crate) fn button_interaction_system(
-    mut commands: Commands,
-    q_buttons: Query<(Entity, Has<ButtonPressedMarker>, Has<TriggeredMarker>)>,
-) {
-    for (entity, pressed, triggered) in q_buttons.iter() {
-        commands.entity(entity).remove::<ButtonJustPressedMarker>();
-        if triggered {
-            if !pressed {
-                commands
-                    .entity(entity)
-                    .insert((ButtonPressedMarker, ButtonJustPressedMarker));
-            }
-        } else {
-            commands.entity(entity).remove::<ButtonPressedMarker>();
-        };
-    }
-}
 impl Button {
     pub fn build<'a>(label: impl Into<&'a str>) -> WidgetBuilder<'a> {
         widgets::Text::build_styled(
@@ -52,5 +35,23 @@ impl Button {
             InteractableMarker,
             Button {},
         ))
+    }
+
+    pub(crate) fn update(
+        mut commands: Commands,
+        q_buttons: Query<(Entity, Has<ButtonPressedMarker>, Has<TriggeredMarker>)>,
+    ) {
+        for (entity, pressed, triggered) in q_buttons.iter() {
+            commands.entity(entity).remove::<ButtonJustPressedMarker>();
+            if triggered {
+                if !pressed {
+                    commands
+                        .entity(entity)
+                        .insert((ButtonPressedMarker, ButtonJustPressedMarker));
+                }
+            } else {
+                commands.entity(entity).remove::<ButtonPressedMarker>();
+            };
+        }
     }
 }

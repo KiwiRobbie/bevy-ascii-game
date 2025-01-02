@@ -70,12 +70,7 @@ pub(super) fn setup_ui(mut commands: Commands, mut menu_state: ResMut<TilesetPan
             size: UVec2 { x: 32, y: 32 },
         },
         UiPhysicsGridMarker,
-        attachments::Border::symmetric(
-            Some('|'),
-            Some('-'),
-            [Some(','), Some('.'), Some('`'), Some('\'')],
-        )
-        .padded(),
+        attachments::Border::ASCII.padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
         InteractableMarker,

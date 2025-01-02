@@ -186,6 +186,7 @@ impl Plugin for PhysicsGridPlugin {
             .init_resource::<UiPhysicsGrid>();
     }
 }
-const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+const CHARSET: &str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`´abcdefghijklmnopqrstuvwxyz{|}~┌┐┘└─│";
 #[derive(Debug, Component)]
 pub struct PrimaryGlyphBufferMarker;

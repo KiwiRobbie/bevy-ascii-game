@@ -15,17 +15,21 @@ pub(crate) fn text_render(
 ) {
     for (entity, text, color) in q_text.iter() {
         let mut entity_commands = commands.entity(entity);
-        entity_commands.insert((
-            GlyphSprite {
-                texture: glyph_textures.add(GlyphTexture::from(vec![text.text.clone()])),
-                offset: IVec2::ZERO,
-            },
-            Depth(0.0),
-        ));
-        if !color {
-            entity_commands.insert(SolidColor {
-                color: text.style.get_style(&theme).color,
-            });
+        if text.text.len() > 0 {
+            entity_commands.insert((
+                GlyphSprite {
+                    texture: glyph_textures.add(GlyphTexture::from(vec![text.text.clone()])),
+                    offset: IVec2::ZERO,
+                },
+                Depth(0.0),
+            ));
+            if !color {
+                entity_commands.insert(SolidColor {
+                    color: text.style.get_style(&theme).color,
+                });
+            }
+        } else {
+            entity_commands.remove::<GlyphSprite>();
         }
     }
 }

@@ -45,12 +45,7 @@ pub(crate) fn setup_ui(commands: &mut Commands, menu_state: &mut DebugMenuState)
             size: UVec2 { x: 32, y: 24 },
         },
         UiPhysicsGridMarker,
-        attachments::Border::symmetric(
-            Some('|'),
-            Some('-'),
-            [Some(','), Some('.'), Some('`'), Some('\'')],
-        )
-        .padded(),
+        attachments::Border::ASCII.padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
     ))

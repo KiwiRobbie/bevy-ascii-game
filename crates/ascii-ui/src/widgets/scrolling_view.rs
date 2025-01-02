@@ -108,23 +108,23 @@ impl ScrollingView {
                 .id()
         })
     }
-}
 
-pub(crate) fn scrolling_view_interaction_system(
-    mut q_scrolling_view: Query<
-        (&mut ScrollingView, &ScrollInteraction),
-        (With<InteractableMarker>, With<ScrollableMarker>),
-    >,
-) {
-    for (mut view, interaction) in q_scrolling_view.iter_mut() {
-        view.remainder += interaction.distance.y;
-        let delta = view.remainder as i32;
-        view.remainder -= delta as f32;
+    pub(crate) fn update(
+        mut q_scrolling_view: Query<
+            (&mut ScrollingView, &ScrollInteraction),
+            (With<InteractableMarker>, With<ScrollableMarker>),
+        >,
+    ) {
+        for (mut view, interaction) in q_scrolling_view.iter_mut() {
+            view.remainder += interaction.distance.y;
+            let delta = view.remainder as i32;
+            view.remainder -= delta as f32;
 
-        if delta > 0 {
-            view.position += delta as u32;
-        } else {
-            view.position = view.position.saturating_sub((-delta) as u32);
+            if delta > 0 {
+                view.position += delta as u32;
+            } else {
+                view.position = view.position.saturating_sub((-delta) as u32);
+            }
         }
     }
 }

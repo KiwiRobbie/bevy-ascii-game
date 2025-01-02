@@ -6,12 +6,17 @@ use spatial_grid::{
     grid::{PhysicsGridMember, SpatialGrid},
 };
 
-fn debug_active(
+fn debug_ui(
     mut gizmos: Gizmos,
-    q_positioned: Query<(&GlobalPosition, &WidgetSize, &PhysicsGridMember), With<ActiveMarker>>,
+    q_positioned: Query<(
+        &GlobalPosition,
+        &WidgetSize,
+        &PhysicsGridMember,
+        Has<ActiveMarker>,
+    )>,
     q_physics_grid: Query<(&GlobalPosition, &SpatialGrid, &Transform)>,
 ) {
-    for (position, size, grid_member) in q_positioned.iter() {
+    for (position, size, grid_member, active) in q_positioned.iter() {
         let Ok((grid_position, grid, transform)) = q_physics_grid.get(grid_member.grid) else {
             continue;
         };
@@ -21,18 +26,19 @@ fn debug_active(
         let size = size.as_vec2() * grid.step.as_vec2();
         let center = offset + 0.5 * size;
 
-        gizmos.rect_2d(center, size, css::ORANGE);
+        gizmos.rect_2d(
+            center,
+            size,
+            [css::WHITE.with_alpha(0.1), css::ORANGE][active as usize],
+        );
     }
 }
 
 pub(crate) struct UiDebugPlugin;
 impl Plugin for UiDebugPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(
-            Update,
-            debug_active.run_if(|enabled: Res<DebugUi>| **enabled),
-        )
-        .init_resource::<DebugUi>();
+        app.add_systems(Update, debug_ui.run_if(|enabled: Res<DebugUi>| **enabled))
+            .init_resource::<DebugUi>();
     }
 }
 

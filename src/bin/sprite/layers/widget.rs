@@ -7,7 +7,7 @@ use ascii_ui::{
     row, sized_box, text,
     theme::UiTheme,
     widget_builder::{WidgetBuilder, WidgetSaver},
-    widgets::{self, checkbox::CheckboxEnabledMarker, Checkbox},
+    widgets::{self, checkbox::CheckboxEnabledMarker, Checkbox, TextEdit},
 };
 use glyph_render::glyph_render_plugin::SolidColor;
 use spatial_grid::position::Position;
@@ -97,12 +97,12 @@ impl LayerEntryWidget {
             let mut visible_checkbox_widget = Entity::PLACEHOLDER;
             let layer = world.get::<EditorLayer>(entity).unwrap();
             row![
-                sized_box![horizontal: 1],
+                sized_box![width: 1],
                 widgets::Checkbox::build()
                     .with((CheckboxEnabledMarker, ExternalStateMarker))
                     .save_id(&mut visible_checkbox_widget)
                     .apply(commands),
-                sized_box![horizontal: 1],
+                sized_box![width: 1],
                 text!(&layer.name)
                     .with(InteractableMarker)
                     .save_id(&mut name_widget)
@@ -178,7 +178,7 @@ impl LayersWidget {
                     text!(" Layers "),
                     widgets::Divider::build('=').with(Flex::new(1)),
                 ],
-                sized_box!(vertical: 1),
+                sized_box!(height: 1),
                 layer_list.into(),
                 widgets::SingleChildWidget::build(None).with(SizedBox::vertical(1)),
                 row![
@@ -186,12 +186,29 @@ impl LayersWidget {
                     widgets::Button::build("Create"),
                 ]
                 .with(Padding::symmetric(1, 0)),
-                sized_box!(vertical: 2),
+                row![
+                    widgets::SingleChildWidget::build(Some(text!("A"))).with(Flex::new(1)),
+                    widgets::SingleChildWidget::build(Some(text!("B"))).with(Flex::new(1)),
+                    widgets::Button::build("B"),
+                ]
+                .with(Padding::symmetric(3, 0)),
+                row![
+                    widgets::SingleChildWidget::build(Some(text!("D"))).with(Flex::new(1)),
+                    widgets::SingleChildWidget::build(Some(text!("E"))).with(Flex::new(1)),
+                ]
+                .with(Padding::symmetric(1, 0)),
+                row![
+                    widgets::SingleChildWidget::build(Some(text!("C"))).with(Flex::new(2)),
+                    text!("B"),
+                ]
+                .with(Padding::symmetric(1, 0)),
+                sized_box!(height: 2),
                 col![].with((SelectedLayerWidget, Padding::symmetric(1, 0))),
                 widgets::ScrollingView::build((0..10).map(|i| text!(format!("{i}"))).collect())
                     .with(SizedBox::vertical(4)),
                 widgets::ScrollingView::build((0..10).map(|i| text!(format!("  {i}"))).collect())
-                    .with(SizedBox::vertical(3))
+                    .with(SizedBox::vertical(3)),
+                TextEdit::build("title"),
             ]
             .with(LayersWidget { layer_list })
             .build(commands)
@@ -223,7 +240,7 @@ impl SelectedLayerWidget {
                     let pos = format!("{} x {}", position.x, position.y);
                     let children = [
                         text!("Selected Layer").build(&mut commands),
-                        sized_box!(vertical: 1).build(&mut commands),
+                        sized_box!(height: 1).build(&mut commands),
                         row![text!("  Name: "), text!(&layer.name),].build(&mut commands),
                         row![text!("Offset: "), text!(pos),].build(&mut commands),
                     ];

@@ -17,7 +17,18 @@ pub struct Border {
 }
 
 impl Border {
-    pub fn symmetric(
+    pub const UNICODE: Border = Border::symmetric(
+        Some('│'),
+        Some('─'),
+        [Some('┌'), Some('┐'), Some('┘'), Some('└')],
+    );
+    pub const ASCII: Border = Border::symmetric(
+        Some('|'),
+        Some('-'),
+        [Some('.'), Some('.'), Some('\''), Some('\'')],
+    );
+
+    pub const fn symmetric(
         horizontal: Option<char>,
         vertical: Option<char>,
         corners: [Option<char>; 4],
@@ -28,54 +39,54 @@ impl Border {
             left: horizontal,
             right: horizontal,
             corners,
-            style: TextTheme::Primary,
+            style: TextTheme::Subtle,
         }
     }
-    fn sides(pos: UVec2, size: UVec2) -> (bool, bool, bool, bool) {
+    const fn sides(pos: UVec2, size: UVec2) -> (bool, bool, bool, bool) {
         let l = pos.x == 0;
         let r = pos.x == size.x - 1;
         let t = pos.y == 0;
         let b = pos.y == size.y - 1;
         return (l, r, t, b);
     }
-    pub fn top(character: char) -> Self {
+    pub const fn top(character: char) -> Self {
         Self {
             top: Some(character),
             bottom: None,
             left: None,
             right: None,
             corners: [Some(character), Some(character), None, None],
-            style: TextTheme::Primary,
+            style: TextTheme::Subtle,
         }
     }
-    pub fn bottom(character: char) -> Self {
+    pub const fn bottom(character: char) -> Self {
         Self {
             top: None,
             bottom: Some(character),
             left: None,
             right: None,
             corners: [None, None, Some(character), Some(character)],
-            style: TextTheme::Primary,
+            style: TextTheme::Subtle,
         }
     }
-    pub fn left(character: char) -> Self {
+    pub const fn left(character: char) -> Self {
         Self {
             top: None,
             bottom: None,
             left: Some(character),
             right: None,
             corners: [Some(character), None, None, Some(character)],
-            style: TextTheme::Primary,
+            style: TextTheme::Subtle,
         }
     }
-    pub fn right(character: char) -> Self {
+    pub const fn right(character: char) -> Self {
         Self {
             top: None,
             bottom: None,
             left: None,
             right: Some(character),
             corners: [None, Some(character), Some(character), None],
-            style: TextTheme::Primary,
+            style: TextTheme::Subtle,
         }
     }
 
@@ -101,10 +112,8 @@ impl Border {
             })
             .collect()
     }
-}
 
-impl Border {
-    pub fn padded(self) -> (Padding, Self) {
+    pub const fn padded(self) -> (Padding, Self) {
         (
             Padding(EdgeInsets {
                 top: self.top.is_some() as u32,

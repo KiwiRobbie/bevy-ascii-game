@@ -11,6 +11,7 @@ pub mod scrolling_view;
 pub(crate) mod stack;
 pub mod tab_view;
 pub mod text;
+pub mod text_edit;
 pub mod texture;
 
 pub use button::Button;
@@ -24,8 +25,8 @@ pub use scrolling_view::ScrollingView;
 pub use stack::Stack;
 pub use tab_view::TabView;
 pub use text::Text;
+pub use text_edit::TextEdit;
 pub use texture::Texture;
-
 #[macro_export]
 macro_rules! row {
     ($($item:expr),*$(,)?) => {
@@ -47,10 +48,14 @@ macro_rules! text {
 }
 #[macro_export]
 macro_rules! sized_box {
-    (vertical: $size:expr) => {
+    (height: $size:expr) => {
         widgets::SingleChildWidget::build(None).with(attachments::SizedBox::vertical($size))
     };
-    (horizontal: $size:expr) => {
+    (width: $size:expr) => {
         widgets::SingleChildWidget::build(None).with(attachments::SizedBox::horizontal($size))
+    };
+
+    (width: $width:expr, height: $height:expr) => {
+        widgets::SingleChildWidget::build(None).with(attachments::SizedBox::new($width, $height))
     };
 }

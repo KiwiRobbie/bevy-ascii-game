@@ -33,17 +33,13 @@ impl EdgeInsets {
         // TODO: Handle to small
 
         Constraint {
-            width: if let Some(width) = &constraint.width {
-                let end = width.end() - self.top - self.bottom;
-                Some(*width.start()..=end)
-            } else {
-                None
+            width: match &constraint.width {
+                Some(w) => Some(*w.start()..=(w.end() - self.left - self.right)),
+                _ => None,
             },
-            height: if let Some(height) = &constraint.height {
-                let end = height.end() - self.left - self.right;
-                Some(*height.start()..=end)
-            } else {
-                None
+            height: match &constraint.height {
+                Some(h) => Some(*h.start()..=(h.end() - self.top - self.bottom)),
+                _ => None,
             },
         }
     }

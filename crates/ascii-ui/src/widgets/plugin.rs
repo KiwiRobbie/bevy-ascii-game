@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use super::{
-    button::button_interaction_system, checkbox::checkbox_interaction_system,
-    scrolling_view::scrolling_view_interaction_system, tab_view::tab_view_interaction_system,
-};
+use super::{Button, Checkbox, ScrollingView, TabView, TextEdit};
 use crate::mouse::mouse_interaction;
 
 pub(crate) struct WidgetPlugin;
@@ -12,10 +9,11 @@ impl Plugin for WidgetPlugin {
         app.add_systems(
             PreUpdate,
             (
-                checkbox_interaction_system,
-                tab_view_interaction_system,
-                button_interaction_system,
-                scrolling_view_interaction_system,
+                Checkbox::update,
+                TabView::update,
+                Button::update,
+                ScrollingView::update,
+                TextEdit::update,
             )
                 .after(mouse_interaction),
         );

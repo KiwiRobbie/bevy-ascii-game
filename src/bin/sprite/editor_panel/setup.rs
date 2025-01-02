@@ -23,15 +23,15 @@ fn editor_ui_builder(commands: &mut Commands) -> Entity {
             text!(" Tools "),
             widgets::Divider::build('=').with(Flex::new(1)),
         ],
-        sized_box!(vertical: 1),
+        sized_box!(height: 1),
         text!(" Move   (G)"),
         text!(" Select (R)"),
         text!(" Text   (T)"),
         text!(" Draw   (D)"),
         text!(" Shape  (S)"),
-        sized_box!(vertical: 1),
+        sized_box!(height: 1),
         LayersWidget::build(),
-        sized_box!(vertical: 1),
+        sized_box!(height: 1),
         widgets::SingleChildWidget::build(None).with(ToolUiContainer),
     ]
     .build(commands)
@@ -60,15 +60,9 @@ pub(super) fn setup_ui(commands: &mut Commands) -> Entity {
             size: UVec2 { x: 32, y: 32 },
         },
         UiPhysicsGridMarker,
-        attachments::Border::symmetric(
-            Some('|'),
-            Some('-'),
-            [Some(','), Some('.'), Some('`'), Some('\'')],
-        )
-        .padded(),
+        attachments::Border::ASCII.padded(),
         attachments::RenderBundle::default(),
         DebugMenuMarker,
-        InteractableMarker,
     ))
     .build(commands);
 

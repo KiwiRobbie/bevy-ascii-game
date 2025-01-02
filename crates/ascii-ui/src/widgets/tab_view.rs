@@ -21,43 +21,6 @@ pub struct TabView {
     pub(crate) stack: Entity,
 }
 
-pub(crate) fn tab_view_interaction_system(
-    q_tab_view: Query<&TabView>,
-    mut q_stack: Query<&mut widgets::Stack>,
-    mut q_text: Query<&mut Text>,
-    q_buttons: Query<Option<&TriggeredMarker>, (With<InteractableMarker>, With<Text>)>,
-    mut commands: Commands,
-) {
-    for tab_view in q_tab_view.iter() {
-        let Some(mut stack) = q_stack.get_mut(tab_view.stack).ok() else {
-            continue;
-        };
-
-        if q_buttons
-            .get(tab_view.left)
-            .ok()
-            .map(|t| t.is_some())
-            .unwrap_or(false)
-        {
-            stack.prev(tab_view.stack, &mut commands);
-
-            if let Ok(mut text) = q_text.get_mut(tab_view.title) {
-                text.text = format!("[ {} ]", tab_view.tabs[stack.get_active()].clone());
-            }
-        } else if q_buttons
-            .get(tab_view.right)
-            .ok()
-            .map(|t| t.is_some())
-            .unwrap_or(false)
-        {
-            stack.next(tab_view.stack, &mut commands);
-
-            if let Ok(mut text) = q_text.get_mut(tab_view.title) {
-                text.text = format!("[ {} ]", tab_view.tabs[stack.get_active()].clone());
-            }
-        }
-    }
-}
 impl TabView {
     pub fn build<'a>(
         children: Vec<(
@@ -99,5 +62,43 @@ impl TabView {
             ))
             .build(commands)
         })
+    }
+
+    pub(crate) fn update(
+        q_tab_view: Query<&TabView>,
+        mut q_stack: Query<&mut widgets::Stack>,
+        mut q_text: Query<&mut Text>,
+        q_buttons: Query<Option<&TriggeredMarker>, (With<InteractableMarker>, With<Text>)>,
+        mut commands: Commands,
+    ) {
+        for tab_view in q_tab_view.iter() {
+            let Some(mut stack) = q_stack.get_mut(tab_view.stack).ok() else {
+                continue;
+            };
+
+            if q_buttons
+                .get(tab_view.left)
+                .ok()
+                .map(|t| t.is_some())
+                .unwrap_or(false)
+            {
+                stack.prev(tab_view.stack, &mut commands);
+
+                if let Ok(mut text) = q_text.get_mut(tab_view.title) {
+                    text.text = format!("[ {} ]", tab_view.tabs[stack.get_active()].clone());
+                }
+            } else if q_buttons
+                .get(tab_view.right)
+                .ok()
+                .map(|t| t.is_some())
+                .unwrap_or(false)
+            {
+                stack.next(tab_view.stack, &mut commands);
+
+                if let Ok(mut text) = q_text.get_mut(tab_view.title) {
+                    text.text = format!("[ {} ]", tab_view.tabs[stack.get_active()].clone());
+                }
+            }
+        }
     }
 }

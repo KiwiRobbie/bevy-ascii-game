@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    attachments::Padding,
     layout::{
         constraint::Constraint,
         widget_layout::{WidgetLayout, WidgetLayoutLogic},
@@ -31,10 +32,13 @@ impl WidgetLayoutLogic for TextLogic {
             .get::<Text>(entity)
             .expect("Text Widget Logic missing Text Component!");
 
+        let padding = world.get::<Padding>(entity).cloned().unwrap_or_default();
+        let padding_total = padding.total();
+        // let padding_offset = IVec2::new(padding.0.left, padding.0.top);
         return UVec2 {
             x: text.text.len() as u32,
             y: 1,
-        };
+        } + padding_total;
     }
 }
 

@@ -1,3 +1,4 @@
+pub(crate) mod cursor;
 pub(crate) mod plugin;
 pub(crate) mod setup;
 pub(crate) mod state;
